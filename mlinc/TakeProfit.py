@@ -13,7 +13,7 @@ import oandapyV20.endpoints.orders as orders
 import oandapyV20.endpoints.positions as positions
 
 ########### Account Setup ###########
-from v20conf import account_id, account_key
+from mlinc.v20conf import account_id, account_key
 api = oandapyV20.API(access_token=account_key)
 
 ########## Position Details ############
