@@ -9,26 +9,26 @@ Place 2 CSVs in folder. Rest is automatic
 """
 import glob
 from math import pi
+
 import pandas as pd
 from bokeh.plotting import figure, show, output_file
 
-#Read CSVs
+# Read CSVs
 file_names = glob.glob('*.csv')
 name1 = file_names[0]
 name2 = file_names[1]
 
 
 df1 = pd.read_csv(name1,
-
-                 header=None,names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
+                  header=None,names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
 
 df2 = pd.read_csv(name2,
-                 header=None,names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
+                  header=None,names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
 
-###### Equalize CSV DataFrames ######
+# Equalize CSV DataFrames ######
 
-#test whether frequency is 1D or higher
-#1D times in CSV may not be equal 
+# test whether frequency is 1D or higher
+# 1D times in CSV may not be equal
 test_freq = df1['time'][1] == df1['time'][2]
 
 if test_freq == True:
@@ -85,10 +85,10 @@ inc = df1.close > df1.open
 dec = df1.open > df1.close
 
 if test_freq == True:
-    w = 4E7 #width candle bar
+    w = 4E7  # width candle bar
 
 else:
-    w = 2E6 #width candle bar
+    w = 2E6  # width candle bar
 
  
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
@@ -116,23 +116,23 @@ inc = df2.close > df2.open
 dec = df2.open > df2.close
 
 if test_freq == True:
-    w = 4E7 #width candle bar
+    w = 4E7  # width candle bar
 
 else:
-    w = 2E6 #width candle bar
+    w = 2E6  # width candle bar
  
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
  
 p = figure(x_axis_type="datetime", tools=TOOLS,
-       plot_width=1000, title = name2)
+           plot_width=1000, title = name2)
 p.xaxis.major_label_orientation = pi/4
 p.grid.grid_line_alpha=0.3
  
 p.segment(B1, df2.high, B1, df2.low, color="black")
 p.vbar(B1[inc], w,  df2.open[inc], df2.close[inc],
-   fill_color="#00FF00", line_color="black")
+       fill_color="#00FF00", line_color="black")
 p.vbar(B1[dec], w,  df2.open[dec], df2.close[dec],
-   fill_color="#F2583E", line_color="black")
+       fill_color="#F2583E", line_color="black")
  
 output_file("candlestick2.html", title=name2)
  

@@ -9,11 +9,11 @@ This script plots a lag indicator for backtesting between 2 pairs
 loaded in Two_CSV2Candle
 """
 
-import pandas as pd
-import numpy as np
 import LoadTwoCSV
+import numpy as np
+import pandas as pd
 
-#number of timesteps(days/hours/seconds) to normalize data over
+# number of timesteps(days/hours/seconds) to normalize data over
 timeFrame = 85
 ThresholdLong = -0.6
 ThresholdShort = 0.65
@@ -38,7 +38,7 @@ StartTimeFrame = EndDate - timeFrameDelta - pd.Timedelta('1 days')
 print('Indicator up-to-date until:')
 print(EndDate)    
 
-#Create Sliding Date Frame
+# Create Sliding Date Frame
 
 for j in range(i):
 
@@ -51,7 +51,6 @@ for j in range(i):
         SlidingStart_count = SlidingStart_row - j
         closest_time_start = LoadTwoCSV.D12[SlidingStart_count]
 
-    
     # Find closest date to EndDate in LoadTwoCSV.D12
     # Exact EndDate may not appear in LoadTwoCSV.D12
         SlidingEnd = min(LoadTwoCSV.D12, key=lambda d: abs(d - EndDate))
@@ -86,7 +85,7 @@ for j in range(i):
 #            Position[j] = -1 # Take Short Position
 #        else: Position[j] = np.NaN # No Action
         
-     # Take Positions (test is backwards in time, so logical operators are reversed) 
+    # Take Positions (test is backwards in time, so logical operators are reversed)
         if lagindex[j-2] > lagindex[j-1] and lagindex[j-1] < lagindex[j] and lagindex[j-1] < ThresholdLong:
             Position[j] = 1 # Take Long Position in local minimum of lagindicator
         elif lagindex[j-2] < lagindex[j-1] and lagindex[j-1] > lagindex[j] and lagindex[j-1] > ThresholdShort:
@@ -107,13 +106,13 @@ from bokeh.layouts import column
 output_file("LagIndicator.html")
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
 
-#plot 1 - lagindicator
+# plot 1 - lagindicator
 p1 = figure(plot_width=1050, plot_height=320, x_axis_type='datetime',
             tools=TOOLS, title = 'Lag Indicator')
 p1.line(PlotDates,lagindexFlip, line_width=2, color='navy')
 
-#plot 2 - price linechart + positions
-#redefine Position for graphics
+# plot 2 - price linechart + positions
+# redefine Position for graphics
 # Convert 'Position' to entry prices for Long & Short Positions
 PositionPlotLong = np.clip(Position,0,1)
 PositionPlotLong[PositionPlotLong == 0] = np.nan
@@ -135,10 +134,11 @@ p2.triangle(PlotDates, PositionPlotLong, size=15,
 p2.inverted_triangle(PlotDates, PositionPlotShort, size=15,
               line_color="black", fill_color="red", alpha=0.7)
 
-#p2.vbar(PlotDates, 1E6,  PlotPriceAVG, PositionPlot,fill_color="#00FF00", line_color="#00FF00", fill_alpha=0.3)
-#p2.vbar(PlotDates, 1E6,  PositionShortPlot, max(PlotPriceClose),fill_color="#F2583E", line_color="#F2583E", fill_alpha=0.3)
+# p2.vbar(PlotDates, 1E6,  PlotPriceAVG, PositionPlot,fill_color="#00FF00", line_color="#00FF00", fill_alpha=0.3)
+# p2.vbar(PlotDates, 1E6,  PositionShortPlot, max(PlotPriceClose),fill_color="#F2583E", line_color="#F2583E",
+# fill_alpha=0.3)
         
- # multi line renderer
+# multi line renderer
 p = column(p1,p2)
 
 show(p)

@@ -5,28 +5,31 @@ Created on Sat Oct 21 13:51:55 2017
 @author: rweegenaar
 
 This script reads in two CSVs, equalizes the dates and times and plots candlestick charts.
-Place 2 CSVs in folder. Rest is automatic
+Place 2 CSVs in folder. Rest is automatic. Names of 'Leader' and 'Lagger' should be 
+alphabetic and Leader's name should be shorter (less characters)
+in alphabet. 
 """
 import glob
+
 import pandas as pd
 
-#Read CSVs
+# Read CSVs
 file_names = glob.glob('*.csv')
 name1 = file_names[0]
 name2 = file_names[1]
 
-#dataframe1
+# dataframe1
 df1 = pd.read_csv(name1,
 
                  header=None,names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
-#dataframe2
+# dataframe2
 df2 = pd.read_csv(name2,
                  header=None,names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
 
-###### Equalize CSV DataFrames ######
+# Equalize CSV DataFrames ######
 
-#test whether frequency is 1D or higher
-#1D times in CSV may not be equal
+# test whether frequency is 1D or higher
+# 1D times in CSV may not be equal
 test_freq = df1['time'][1] == df1['time'][2]
 
 if test_freq == True:
@@ -76,5 +79,4 @@ while df1['DateTime'].size > df2['DateTime'].size:
 while df1['DateTime'].size < df2['DateTime'].size:
     q = df2['DateTime'].size - 1
     df2 = df2.drop(df2.index[q])
-    B1.pop(q)    
-    
+    B1.pop(q)
