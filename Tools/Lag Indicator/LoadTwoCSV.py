@@ -5,12 +5,10 @@ Created on Sat Oct 21 13:51:55 2017
 @author: rweegenaar
 
 This script reads in two CSVs, equalizes the dates and times and plots candlestick charts.
-Place 2 CSVs in folder. Rest is automatic. Names of 'Leader' and 'Lagger' should be 
-alphabetic and Leader's name should be shorter (less characters)
-in alphabet. 
+Place 2 CSVs in folder. Rest is automatic. Names of 'Leader' and 'Lagger' should be in
+alphabetic order.
 """
 import glob
-
 import pandas as pd
 
 # Read CSVs
