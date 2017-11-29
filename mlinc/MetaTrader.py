@@ -1,6 +1,10 @@
 from metatrader.mt4 import initizalize
 from metatrader.backtest import BackTest
 
+"""
+Note that this only works with python 2 (select from interpreter list)
+"""
+
 # point mt4 install folder
 initizalize('C:\\Program Files\\FXCM MetaTrader 4')
 
