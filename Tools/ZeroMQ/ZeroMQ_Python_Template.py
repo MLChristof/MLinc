@@ -5,7 +5,7 @@ Created on Thu Aug 24 16:48:05 2017
 """
 
 # IMPORT zmq library
-import pyzmq as zmq
+import zmq
 
 # Sample Commands for ZeroMQ MT4 EA
 eurusd_buy_order = "TRADE|OPEN|0|EURUSD|0|50|50|Python-to-MT4"
