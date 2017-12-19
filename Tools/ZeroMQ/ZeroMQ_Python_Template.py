@@ -5,13 +5,13 @@ Created on Thu Aug 24 16:48:05 2017
 """
 
 # IMPORT zmq library
-import pyzmq as zmq
+import zmq
 
 # Sample Commands for ZeroMQ MT4 EA
-eurusd_buy_order = "TRADE|OPEN|0|EURUSD|0|50|50|Python-to-MT4"
+eurusd_buy_order = "TRADE|OPEN|1|EURUSD|0|50|50|Python-to-MT4"
 eurusd_sell_order = "TRADE|OPEN|1|EURUSD|0|50|50|Python-to-MT4"
-eurusd_closebuy_order = "TRADE|CLOSE|0|EURUSD|0|50|50|Python-to-MT4"
-get_rates = "RATES|GBPUSD"
+eurusd_closebuy_order = "TRADE|CLOSE|1|EURUSD|0|50|50|Python-to-MT4"
+get_rates = "RATES|EURUSD"
 
 
 # Sample Function for Client
@@ -31,11 +31,11 @@ def zeromq_mt4_ea_client():
     remote_send(reqSocket, get_rates)
 
     # Send BUY EURUSD command to ZeroMQ MT4 EA
-    # remote_send(reqSocket, eurusd_buy_order)
+    remote_send(reqSocket, eurusd_buy_order)
 
     # Send CLOSE EURUSD command to ZeroMQ MT4 EA. You'll need to append the
     # trade's ORDER ID to the end, as below for example:
-    # remote_send(reqSocket, eurusd_closebuy_order + "|" + "12345678")
+    remote_send(reqSocket, eurusd_closebuy_order + "|" + "12345678")
 
     # PULL from pullSocket
     remote_pull(pullSocket)
