@@ -28,7 +28,7 @@ def zeromq_mt4_ea_client():
     pullSocket.connect("tcp://localhost:5556")
 
     # Send RATES command to ZeroMQ MT4 EA
-    remote_send(reqSocket, get_rates)
+    # remote_send(reqSocket, get_rates)
 
     # Send BUY EURUSD command to ZeroMQ MT4 EA
     remote_send(reqSocket, eurusd_buy_order)
