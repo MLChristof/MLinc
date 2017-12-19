@@ -28,10 +28,10 @@ def zeromq_mt4_ea_client():
     pullSocket.connect("tcp://localhost:5556")
 
     # Send RATES command to ZeroMQ MT4 EA
-    remote_send(reqSocket, get_rates)
+    # remote_send(reqSocket, get_rates)
 
     # Send BUY EURUSD command to ZeroMQ MT4 EA
-    # remote_send(reqSocket, eurusd_buy_order)
+    remote_send(reqSocket, eurusd_buy_order)
 
     # Send CLOSE EURUSD command to ZeroMQ MT4 EA. You'll need to append the
     # trade's ORDER ID to the end, as below for example:
