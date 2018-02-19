@@ -46,11 +46,10 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
     date_list = []
 
     for i, row in enumerate(quandl_array):
-        month = row[0][i+1].month
-        if row[0][i+1].month != row[0][i].month:
-
-        if row[0].day == 1:
-            rows_of_interest.append(i)
+        if quandl_array[i+1].month != quandl_array[i].month:
+            rows_of_interest.append(quandl_array[i+1].month)
+        # if row[0].day == 1:
+        #     rows_of_interest.append(i)
 
     for i, row in enumerate(rows_of_interest):
         date_list.append(quandl_array[row][0])
