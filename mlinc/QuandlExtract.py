@@ -44,6 +44,7 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
     account_balance_list = []
     inlay_list = []
     date_list = []
+    percentage_change_list = []
 
     for i, row in enumerate(quandl_array):
         try:
@@ -64,19 +65,21 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
         else:
             close_price = quandl_array[rows_of_interest[i]][3]
             percentage_change = (quandl_array[rows_of_interest[i-1]][3] - close_price) / close_price
+            percentage_change_list.append(percentage_change)
             account_balance = (percentage_change + 1) * account_balance + monthly_investment - transaction_fee
             account_balance_list.append(account_balance)
             inlay_list.append(inlay_list[i-1] + monthly_investment)
 
+    print(n.mean(percentage_change_list))
     print(account_balance_list[-1])
     print(inlay_list[-1])
     print(date_list)
 
-    plt.figure()
-    plt.plot(account_balance_list)
-    plt.hold
-    plt.plot(inlay_list)
-    plt.show()
+    # plt.figure()
+    # plt.plot(account_balance_list)
+    # plt.hold
+    # plt.plot(inlay_list)
+    # plt.show()
 
     return account_balance
 
@@ -84,10 +87,19 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
 if __name__ == '__main__':
     SP500 = quandl_stocks(symbol='CHRIS/CME_SP1', start_date=(1984, 1, 1), end_date=None)
     SP500 = n.array(SP500.tolist())
-    # print(SP500[0])
+    # print(SP500)
     # print(SP500[0][0].year)
     # print(SP500[0][0].month)
     # print(SP500[0][0].day)
+
+    closing_prices = []
+    for j, i in enumerate(SP500):
+        closing_prices.append(i[3])
+    closing_prices_change = n.diff(closing_prices)
+
+    plt.figure()
+    plt.plot(closing_prices_change)
+    plt.show()
 
     # for i in SP500:
     #     if i[0].month >= 9 or i[0].month <= 5:
