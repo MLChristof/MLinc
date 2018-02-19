@@ -46,11 +46,15 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
     date_list = []
 
     for i, row in enumerate(quandl_array):
-        if quandl_array[i+1].month != quandl_array[i].month:
-            rows_of_interest.append(quandl_array[i+1].month)
+        try:
+            if quandl_array[i+1][0].month != quandl_array[i][0].month:
+                rows_of_interest.append(i+1)
+        except IndexError:
+            pass
         # if row[0].day == 1:
         #     rows_of_interest.append(i)
 
+    account_balance = 0
     for i, row in enumerate(rows_of_interest):
         date_list.append(quandl_array[row][0])
         if i == 0:
@@ -58,7 +62,7 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
             account_balance_list.append(account_balance)
             inlay_list.append(start_capital)
         else:
-            close_price = quandl_array[row][3]
+            close_price = quandl_array[rows_of_interest[i]][3]
             percentage_change = (quandl_array[rows_of_interest[i-1]][3] - close_price) / close_price
             account_balance = (percentage_change + 1) * account_balance + monthly_investment - transaction_fee
             account_balance_list.append(account_balance)
@@ -90,7 +94,7 @@ if __name__ == '__main__':
     #         print(i[0], i[3])
 
     # print(bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=100., transaction_fee=2.5))
-    bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=100, transaction_fee=0)
+    bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=0, transaction_fee=0)
 
 
 
