@@ -2,10 +2,28 @@ import quandl
 import datetime
 import numpy as n
 import matplotlib.pyplot as plt
+import os
 
 
 quandl.ApiConfig.api_key = 'dY1WTAj3kH6dCSKvzMBw'
 """ Open, High, Low, Close, Change, Settle, Volume, Previous Day Open Interest"""
+
+
+def multiply(numbers):
+    total = 1
+    for x in numbers:
+        total *= x
+    return total
+
+file = open(os.getcwd() + "\Data\Jaarmutatie_CPI__van_200218083138.csv"
+            , 'r')
+lines = file.readlines()
+inflation = []
+for line in lines:
+    inflation.append(float(line.split(';')[1][1:-1]))
+inflation = n.array(inflation)/100+1
+# From 1984 to 2017
+total_inflation = multiply(inflation)
 
 
 def quandl_stocks(symbol, start_date=(2000, 1, 1), ticker=None, end_date=None):
@@ -91,7 +109,7 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
 if __name__ == '__main__':
     SP500 = quandl_stocks(symbol='CHRIS/CME_SP1', start_date=(1984, 1, 1), end_date=None)
     SP500 = n.array(SP500.tolist())
-    bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=100, transaction_fee=-2.5)
+    bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=0, transaction_fee=-2.5)
 
     # print(SP500)
     # print(SP500[0][0].year)
