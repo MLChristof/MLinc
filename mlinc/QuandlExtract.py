@@ -6,7 +6,7 @@ import os
 
 
 quandl.ApiConfig.api_key = 'dY1WTAj3kH6dCSKvzMBw'
-""" Open, High, Low, Close, Change, Settle, Volume, Previous Day Open Interest"""
+""" Date, Open, High, Low, Close, Change, Settle, Volume, Previous Day Open Interest"""
 
 
 def multiply(numbers):
@@ -58,6 +58,20 @@ def quandl_stocks(symbol, start_date=(2000, 1, 1), ticker=None, end_date=None):
 
 
 def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee):
+    """
+    
+    Parameters
+    ----------
+    quandl_array: NumpyArray
+        This has be a quandl import
+    start_capital
+    monthly_investment
+    transaction_fee
+
+    Returns
+    -------
+
+    """
     rows_of_interest = []
     account_balance_list = []
     inlay_list = []
@@ -81,8 +95,8 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
             account_balance_list.append(account_balance)
             inlay_list.append(start_capital)
         else:
-            close_price_new = quandl_array[rows_of_interest[i]][3]
-            close_price_old = quandl_array[rows_of_interest[i-1]][3]
+            close_price_new = quandl_array[rows_of_interest[i]][4]
+            close_price_old = quandl_array[rows_of_interest[i-1]][4]
             percentage_change = (close_price_new - close_price_old) / close_price_old
             percentage_change_list.append(percentage_change)
             account_balance = (percentage_change + 1) * account_balance + monthly_investment - transaction_fee
