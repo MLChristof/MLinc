@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-quandl.ApiConfig.api_key = 'dY1WTAj3kH6dCSKvzMBw'
+quandl.ApiConfig.api_key = ''
 """ Date, Open, High, Low, Close, Change, Settle, Volume, Previous Day Open Interest"""
 
 
@@ -19,11 +19,14 @@ file = open(os.getcwd() + "\Data\Jaarmutatie_CPI__van_200218125025.csv"
             , 'r')
 lines = file.readlines()
 inflation = []
+inflation_factor = []
 inflation_date = []
 for line in lines:
     inflation.append(float(line.split(';')[1][2:-2]))
     inflation_date.append(str(line.split(';')[0][1:]))
 inflation = (n.array(inflation)/100+1)**(1/12)
+inflation_factor = 1/inflation
+print(inflation_factor)
 # print(inflation_date)
 # From 1984 to 2017
 # total_inflation = multiply(inflation)
@@ -93,12 +96,11 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
         for j, item in enumerate(inflation_date):
             if str(row[0].year) in item:
                 if month[str(row[0].month)] in item:
-                    print(inflation[j])
-                    n.append(quandl_array[i], [inflation[j]])
-                    print(quandl_array[i])
+                    # print(inflation[j])
+                    n.append(quandl_array[i], [inflation_factor[j]])
+                    # print(quandl_array[i])
                     # quandl_array[i].append(inflation[j])
-    # print(quandl_array)
-
+    print(quandl_array)
 
     rows_of_interest = []
     account_balance_list = []
@@ -132,8 +134,12 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
             inlay_list.append(inlay_list[i-1] + monthly_investment)
 
     # print(n.mean(percentage_change_list))
-    # print(account_balance_list[-1])
-    # print(inlay_list[-1])
+    end_balance = account_balance_list[-1]
+    print('account balance = ', end_balance)
+    total_inlay = inlay_list[-1]
+    print('total inlay = ', total_inlay)
+    return_invest = 100*(end_balance/total_inlay)
+    print('return on investment [%] = ', return_invest)
     # print(date_list)
 
     plt.figure()
@@ -151,7 +157,7 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
 if __name__ == '__main__':
     SP500 = quandl_stocks(symbol='CHRIS/CME_SP1', start_date=(1984, 1, 1), end_date=None)
     SP500 = n.array(SP500.tolist())
-    bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=100, transaction_fee=-2.5)
+    bench_mark(quandl_array=SP500, start_capital=10000., monthly_investment=100, transaction_fee=-2.5)
 
     # print(SP500)
     # print(SP500[0][0].year)
