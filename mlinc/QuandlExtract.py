@@ -15,15 +15,31 @@ def multiply(numbers):
         total *= x
     return total
 
-file = open(os.getcwd() + "\Data\Jaarmutatie_CPI__van_200218083138.csv"
+file = open(os.getcwd() + "\Data\Jaarmutatie_CPI__van_200218125025.csv"
             , 'r')
 lines = file.readlines()
 inflation = []
+inflation_date = []
 for line in lines:
-    inflation.append(float(line.split(';')[1][1:-1]))
-inflation = n.array(inflation)/100+1
+    inflation.append(float(line.split(';')[1][2:-2]))
+    inflation_date.append(str(line.split(';')[0][1:]))
+inflation = (n.array(inflation)/100+1)**(1/12)
+# print(inflation_date)
 # From 1984 to 2017
-total_inflation = multiply(inflation)
+# total_inflation = multiply(inflation)
+
+month = {'1': 'january',
+         '2': 'february',
+         '3': 'march',
+         '4': 'april',
+         '5': 'may',
+         '6': 'june',
+         '7': 'july',
+         '8': 'august',
+         '9': 'september',
+         '10': 'oktober',
+         '11': 'november',
+         '12': 'december'}
 
 
 def quandl_stocks(symbol, start_date=(2000, 1, 1), ticker=None, end_date=None):
@@ -72,6 +88,18 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
     -------
 
     """
+    # print(quandl_array[0])
+    for i, row in enumerate(quandl_array):
+        for j, item in enumerate(inflation_date):
+            if str(row[0].year) in item:
+                if month[str(row[0].month)] in item:
+                    print(inflation[j])
+                    n.append(quandl_array[i], [inflation[j]])
+                    print(quandl_array[i])
+                    # quandl_array[i].append(inflation[j])
+    # print(quandl_array)
+
+
     rows_of_interest = []
     account_balance_list = []
     inlay_list = []
@@ -103,10 +131,10 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
             account_balance_list.append(account_balance)
             inlay_list.append(inlay_list[i-1] + monthly_investment)
 
-    print(n.mean(percentage_change_list))
-    print(account_balance_list[-1])
-    print(inlay_list[-1])
-    print(date_list)
+    # print(n.mean(percentage_change_list))
+    # print(account_balance_list[-1])
+    # print(inlay_list[-1])
+    # print(date_list)
 
     plt.figure()
     plt.title('S&P 500 investment')
@@ -123,7 +151,7 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
 if __name__ == '__main__':
     SP500 = quandl_stocks(symbol='CHRIS/CME_SP1', start_date=(1984, 1, 1), end_date=None)
     SP500 = n.array(SP500.tolist())
-    bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=0, transaction_fee=-2.5)
+    bench_mark(quandl_array=SP500, start_capital=1000., monthly_investment=100, transaction_fee=-2.5)
 
     # print(SP500)
     # print(SP500[0][0].year)
