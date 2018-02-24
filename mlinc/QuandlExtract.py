@@ -2,7 +2,7 @@ import quandl
 import datetime
 import numpy as n
 import matplotlib.pyplot as plt
-import os
+import os, sys
 
 
 quandl.ApiConfig.api_key = ''

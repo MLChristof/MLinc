@@ -13,6 +13,9 @@ eurusd_sell_order = "TRADE|OPEN|1|EURUSD|0|50|50|Python-to-MT4"
 eurusd_closebuy_order = "TRADE|CLOSE|1|EURUSD|0|50|50|Python-to-MT4"
 get_rates = "RATES|EURUSD"
 
+# "TRADE|OPEN|0|EURUSD|VOLUME=0.1|SLIPPEDGE|SL|TP"
+# eurusd_buy_order = "TRADE|OPEN|0|EURUSD|0.1|2|1.17|1.19|Python-to-MT4"
+
 
 # Sample Function for Client
 def zeromq_mt4_ea_client():
@@ -28,10 +31,10 @@ def zeromq_mt4_ea_client():
     pullSocket.connect("tcp://localhost:5556")
 
     # Send RATES command to ZeroMQ MT4 EA
-    # remote_send(reqSocket, get_rates)
+    remote_send(reqSocket, get_rates)
 
     # Send BUY EURUSD command to ZeroMQ MT4 EA
-    remote_send(reqSocket, eurusd_buy_order)
+    # remote_send(reqSocket, eurusd_buy_order)
 
     # Send CLOSE EURUSD command to ZeroMQ MT4 EA. You'll need to append the
     # trade's ORDER ID to the end, as below for example:
