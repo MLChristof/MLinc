@@ -2,10 +2,11 @@ import quandl
 import datetime
 import numpy as n
 import matplotlib.pyplot as plt
-import os, sys
+import os
 
-
-quandl.ApiConfig.api_key = ''
+file = open("C:/Users/Jelle/Desktop/quandl_api.txt")
+api = file.readline()
+quandl.ApiConfig.api_key = api
 """ Date, Open, High, Low, Close, Change, Settle, Volume, Previous Day Open Interest"""
 
 
@@ -15,8 +16,10 @@ def multiply(numbers):
         total *= x
     return total
 
-file = open(os.getcwd() + "\Data\Jaarmutatie_CPI__van_200218125025.csv"
-            , 'r')
+
+cwd = os.getcwd()
+one_folder_up = os.path.dirname(os.getcwd())
+file = open(one_folder_up + "/Data/Jaarmutatie_CPI__van_200218125025.csv", 'r')
 lines = file.readlines()
 inflation = []
 inflation_factor = []
@@ -43,7 +46,6 @@ month = {'1': 'january',
          '10': 'oktober',
          '11': 'november',
          '12': 'december'}
-
 
 def quandl_stocks(symbol, start_date=(2000, 1, 1), ticker=None, end_date=None):
     """
@@ -75,10 +77,9 @@ def quandl_stocks(symbol, start_date=(2000, 1, 1), ticker=None, end_date=None):
                       ticker=ticker
                       )
 
-
 def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee):
     """
-    
+
     Parameters
     ----------
     quandl_array: NumpyArray
@@ -155,9 +156,13 @@ def bench_mark(quandl_array, start_capital, monthly_investment, transaction_fee)
 
 
 if __name__ == '__main__':
+    # Test = SmartIndexBackTester()
+    # Test.quandl_stocks(symbol='CHRIS/CME_SP1', start_date=(1984, 1, 1), end_date=None)
+    # Test.bench_mark(quandl_array=SP500, start_capital=10000., monthly_investment=100, transaction_fee=-2.5)
     SP500 = quandl_stocks(symbol='CHRIS/CME_SP1', start_date=(1984, 1, 1), end_date=None)
     SP500 = n.array(SP500.tolist())
     bench_mark(quandl_array=SP500, start_capital=10000., monthly_investment=100, transaction_fee=-2.5)
+
 
     # print(SP500)
     # print(SP500[0][0].year)
