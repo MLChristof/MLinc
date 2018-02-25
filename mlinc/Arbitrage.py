@@ -18,7 +18,18 @@ class TradeEngine(object):
         self.db_name = db_name
 
     def get_trade_arguments(self, priority_spec):
+        """
+        
+        Parameters
+        ----------
+        priority_spec = str
+            priority_spec defines how to pick the first order out of the database
 
+        Returns
+        -------
+        trade_args = pandas dataframe
+            trad_args is 1 row of input arguments for a trade
+        """
         database = pd.read_csv(self.db_name, names=['ID', 'Date', 'ex_buy', 'coin_buy', 'coin_sell', 'volume', 'ex_sell'
                                                     , 'priority'])
         database['Date'] = pd.to_datetime(database['Date'])
@@ -30,8 +41,11 @@ class TradeEngine(object):
         trade_args = database.iloc[0]
         return trade_args
 
+    def place_order(self,trade_args):
+
 
 if __name__ == '__main__':
     trade = TradeEngine(r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\Data\DATABASE_format_test.csv')
     arguments = trade.get_trade_arguments('chance')
+    order = place_order(arguments)
     print(arguments)
