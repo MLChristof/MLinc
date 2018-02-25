@@ -56,24 +56,48 @@ class SmartIndex(object):
         else:
             end_date = datetime.date.today()
 
-        quandlget = quandl.get(query_list,
-                               returns='pandas',
-                               start_date=start_date,
-                               end_date=end_date,
-                               collapse='daily',
-                               order='asc',
-                               ticker=ticker
-                               )
+        quandlpd = quandl.get(query_list,
+                              returns='pandas',
+                              start_date=start_date,
+                              end_date=end_date,
+                              collapse='daily',
+                              order='asc',
+                              ticker=ticker
+                              )
 
-        print(quandlget.index)
-        print(quandlget.dtypes)
-        print(quandlget['CHRIS/CME_SP1 - Open'])
-        # print(quandlget[0])
+        # types = list(quandlpd.dtypes.index)
+        # print(types)
+        # for i, item in enumerate(types):
+        #     item = str(item)
+        #     item = item.lower()
+        #     if 'open' in item:
+        #         types[i] = 'open'
+        #     elif 'high' in item:
+        #         types[i] = 'high'
+        #     elif 'low' in item:
+        #         types[i] = 'low'
+        #     elif 'last' or 'close' in item:
+        #         types[i] = 'close'
+        # print(types)
 
-        # print(quandlget.dtype.names)
-        # names = quandlget.dtype.names
-        # print(quandlget.Date)
-        # print(quandlget.names[1])
+        # stockID = self.symbol + ' - Open'
+
+        # print(n.array(quandlpd[stockID]))
+
+        date = quandlpd.index
+        # print(date)
+        # print(type(date))
+        print(date['datetime64[ns]'])
+
+        open = n.array(quandlpd[self.symbol + ' - Open'])
+        high = n.array(quandlpd[self.symbol + ' - High'])
+        low = n.array(quandlpd[self.symbol + ' - Low'])
+        close = n.array(quandlpd[self.symbol + ' - Last'])
+        volume = n.array(quandlpd[self.symbol + ' - Volume'])
+
+        output = {'open': open, 'high': high, 'low': low, 'close': close, 'volume': volume}
+
+        return output
 
 
 if __name__ == '__main__':
