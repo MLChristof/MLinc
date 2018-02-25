@@ -23,13 +23,15 @@ class TradeEngine(object):
                                                     , 'priority'])
         database['Date'] = pd.to_datetime(database['Date'])
         if priority_spec == 'chance':
-            database.sort('priority')
+            database.sort_values('priority')
         elif priority_spec == 'date':
-            database.sort('Date')
+            database.sort_values('Date')
 
-        trade_args = database[0]
+        trade_args = database.iloc[0]
         return trade_args
 
 
 if __name__ == '__main__':
-    test = TradeEngine('SQL_database')
+    trade = TradeEngine(r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\Data\DATABASE_format_test.csv')
+    arguments = trade.get_trade_arguments('chance')
+    print(arguments)
