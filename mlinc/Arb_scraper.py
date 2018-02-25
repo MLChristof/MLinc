@@ -10,7 +10,6 @@ soup = BeautifulSoup(page.text, 'html.parser')
 
 # Pull all text from the BodyText div
 trade_pair_list = soup.find_all("div", {"class": "table_title container cust_container"})
-# price_list = soup.find_all("div", {"class" : "row"})
 
 pair = []
 ex1 = []
@@ -27,10 +26,6 @@ for row in trade_pair_list:
     ex1.append(row.find_all('span')[1].text)
     ex2.append(row.find_all('span')[2].text)
     time.append(row.find_all('span')[3].text)
-
-# for row in price_list:
-#     print(row.find_all('arbitrage-price'))
-#     # print(bid)
 
 dataframe = pd.DataFrame(
     {'Pair': pair,
