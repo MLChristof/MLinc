@@ -21,13 +21,14 @@ class TradeEngine(object):
 
         database = pd.read_csv(self.db_name, names=['ID', 'Date', 'ex_buy', 'coin_buy', 'coin_sell', 'volume', 'ex_sell'
                                                     , 'priority'])
-        database.
+        database['Date'] = pd.to_datetime(database['Date'])
         if priority_spec == 'chance':
-            database.sort()
-            pass
+            database.sort('priority')
         elif priority_spec == 'date':
-            #TODO: Define to sort on date
-            pass
+            database.sort('Date')
+
+        trade_args = database[0]
+        return trade_args
 
 
 if __name__ == '__main__':
