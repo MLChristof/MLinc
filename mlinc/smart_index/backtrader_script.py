@@ -16,7 +16,7 @@ class TestStrategy(bt.Strategy):
     )
 
     def log(self, txt, dt=None):
-        ''' Logging function fot this strategy'''
+        ''' Logging function for this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
         # print('%s, %s' % (dt.isoformat(), txt))
         # print('%s' % (dt.isoformat()))
@@ -98,6 +98,11 @@ class TestStrategy(bt.Strategy):
         # FOR RSI
         if self.datas[0].datetime.date(0).month < 5 or self.datas[0].datetime.date(0).month > 9:
             if not self.position:
+
+# To Do: 1) close position instead of sell
+#        2) enable multiple simultaneous positions
+#        3) Open Long position every 1st of the month or next trading day (including 1st May and 1st Sept?)
+#        4) Detect Bear market (retrace of 25% from peak in one year)
 
                 # Not yet ... we MIGHT BUY if ...
                 if self.sma < 35:
