@@ -18,7 +18,8 @@ class TestStrategy(bt.Strategy):
     def log(self, txt, dt=None):
         ''' Logging function fot this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
+        # print('%s, %s' % (dt.isoformat(), txt))
+        # print('%s' % (dt.isoformat()))
 
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
@@ -30,8 +31,10 @@ class TestStrategy(bt.Strategy):
         self.buycomm = None
 
         # Add a MovingAverageSimple indicator
-        self.sma = bt.indicators.SimpleMovingAverage(
-            self.datas[0], period=self.params.maperiod)
+        # self.sma = bt.indicators.SimpleMovingAverage(
+        #     self.datas[0], period=self.params.maperiod)
+
+        self.sma = bt.indicators.RSI(self.datas[0], period=self.params.maperiod)
 
         # Indicators for the plotting show
         # bt.indicators.ExponentialMovingAverage(self.datas[0], period=25)
@@ -89,26 +92,29 @@ class TestStrategy(bt.Strategy):
         if self.order:
             return
 
-        # Check if we are in the market
-        if not self.position:
+        if self.datas[0].datetime.date(0).month == 5:
+            self.order = self.close()
 
-            # Not yet ... we MIGHT BUY if ...
-            if self.dataclose[0] > self.sma[0]:
+        # FOR RSI
+        if self.datas[0].datetime.date(0).month < 5 or self.datas[0].datetime.date(0).month > 9:
+            if not self.position:
 
-                # BUY, BUY, BUY!!! (with all possible default parameters)
-                self.log('BUY CREATE, %.2f' % self.dataclose[0])
+                # Not yet ... we MIGHT BUY if ...
+                if self.sma < 35:
+                    # BUY, BUY, BUY!!! (with all possible default parameters)
+                    self.log('BUY CREATE, %.2f' % self.dataclose[0])
 
-                # Keep track of the created order to avoid a 2nd order
-                self.order = self.buy()
+                    # Keep track of the created order to avoid a 2nd order
+                    self.order = self.buy()
 
-        else:
+            else:
 
-            if self.dataclose[0] < self.sma[0]:
-                # SELL, SELL, SELL!!! (with all possible default parameters)
-                self.log('SELL CREATE, %.2f' % self.dataclose[0])
+                if self.sma > 70:
+                    # SELL, SELL, SELL!!! (with all possible default parameters)
+                    self.log('SELL CREATE, %.2f' % self.dataclose[0])
 
-                # Keep track of the created order to avoid a 2nd order
-                self.order = self.sell()
+                    # Keep track of the created order to avoid a 2nd order
+                    self.order = self.sell()
 
 
 if __name__ == '__main__':
@@ -127,9 +133,9 @@ if __name__ == '__main__':
     data = bt.feeds.YahooFinanceCSVData(
         dataname=datapath,
         # Do not pass values before this date
-        fromdate=datetime.datetime(2010, 1, 3),
+        fromdate=datetime.datetime(1980, 1, 3),
         # Do not pass values before this date
-        todate=datetime.datetime(2018, 2, 24),
+        todate=datetime.datetime(2015, 2, 24),
         # Do not pass values after this date
         reverse=False)
 
@@ -137,7 +143,7 @@ if __name__ == '__main__':
     cerebro.adddata(data)
 
     # Set our desired cash start
-    cerebro.broker.setcash(1000000.0)
+    cerebro.broker.setcash(10000.0)
 
     # Add a FixedSize sizer according to the stake
     cerebro.addsizer(bt.sizers.FixedSize, stake=1)
