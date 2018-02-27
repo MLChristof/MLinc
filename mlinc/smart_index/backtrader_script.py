@@ -35,6 +35,7 @@ class TestStrategy(bt.Strategy):
         #     self.datas[0], period=self.params.maperiod)
 
         self.sma = bt.indicators.RSI(self.datas[0], period=self.params.maperiod)
+        self.ml_indicator = self.multi_lul_indicator()
 
         # Indicators for the plotting show
         # bt.indicators.ExponentialMovingAverage(self.datas[0], period=25)
@@ -45,6 +46,9 @@ class TestStrategy(bt.Strategy):
         # rsi = bt.indicators.RSI(self.datas[0])
         # bt.indicators.SmoothedMovingAverage(rsi, period=10)
         # bt.indicators.ATR(self.datas[0], plot=False)
+
+    def multi_lul_indicator(self):
+        return 50
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -85,6 +89,10 @@ class TestStrategy(bt.Strategy):
                  (trade.pnl, trade.pnlcomm))
 
     def next(self):
+        # TODO: Close position instead of sfell
+        # TODO: Enable multiple simultanious positions
+        # TODO: Open long postiion every 1st of the month or next trading day
+        # TODO: Detect Bear market (retrace of 25% from peak in one year
         # Simply log the closing price of the series from the reference
         self.log('Close, %.2f' % self.dataclose[0])
 
@@ -95,14 +103,12 @@ class TestStrategy(bt.Strategy):
         if self.datas[0].datetime.date(0).month == 5:
             self.order = self.close()
 
+        # For ML
+
+
         # FOR RSI
         if self.datas[0].datetime.date(0).month < 5 or self.datas[0].datetime.date(0).month > 9:
             if not self.position:
-
-# To Do: 1) close position instead of sell
-#        2) enable multiple simultaneous positions
-#        3) Open Long position every 1st of the month or next trading day (including 1st May and 1st Sept?)
-#        4) Detect Bear market (retrace of 25% from peak in one year)
 
                 # Not yet ... we MIGHT BUY if ...
                 if self.sma < 35:
