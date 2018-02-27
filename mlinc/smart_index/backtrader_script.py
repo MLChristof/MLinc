@@ -100,14 +100,9 @@ class TestStrategy(bt.Strategy):
         if self.order:
             return
 
+        # For ML
         if self.datas[0].datetime.date(0).month == 5:
             self.order = self.close()
-
-        # For ML
-
-
-        # FOR RSI
-        if self.datas[0].datetime.date(0).month < 5 or self.datas[0].datetime.date(0).month > 9:
             if not self.position:
 
                 # Not yet ... we MIGHT BUY if ...
@@ -126,6 +121,27 @@ class TestStrategy(bt.Strategy):
 
                     # Keep track of the created order to avoid a 2nd order
                     self.order = self.sell()
+
+        # FOR RSI
+        # if self.datas[0].datetime.date(0).month < 5 or self.datas[0].datetime.date(0).month > 9:
+        #     if not self.position:
+        #
+        #         # Not yet ... we MIGHT BUY if ...
+        #         if self.sma < 35:
+        #             # BUY, BUY, BUY!!! (with all possible default parameters)
+        #             self.log('BUY CREATE, %.2f' % self.dataclose[0])
+        #
+        #             # Keep track of the created order to avoid a 2nd order
+        #             self.order = self.buy()
+        #
+        #     else:
+        #
+        #         if self.sma > 70:
+        #             # SELL, SELL, SELL!!! (with all possible default parameters)
+        #             self.log('SELL CREATE, %.2f' % self.dataclose[0])
+        #
+        #             # Keep track of the created order to avoid a 2nd order
+        #             self.order = self.sell()
 
 
 if __name__ == '__main__':
