@@ -35,7 +35,7 @@ class TestStrategy(bt.Strategy):
         #     self.datas[0], period=self.params.maperiod)
 
         self.sma = bt.indicators.RSI(self.datas[0], period=self.params.maperiod)
-        self.ml_indicator = self.multi_lul_indicator()
+        # self.ml_indicator = self.multi_lul_indicator()
 
         # Indicators for the plotting show
         # bt.indicators.ExponentialMovingAverage(self.datas[0], period=25)
@@ -47,8 +47,8 @@ class TestStrategy(bt.Strategy):
         # bt.indicators.SmoothedMovingAverage(rsi, period=10)
         # bt.indicators.ATR(self.datas[0], plot=False)
 
-    def multi_lul_indicator(self):
-        return 50
+    # def multi_lul_indicator(self):
+    #     return 50
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
