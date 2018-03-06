@@ -13,6 +13,7 @@ import LoadTwoCSV
 import numpy as np
 import pandas as pd
 
+
 # number of timesteps(days/hours/seconds) to normalize data over
 timeFrame = 85
 ThresholdLong = -0.6
