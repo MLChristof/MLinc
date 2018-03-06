@@ -47,8 +47,12 @@ class TestStrategy(bt.Strategy):
         # bt.indicators.SmoothedMovingAverage(rsi, period=10)
         # bt.indicators.ATR(self.datas[0], plot=False)
 
-    def multi_lul_indicator(self):
-        return 50
+    # def multi_lul_indicator(self):
+    #     if self.datas[0].datetime.date(0).month < 5 or self.datas[0].datetime.date(0).month > 9:
+    #         if self.datas[0].datetime.date(0).day == 1:
+    #             self.order = self.buy()
+    #
+
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -89,7 +93,7 @@ class TestStrategy(bt.Strategy):
                  (trade.pnl, trade.pnlcomm))
 
     def next(self):
-        # TODO: Close position instead of sfell
+        # TODO: Close position instead of sell
         # TODO: Enable multiple simultanious positions
         # TODO: Open long postiion every 1st of the month or next trading day
         # TODO: Detect Bear market (retrace of 25% from peak in one year
