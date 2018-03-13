@@ -30,6 +30,8 @@ class TestStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
 
+        self.month = [1, 2]
+
         # Add a MovingAverageSimple indicator
         # self.sma = bt.indicators.SimpleMovingAverage(
         #     self.datas[0], period=self.params.maperiod)
@@ -100,27 +102,43 @@ class TestStrategy(bt.Strategy):
         if self.order:
             return
 
-        # For ML
-        if self.datas[0].datetime.date(0).month == 5:
-            self.order = self.close()
-            if not self.position:
+        self.month.append(self.datas[0].datetime.date(0).month)
 
-                # Not yet ... we MIGHT BUY if ...
-                if self.sma < 35:
-                    # BUY, BUY, BUY!!! (with all possible default parameters)
-                    self.log('BUY CREATE, %.2f' % self.dataclose[0])
-
-                    # Keep track of the created order to avoid a 2nd order
-                    self.order = self.buy()
-
+        if self.month[-1] != self.month[-2]:
+            if self.month[-1] > 9 or self.month[-1] < 5:
+                self.log('BUY CREATE, %.2f' % self.dataclose[0])
+                self.order = self.buy()
+            elif self.month[-1] == 5:
+                self.order = self.close()
+            elif self.month[-1] == 9:
+                self.order = self.buy(size=8)
             else:
+                return
 
-                if self.sma > 70:
-                    # SELL, SELL, SELL!!! (with all possible default parameters)
-                    self.log('SELL CREATE, %.2f' % self.dataclose[0])
 
-                    # Keep track of the created order to avoid a 2nd order
-                    self.order = self.sell()
+
+
+        # For ML
+        # if self.datas[0].datetime.date(0).month == 5:
+        #     self.order = self.close()
+        #     if not self.position:
+        #
+        #         # Not yet ... we MIGHT BUY if ...
+        #         if self.sma < 35:
+        #             # BUY, BUY, BUY!!! (with all possible default parameters)
+        #             self.log('BUY CREATE, %.2f' % self.dataclose[0])
+        #
+        #             # Keep track of the created order to avoid a 2nd order
+        #             self.order = self.buy()
+        #
+        #     else:
+        #
+        #         if self.sma > 70:
+        #             # SELL, SELL, SELL!!! (with all possible default parameters)
+        #             self.log('SELL CREATE, %.2f' % self.dataclose[0])
+        #
+        #             # Keep track of the created order to avoid a 2nd order
+        #             self.order = self.sell()
 
         # FOR RSI
         # if self.datas[0].datetime.date(0).month < 5 or self.datas[0].datetime.date(0).month > 9:
@@ -170,13 +188,13 @@ if __name__ == '__main__':
     cerebro.adddata(data)
 
     # Set our desired cash start
-    cerebro.broker.setcash(10000.0)
+    cerebro.broker.setcash(100000.0)
 
     # Add a FixedSize sizer according to the stake
-    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=0.5)
 
     # Set the commission
-    cerebro.broker.setcommission(commission=0.001)
+    cerebro.broker.setcommission(commission=0.02)
 
     # Print out the starting conditions
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
