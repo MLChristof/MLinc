@@ -8,7 +8,6 @@ import logging
 from socketclusterclient import Socketcluster
 
 
-
 class TradeEngine(object):
 
     def __init__(self, db_name):
@@ -43,16 +42,16 @@ class TradeEngine(object):
         trade_args = database.iloc[0]
         return trade_args
 
-    def place_order(self, arguments):
-        socket = Socketcluster.socket("wss://sc-02.coinigy.com/socketcluster/")
-        socket.setBasicListener(onconnect, ondisconnect, onConnectError)
-        socket.setAuthenticationListener(onSetAuthentication, onAuthentication)
-        socket.setreconnection(False)
-        socket.connect()
-        return order_succes
+    # def place_order(self, arguments):
+    #     socket = Socketcluster.socket("wss://sc-02.coinigy.com/socketcluster/")
+    #     socket.setBasicListener(onconnect, ondisconnect, onConnectError)
+    #     socket.setAuthenticationListener(onSetAuthentication, onAuthentication)
+    #     socket.setreconnection(False)
+    #     socket.connect()
+    #     return order_succes
 
 
 if __name__ == '__main__':
     trade = TradeEngine(r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\Data\DATABASE_format_test.csv')
     arguments = trade.get_trade_arguments('chance')
-    order_succes = trade.place_order(arguments)
+    # order_succes = trade.place_order(arguments)
