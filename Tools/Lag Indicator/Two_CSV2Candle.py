@@ -65,6 +65,7 @@ while k < m:
     else: k = k + 1
 
 
+
 # Delete remaining rows
 while df1['date'].size > df2['date'].size:
     p = df1['date'].size - 1
