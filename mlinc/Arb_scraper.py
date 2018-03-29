@@ -9,8 +9,7 @@ page = requests.get('https://cryptocoincharts.info/arbitrage')
 soup = BeautifulSoup(page.text, 'html.parser')
 
 # Pull all text from the BodyText div
-trade_pair_list = soup.find_all("div", {"class": "panel-heading"})
-# price_list = soup.find_all("div", {"class" : "row"})
+trade_pair_list = soup.find_all("div", {"class": "table_title container cust_container"})
 
 pair = []
 ex1 = []
@@ -23,14 +22,10 @@ spread = []
 volume = []
 
 for row in trade_pair_list:
-    pair.append(row.find_all('b')[0].text)
-    ex1.append(row.find_all('b')[1].text)
-    ex2.append(row.find_all('b')[2].text)
-    time.append(row.find_all('b')[3].text)
-
-# for row in price_list:
-#     print(row.find_all('arbitrage-price'))
-#     # print(bid)
+    pair.append(row.find_all('span')[0].text)
+    ex1.append(row.find_all('span')[1].text)
+    ex2.append(row.find_all('span')[2].text)
+    time.append(row.find_all('span')[3].text)
 
 dataframe = pd.DataFrame(
     {'Pair': pair,
