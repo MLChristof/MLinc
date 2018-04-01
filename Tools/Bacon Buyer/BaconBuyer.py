@@ -11,13 +11,11 @@ This script goes long and short on minima and maxima of the Moving Average
 import pandas as pd
 import numpy as np
 import glob
-import scipy as sc
-import scipy.signal
+from bokeh.plotting import figure, output_file, show
 
+# INPUT
 # Set Moving Average Period
-
-Period = 200
-SGWindowLength = 501
+MAPeriod = 30
 
 # Read CSVs
 file_names = glob.glob('*.csv')
@@ -31,95 +29,114 @@ A1 = df1['date'] + " " + df1['time']
 D1 = list(set(A1))
 D1_date = pd.to_datetime(D1)
 D1_date.values.sort()
-# i = D1_date.size
 
 A1 = pd.to_datetime(A1)
 
+
+
 # create new dataframe 'df2' with DateTimes and Moving Averages
 # preallocate column with zeros
-MA = np.zeros(A1.size)
-deltaMA = np.zeros(A1.size)
+DWMA = np.zeros(A1.size)
+WMA = np.zeros(A1.size)
+HMA = np.zeros(A1.size)
+deltaWMA = np.zeros(A1.size)
+dHMA = np.zeros(A1.size)
 POS = np.zeros(A1.size)
-SmoothMA = np.zeros(A1.size)
 df2 = pd.DataFrame(A1)
 df2['close'] = df1['close']
-df2['MA'] = MA
-df2['SmoothMA'] = SmoothMA
+df2['DWMA'] = DWMA
+df2['WMA'] = WMA
+df2['HMA'] = HMA
+df2['deltaWMA'] = deltaWMA
+df2['dHMA'] = dHMA
 
-# Calculate and store Moving Average with length 'Period' (value given at top script)
+# int(round()) rounds to nearest integer
+i = int(round(0.5*MAPeriod))
+q = MAPeriod
+r = int(round(MAPeriod ** 0.5))
 
-i = Period
-k = A1.size - i + 1
+k = A1.size
 
-for p in range(k):
-        closesum = 0
-        for j in range(i):
+# loop going forward in time
+for p in range(q-1, k):
+        # print progress
+        print(A1[p])
 
-            closesum = closesum + df1.close[j+p]
+        # 'Hull Moving Average'
+        # https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/hull-moving-average
+        # https://tradingsim.com/blog/hull-ma/
+        # https://oxfordstrat.com/trading-strategies/hull-moving-average/
 
-        closeavg = closesum/i
-        print(A1[p+i-1])
+        #step (1)
+        # calc 2x Weighted Moving Average (DWMA) with period i = integer(0.5*MAPeriod)
+        sum1 = 0
+        for j in range(q-i, q):
+
+            sum1 = sum1 + (j-i+1)*df1.close[p+j-q+1]
+        # ((i**2+i)/2) with i = 5: 5+4+3+2+1 = 15
+        DWMA = 2*(sum1/((i**2+i)/2))
+        df2.at[p, 'DWMA'] = DWMA
+
+        # step (2)
+        # calc Weighted Moving Average (WMA) with period q = MAPeriod
+        # subtract WMA from DWMA
+        sum2 = 0
+        for j in range(q):
+
+            sum2 = sum2 + (j+1)*df1.close[p+j-q+1]
+        WMA = (sum2/((q**2+q)/2))
+        df2.at[p, 'WMA'] = WMA
+        deltaWMA = DWMA - WMA
         # store moving average value in df2
-        df2.at[p+i-1, 'MA'] = closeavg
-        # determine sign of delta MA
-        if df2.MA[p+i-1] - df2.MA[p+i-2] >= 0:
-            df2.at[p+i-1, 'deltaMA'] = 1
+        df2.at[p, 'deltaWMA'] = deltaWMA
+
+        # step (3)
+        # calc Weighted Moving Average (WMA) with period r = integer(sqrt(MAPeriod))
+        # from deltaWMA data to get the Hull Moving Average
+        sum3 = 0
+        for j in range(r):
+
+            sum3 = sum3 + (j+1)*df2.deltaWMA[p+j-r+1]
+        HMA = (sum3/((r**2+r)/2))
+        df2.at[p, 'HMA'] = HMA
+
+        # determine sign of delta HMA
+        if df2.HMA[p] - df2.HMA[p-1] >= 0:
+            df2.at[p, 'dHMA'] = 1
         else:
-            df2.at[p+i-1, 'deltaMA'] = -1
+            df2.at[p, 'dHMA'] = -1
 
-        #identify minimum (LONG Position)
-        if df2.deltaMA[p+i-1] > 0 \
-                and df2.deltaMA[p+i-2] > 0 \
-                and df2.deltaMA[p+i-3] > 0 \
-                and df2.deltaMA[p+i-4] > 0 \
-                and \
-                df2.deltaMA[p+i-5] < 0 \
-                and df2.deltaMA[p+i-6] < 0 \
-                and df2.deltaMA[p+i-7] < 0 \
-                and df2.deltaMA[p+i-8] < 0:
-            df2.at[p+i-1, 'POS'] = 1
-        #identify maximum (Short Position)
-        elif df2.deltaMA[p+i-1] < 0 \
-                and df2.deltaMA[p+i-2] < 0 \
-                and df2.deltaMA[p+i-3] < 0 \
-                and df2.deltaMA[p+i-4] < 0 \
-                and \
-                df2.deltaMA[p+i-5] > 0 \
-                and df2.deltaMA[p+i-6] > 0 \
-                and df2.deltaMA[p+i-7] > 0 \
-                and df2.deltaMA[p+i-8] > 0:
-            df2.at[p+i-1, 'POS'] = -1
+        # identify minimum (LONG Position)
+        if df2.dHMA[p] > 0 and df2.dHMA[p-0] > 0 and df2.dHMA[p-1] < 0 and df2.dHMA[p-1] < 0:
+            df2.at[p, 'POS'] = 1
+        # identify maximum (Short Position)
+        elif df2.dHMA[p] < 0 and df2.dHMA[p-0] < 0 and df2.dHMA[p-1] > 0 and df2.dHMA[p-1] > 0:
+            df2.at[p, 'POS'] = -1
         else:
-            df2.at[p+i-1, 'POS'] = np.NaN
+            df2.at[p, 'POS'] = np.NaN
 
 
-# apply Savitzky_Golay filter to MA (smoothing)
-df2['SmoothMA'] = np.array(df2.MA)
-df2['SmoothMA'] = sc.signal.savgol_filter(x=df2['SmoothMA'], window_length=SGWindowLength, polyorder=2)
 
-print(df2)
-
-
+#
+# with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
+#     print(df2)
 
 # Plot Lagindex and price
-from bokeh.plotting import figure, output_file, show
-from bokeh.layouts import column
+
 # crop arrays to correct size
-PlotDates = A1.iloc[i+SGWindowLength:]
-PlotClose = df2.close.iloc[i+SGWindowLength:]
-PlotMA = df2.MA.iloc[i+SGWindowLength:]
-PlotSmoothMA = df2.SmoothMA.iloc[i+SGWindowLength:]
-PlotPOS = df2.POS.iloc[i+SGWindowLength:]
+PlotDates = A1.iloc[q+r:]
+PlotClose = df2.close.iloc[q+r:]
+PlotHMA = df2.HMA.iloc[q+r:]
+PlotPOS = df2.POS.iloc[q+r:]
 
 output_file("MovingAverage.html")
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
-Title = 'Bacon Buyer Moving Average; Period = ' + str(Period)
+Title = 'Bacon Buyer Hull Moving Average; Period = ' + str(MAPeriod) + '; ' + str(name1)
 # plot 1 - Close Prices & Moving Average
 p1 = figure(plot_width=1050, plot_height=600, x_axis_type='datetime',
             tools=TOOLS, title=Title)
 p1.line(PlotDates, PlotClose, line_width=0.8, color='firebrick')
-p1.line(PlotDates, PlotMA, line_width=2, color='navy')
-p1.line(PlotDates, PlotSmoothMA, line_width=2, color='green')
+p1.line(PlotDates, PlotHMA, line_width=2, color='navy')
 
 
 
