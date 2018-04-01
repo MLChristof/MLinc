@@ -5,7 +5,7 @@ Created on Th Oct 29 13:33:12 2017
 
 @author: rweegenaar
 
-This script goes long and short on minima and maxima of the Moving Average
+This script goes long and short on minima and maxima of the Hull Moving Average
 """
 
 import pandas as pd
@@ -48,6 +48,7 @@ df2['HMA'] = HMA
 df2['deltaWMA'] = deltaWMA
 df2['dHMA'] = dHMA
 
+# Periods for Hull Moving Average
 # int(round()) rounds to nearest integer
 i = int(round(0.5*MAPeriod))
 q = MAPeriod
