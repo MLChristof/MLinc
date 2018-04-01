@@ -15,7 +15,7 @@ from bokeh.plotting import figure, output_file, show
 
 # INPUT
 # Set Moving Average Period
-MAPeriod = 30
+MAPeriod = 150
 
 # Read CSVs
 file_names = glob.glob('*.csv')
@@ -32,10 +32,8 @@ D1_date.values.sort()
 
 A1 = pd.to_datetime(A1)
 
-
-
 # create new dataframe 'df2' with DateTimes and Moving Averages
-# preallocate column with zeros
+# preallocate columns with zeros
 DWMA = np.zeros(A1.size)
 WMA = np.zeros(A1.size)
 HMA = np.zeros(A1.size)
@@ -67,7 +65,7 @@ for p in range(q-1, k):
         # https://tradingsim.com/blog/hull-ma/
         # https://oxfordstrat.com/trading-strategies/hull-moving-average/
 
-        #step (1)
+        # step (1)
         # calc 2x Weighted Moving Average (DWMA) with period i = integer(0.5*MAPeriod)
         sum1 = 0
         for j in range(q-i, q):
@@ -107,21 +105,31 @@ for p in range(q-1, k):
             df2.at[p, 'dHMA'] = -1
 
         # identify minimum (LONG Position)
-        if df2.dHMA[p] > 0 and df2.dHMA[p-0] > 0 and df2.dHMA[p-1] < 0 and df2.dHMA[p-1] < 0:
+        if df2.dHMA[p] > 0 \
+                and df2.dHMA[p - 1] < 0 \
+                and df2.dHMA[p - 2] < 0 \
+                and df2.dHMA[p - 3] < 0 \
+                and df2.dHMA[p - 4] < 0 \
+                and df2.dHMA[p - 5] < 0 \
+                and df2.dHMA[p - 6] < 0:
             df2.at[p, 'POS'] = 1
         # identify maximum (Short Position)
-        elif df2.dHMA[p] < 0 and df2.dHMA[p-0] < 0 and df2.dHMA[p-1] > 0 and df2.dHMA[p-1] > 0:
+        elif df2.dHMA[p] < 0 \
+                and df2.dHMA[p - 1] > 0 \
+                and df2.dHMA[p - 2] > 0 \
+                and df2.dHMA[p - 3] > 0 \
+                and df2.dHMA[p - 4] > 0 \
+                and df2.dHMA[p - 5] > 0 \
+                and df2.dHMA[p - 6] > 0:
             df2.at[p, 'POS'] = -1
         else:
             df2.at[p, 'POS'] = np.NaN
-
-
 
 #
 # with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
 #     print(df2)
 
-# Plot Lagindex and price
+# Plot HMA and price
 
 # crop arrays to correct size
 PlotDates = A1.iloc[q+r:]
@@ -132,13 +140,11 @@ PlotPOS = df2.POS.iloc[q+r:]
 output_file("MovingAverage.html")
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
 Title = 'Bacon Buyer Hull Moving Average; Period = ' + str(MAPeriod) + '; ' + str(name1)
-# plot 1 - Close Prices & Moving Average
+# plot 1 - Close Prices & Hull Moving Average
 p1 = figure(plot_width=1050, plot_height=600, x_axis_type='datetime',
             tools=TOOLS, title=Title)
 p1.line(PlotDates, PlotClose, line_width=0.8, color='firebrick')
 p1.line(PlotDates, PlotHMA, line_width=2, color='navy')
-
-
 
 # plot positions
 # redefine Position for graphics
