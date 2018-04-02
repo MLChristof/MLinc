@@ -48,6 +48,8 @@ POS = np.zeros(A1.size)
 POSnr = np.zeros(A1.size)
 SL = np.zeros(A1.size)
 TP = np.zeros(A1.size)
+WIN = np.zeros(A1.size)
+LOSS = np.zeros(A1.size)
 POScnt = 0
 
 df2['close'] = df1['close']
@@ -61,6 +63,8 @@ df2['dHMA'] = dHMA
 df2['POSnr'] = POSnr
 df2['SL'] = SL
 df2['TP'] = TP
+df2['WIN'] = WIN
+df2['LOSS'] = LOSS
 
 # Periods for Hull Moving Average
 # int(round()) rounds to nearest integer
@@ -131,7 +135,7 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 6] < 0:
             # flag long position [1]
             df2.at[p, 'POS'] = 1
-            # count position
+            # count  opened position
             POScnt = POScnt + 1
             df2.at[p, 'POSnr'] = POScnt
             # create column in df2 for new position
@@ -156,7 +160,7 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 6] > 0:
             # flag short position [-1]
             df2.at[p, 'POS'] = -1
-            # count position
+            # count opened position
             POScnt = POScnt + 1
             df2.at[p, 'POSnr'] = POScnt
             # create column in df2 for new position
@@ -176,10 +180,42 @@ for p in range(q-1, k):
             df2.at[p, 'SL'] = np.NaN
             df2.at[p, 'TP'] = np.NaN
 
-        # Keep track of Wins / Losses
+        # # Account Wins / Losses
+        # # TODO Positions can now be won or lost more than once. Somehow close position
+        # for j in range(int(POScnt)):
+        #     # Short Positions
+        #     # get row index of position j+1
+        #     idx_j = df2.loc[df2['POSnr'] == (j+1)].index[0]
+        #     if df2.POS[idx_j] < 0 and df2.low[p] <= df2.TP[idx_j]:
+        #         # short position won
+        #         POSX = 'POS' + str(j+1)
+        #         df2.at[p, POSX] = 1
+        #         if df2[POSX][p] == 1 and df2.POS1[p-1] < 1:
+        #             df2.at[p, 'WIN'] = df2.at[p, 'WIN'] + 1
+        #             # mark POSX as closed and continue to next j in for loop
+        #             continue
+        #     elif df2.POS[idx_j] < 0 and df2.high[p] >= df2.SL[idx_j]:
+        #         # short position lost
+        #         df2.at[p, POSX] = -1
+        #         if df2[POSX][p] == -1 and df2.POS1[p-1] > -1:
+        #             df2.at[p, 'LOSS'] = df2.at[p, 'LOSS'] - 1
+        #
+        #     # Long Positions
+        #     if df2.POS[idx_j] > 0 and df2.high[p] >= df2.TP[idx_j]:
+        #         # long position won
+        #         POSX = 'POS' + str(j+1)
+        #         df2.at[p, POSX] = 1
+        #         if df2[POSX][p] == 1 and df2.POS1[p-1] < 1:
+        #             df2.at[p, 'WIN'] = df2.at[p, 'WIN'] + 1
+        #             continue
+        #     elif df2.POS[idx_j] > 0 and df2.low[p] <= df2.SL[idx_j]:
+        #         # long position lost
+        #         df2.at[p, POSX] = -1
+        #         if df2[POSX][p] == -1 and df2.POS1[p-1] > -1:
+        #             df2.at[p, 'LOSS'] = df2.at[p, 'LOSS'] - 1
 
 # print Dataframe
-with pd.option_context('display.max_rows', None, 'display.max_columns', 15):
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print(df2)
 
 # Plot closing prices, HMA, positions with SL and TP
