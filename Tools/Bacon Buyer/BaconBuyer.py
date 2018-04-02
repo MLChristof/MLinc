@@ -45,8 +45,10 @@ HMA = np.zeros(A1.size)
 deltaWMA = np.zeros(A1.size)
 dHMA = np.zeros(A1.size)
 POS = np.zeros(A1.size)
+POSnr = np.zeros(A1.size)
 SL = np.zeros(A1.size)
 TP = np.zeros(A1.size)
+POScnt = 0
 
 df2['close'] = df1['close']
 df2['low'] = df1['low']
@@ -56,6 +58,7 @@ df2['WMA'] = WMA
 df2['HMA'] = HMA
 df2['deltaWMA'] = deltaWMA
 df2['dHMA'] = dHMA
+df2['POSnr'] = POSnr
 df2['SL'] = SL
 df2['TP'] = TP
 
@@ -66,6 +69,7 @@ q = MAPeriod
 r = int(round(MAPeriod ** 0.5))
 
 k = A1.size
+
 
 # loop going forward in time
 for p in range(q-1, k):
@@ -83,7 +87,7 @@ for p in range(q-1, k):
         for j in range(q-i, q):
 
             sum1 = sum1 + (j-i+1)*df1.close[p+j-q+1]
-        # ((i**2+i)/2) with i = 5: 5+4+3+2+1 = 15
+        # Calc weighting sum with: ((i**2+i)/2) with i = 5: 5+4+3+2+1 = 15
         DWMA = 2*(sum1/((i**2+i)/2))
         df2.at[p, 'DWMA'] = DWMA
 
@@ -110,14 +114,14 @@ for p in range(q-1, k):
         HMA = (sum3/((r**2+r)/2))
         df2.at[p, 'HMA'] = HMA
 
-        # determine sign of delta HMA
+        # determine sign of delta HMA (pos or neg slope HMA)
         if df2.HMA[p] - df2.HMA[p-1] >= 0:
             df2.at[p, 'dHMA'] = 1
         else:
             df2.at[p, 'dHMA'] = -1
 
         # Place position (1 is Long, -1 is short)
-        # identify minimum (LONG Position)
+        #  LONG Position: identify minimum on Hull Moving Average
         if df2.dHMA[p] > 0 \
                 and df2.dHMA[p - 1] < 0 \
                 and df2.dHMA[p - 2] < 0 \
@@ -125,7 +129,15 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 4] < 0 \
                 and df2.dHMA[p - 5] < 0 \
                 and df2.dHMA[p - 6] < 0:
+            # flag long position [1]
             df2.at[p, 'POS'] = 1
+            # count position
+            POScnt = POScnt + 1
+            df2.at[p, 'POSnr'] = POScnt
+            # create column in df2 for new position
+            column_name = 'POS' + str(POScnt)
+            POScol = np.zeros(A1.size)
+            df2[column_name] = POScol
             # determine Stop Loss Price
             if df2.close[p] - df2.HMA[p] > MinSL:
                 df2.at[p, 'SL'] = df2.HMA[p]
@@ -134,8 +146,7 @@ for p in range(q-1, k):
             # determine Take Profit Price
             df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.SL[p]) + df2.close[p]
 
-
-        # identify maximum (Short Position)
+        # Short Position: identify maximum on Hull Moving Average
         elif df2.dHMA[p] < 0 \
                 and df2.dHMA[p - 1] > 0 \
                 and df2.dHMA[p - 2] > 0 \
@@ -143,7 +154,15 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 4] > 0 \
                 and df2.dHMA[p - 5] > 0 \
                 and df2.dHMA[p - 6] > 0:
+            # flag short position [-1]
             df2.at[p, 'POS'] = -1
+            # count position
+            POScnt = POScnt + 1
+            df2.at[p, 'POSnr'] = POScnt
+            # create column in df2 for new position
+            column_name = 'POS' + str(POScnt)
+            POScol = np.zeros(A1.size)
+            df2[column_name] = POScol
             # determine Stop Loss Price
             if df2.HMA[p] - df2.close[p] > MinSL:
                 df2.at[p, 'SL'] = df2.HMA[p]
@@ -153,15 +172,17 @@ for p in range(q-1, k):
             df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.SL[p]) + df2.close[p]
         else:
             df2.at[p, 'POS'] = np.NaN
+            df2.at[p, 'POSnr'] = np.NaN
             df2.at[p, 'SL'] = np.NaN
             df2.at[p, 'TP'] = np.NaN
 
+        # Keep track of Wins / Losses
+
 # print Dataframe
-with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
+with pd.option_context('display.max_rows', None, 'display.max_columns', 15):
     print(df2)
 
-# Plot HMA and price
-
+# Plot closing prices, HMA, positions with SL and TP
 # crop arrays to correct size
 PlotDates = A1.iloc[q+r:]
 PlotClose = df2.close.iloc[q+r:]
@@ -176,7 +197,7 @@ output_file("MovingAverage.html")
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
 Title = 'Bacon Buyer Hull Moving Average; Period = ' + str(MAPeriod) + '; ' + str(name1)
 # plot 1 - Close Prices & Hull Moving Average
-p1 = figure(plot_width=1050, plot_height=600, x_axis_type='datetime',
+p1 = figure(plot_width=1400, plot_height=800, x_axis_type='datetime',
             tools=TOOLS, title=Title)
 p1.line(PlotDates, PlotClose, line_width=0.8, color='firebrick')
 p1.line(PlotDates, PlotLow, line_width=0.4, color='grey')
