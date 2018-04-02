@@ -49,6 +49,8 @@ SL = np.zeros(A1.size)
 TP = np.zeros(A1.size)
 
 df2['close'] = df1['close']
+df2['low'] = df1['low']
+df2['high'] = df1['high']
 df2['DWMA'] = DWMA
 df2['WMA'] = WMA
 df2['HMA'] = HMA
@@ -114,9 +116,8 @@ for p in range(q-1, k):
         else:
             df2.at[p, 'dHMA'] = -1
 
-        # identify minimum (LONG Position)
         # Place position (1 is Long, -1 is short)
-        # Place SL and TP
+        # identify minimum (LONG Position)
         if df2.dHMA[p] > 0 \
                 and df2.dHMA[p - 1] < 0 \
                 and df2.dHMA[p - 2] < 0 \
@@ -125,8 +126,15 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 5] < 0 \
                 and df2.dHMA[p - 6] < 0:
             df2.at[p, 'POS'] = 1
-            df2.at[p, 'SL'] = df2.HMA[p]
-            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.HMA[p]) + df2.close[p]
+            # determine Stop Loss Price
+            if df2.close[p] - df2.HMA[p] > MinSL:
+                df2.at[p, 'SL'] = df2.HMA[p]
+            else:
+                df2.at[p, 'SL'] = df2.close[p]-MinSL
+            # determine Take Profit Price
+            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.SL[p]) + df2.close[p]
+
+
         # identify maximum (Short Position)
         elif df2.dHMA[p] < 0 \
                 and df2.dHMA[p - 1] > 0 \
@@ -136,8 +144,13 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 5] > 0 \
                 and df2.dHMA[p - 6] > 0:
             df2.at[p, 'POS'] = -1
-            df2.at[p, 'SL'] = df2.HMA[p]
-            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.HMA[p]) + df2.close[p]
+            # determine Stop Loss Price
+            if df2.HMA[p] - df2.close[p] > MinSL:
+                df2.at[p, 'SL'] = df2.HMA[p]
+            else:
+                df2.at[p, 'SL'] = df2.close[p] + MinSL
+            # determine Take Profit Price
+            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.SL[p]) + df2.close[p]
         else:
             df2.at[p, 'POS'] = np.NaN
             df2.at[p, 'SL'] = np.NaN
@@ -152,6 +165,8 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
 # crop arrays to correct size
 PlotDates = A1.iloc[q+r:]
 PlotClose = df2.close.iloc[q+r:]
+PlotHigh = df2.high.iloc[q+r:]
+PlotLow = df2.low.iloc[q+r:]
 PlotHMA = df2.HMA.iloc[q+r:]
 PlotPOS = df2.POS.iloc[q+r:]
 PlotSL = df2.SL.iloc[q+r:]
@@ -164,6 +179,8 @@ Title = 'Bacon Buyer Hull Moving Average; Period = ' + str(MAPeriod) + '; ' + st
 p1 = figure(plot_width=1050, plot_height=600, x_axis_type='datetime',
             tools=TOOLS, title=Title)
 p1.line(PlotDates, PlotClose, line_width=0.8, color='firebrick')
+p1.line(PlotDates, PlotLow, line_width=0.4, color='grey')
+p1.line(PlotDates, PlotHigh, line_width=0.4, color='grey')
 p1.line(PlotDates, PlotHMA, line_width=2, color='navy')
 
 # plot positions
