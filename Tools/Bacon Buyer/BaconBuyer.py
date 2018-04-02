@@ -16,6 +16,10 @@ from bokeh.plotting import figure, output_file, show
 # INPUT
 # Set Moving Average Period
 MAPeriod = 150
+# Set Minimum Stop Loss (at least larger than spread)
+MinSL = 0.002
+# Risk Reward Ratio
+RRR = 1
 
 # Read CSVs
 file_names = glob.glob('*.csv')
@@ -34,19 +38,24 @@ A1 = pd.to_datetime(A1)
 
 # create new dataframe 'df2' with DateTimes and Moving Averages
 # preallocate columns with zeros
+df2 = pd.DataFrame(A1)
 DWMA = np.zeros(A1.size)
 WMA = np.zeros(A1.size)
 HMA = np.zeros(A1.size)
 deltaWMA = np.zeros(A1.size)
 dHMA = np.zeros(A1.size)
 POS = np.zeros(A1.size)
-df2 = pd.DataFrame(A1)
+SL = np.zeros(A1.size)
+TP = np.zeros(A1.size)
+
 df2['close'] = df1['close']
 df2['DWMA'] = DWMA
 df2['WMA'] = WMA
 df2['HMA'] = HMA
 df2['deltaWMA'] = deltaWMA
 df2['dHMA'] = dHMA
+df2['SL'] = SL
+df2['TP'] = TP
 
 # Periods for Hull Moving Average
 # int(round()) rounds to nearest integer
@@ -106,6 +115,8 @@ for p in range(q-1, k):
             df2.at[p, 'dHMA'] = -1
 
         # identify minimum (LONG Position)
+        # Place position (1 is Long, -1 is short)
+        # Place SL and TP
         if df2.dHMA[p] > 0 \
                 and df2.dHMA[p - 1] < 0 \
                 and df2.dHMA[p - 2] < 0 \
@@ -114,6 +125,8 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 5] < 0 \
                 and df2.dHMA[p - 6] < 0:
             df2.at[p, 'POS'] = 1
+            df2.at[p, 'SL'] = df2.HMA[p]
+            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.HMA[p]) + df2.close[p]
         # identify maximum (Short Position)
         elif df2.dHMA[p] < 0 \
                 and df2.dHMA[p - 1] > 0 \
@@ -123,12 +136,16 @@ for p in range(q-1, k):
                 and df2.dHMA[p - 5] > 0 \
                 and df2.dHMA[p - 6] > 0:
             df2.at[p, 'POS'] = -1
+            df2.at[p, 'SL'] = df2.HMA[p]
+            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.HMA[p]) + df2.close[p]
         else:
             df2.at[p, 'POS'] = np.NaN
+            df2.at[p, 'SL'] = np.NaN
+            df2.at[p, 'TP'] = np.NaN
 
-#
-# with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
-#     print(df2)
+# print Dataframe
+with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
+    print(df2)
 
 # Plot HMA and price
 
@@ -137,6 +154,8 @@ PlotDates = A1.iloc[q+r:]
 PlotClose = df2.close.iloc[q+r:]
 PlotHMA = df2.HMA.iloc[q+r:]
 PlotPOS = df2.POS.iloc[q+r:]
+PlotSL = df2.SL.iloc[q+r:]
+PlotTP = df2.TP.iloc[q+r:]
 
 output_file("MovingAverage.html")
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
@@ -158,10 +177,17 @@ PositionPlotShort = np.clip(PlotPOS, -1, 0)
 PositionPlotShort[PositionPlotShort == 0] = np.nan
 PositionPlotShort = -PositionPlotShort*PlotClose
 
+# Take Positions
 p1.triangle(PlotDates, PositionPlotLong, size=15,
               line_color="black", fill_color="lime", alpha=0.8)
 p1.inverted_triangle(PlotDates, PositionPlotShort, size=15,
               line_color="black", fill_color="red", alpha=0.7)
+
+# SLs and TPs
+p1.circle(PlotDates, PlotSL, size=10,
+              line_color="red", fill_color="red", fill_alpha=0.2)
+p1.circle(PlotDates, PlotTP, size=10,
+              line_color="green", fill_color="green", fill_alpha=0.2)
 
 show(p1)
 
