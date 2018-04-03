@@ -188,7 +188,7 @@ for p in range(q-1, k):
             df2.at[p, 'TP'] = np.NaN
 
         # Account Wins / Losses
-        # TODO Positions can now be won or lost more than once. Somehow close position
+        # TODO Positions can now be won or lost and positions are closed afterwards. Cannot close when 2 are open
         for j in range(int(POScnt)):
             # Short Positions
             # get row index of position j+1
