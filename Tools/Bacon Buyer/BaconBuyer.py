@@ -25,7 +25,7 @@ RRR = 1
 file_names = glob.glob('*.csv')
 name1 = file_names[0]
 
-# dataframe1
+# DataFrame1
 df1 = pd.read_csv(name1, header=None, names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
 
 A1 = df1['date'] + " " + df1['time']
@@ -73,6 +73,7 @@ q = MAPeriod
 r = int(round(MAPeriod ** 0.5))
 
 k = A1.size
+OpenPosList = {'POScnt': 'Status'}
 
 
 # loop going forward in time
@@ -136,8 +137,11 @@ for p in range(q-1, k):
             # flag long position [1]
             df2.at[p, 'POS'] = 1
             # count  opened position
-            POScnt = POScnt + 1
+            POScnt += 1
             df2.at[p, 'POSnr'] = POScnt
+            # mark position as open in OpenPosList Dictionary
+            OpenPosList[POScnt] = 'open'
+            print(OpenPosList)
             # create column in df2 for new position
             column_name = 'POS' + str(POScnt)
             POScol = np.zeros(A1.size)
@@ -161,8 +165,11 @@ for p in range(q-1, k):
             # flag short position [-1]
             df2.at[p, 'POS'] = -1
             # count opened position
-            POScnt = POScnt + 1
+            POScnt += 1
             df2.at[p, 'POSnr'] = POScnt
+            # mark position as open in OpenPosList Dictionary
+            OpenPosList[POScnt] = 'open'
+            print(OpenPosList)
             # create column in df2 for new position
             column_name = 'POS' + str(POScnt)
             POScol = np.zeros(A1.size)
@@ -180,43 +187,64 @@ for p in range(q-1, k):
             df2.at[p, 'SL'] = np.NaN
             df2.at[p, 'TP'] = np.NaN
 
-        # # Account Wins / Losses
-        # # TODO Positions can now be won or lost more than once. Somehow close position
-        # for j in range(int(POScnt)):
-        #     # Short Positions
-        #     # get row index of position j+1
-        #     idx_j = df2.loc[df2['POSnr'] == (j+1)].index[0]
-        #     if df2.POS[idx_j] < 0 and df2.low[p] <= df2.TP[idx_j]:
-        #         # short position won
-        #         POSX = 'POS' + str(j+1)
-        #         df2.at[p, POSX] = 1
-        #         if df2[POSX][p] == 1 and df2.POS1[p-1] < 1:
-        #             df2.at[p, 'WIN'] = df2.at[p, 'WIN'] + 1
-        #             # mark POSX as closed and continue to next j in for loop
-        #             continue
-        #     elif df2.POS[idx_j] < 0 and df2.high[p] >= df2.SL[idx_j]:
-        #         # short position lost
-        #         df2.at[p, POSX] = -1
-        #         if df2[POSX][p] == -1 and df2.POS1[p-1] > -1:
-        #             df2.at[p, 'LOSS'] = df2.at[p, 'LOSS'] - 1
-        #
-        #     # Long Positions
-        #     if df2.POS[idx_j] > 0 and df2.high[p] >= df2.TP[idx_j]:
-        #         # long position won
-        #         POSX = 'POS' + str(j+1)
-        #         df2.at[p, POSX] = 1
-        #         if df2[POSX][p] == 1 and df2.POS1[p-1] < 1:
-        #             df2.at[p, 'WIN'] = df2.at[p, 'WIN'] + 1
-        #             continue
-        #     elif df2.POS[idx_j] > 0 and df2.low[p] <= df2.SL[idx_j]:
-        #         # long position lost
-        #         df2.at[p, POSX] = -1
-        #         if df2[POSX][p] == -1 and df2.POS1[p-1] > -1:
-        #             df2.at[p, 'LOSS'] = df2.at[p, 'LOSS'] - 1
+        # Account Wins / Losses
+        # TODO Positions can now be won or lost more than once. Somehow close position
+        for j in range(int(POScnt)):
+            # Short Positions
+            # get row index of position j+1
+            idx_j = df2.loc[df2['POSnr'] == (j+1)].index[0]
+            if df2.POS[idx_j] < 0 and df2.low[p] <= df2.TP[idx_j]:
+                # short position won
+                POSX = 'POS' + str(j+1)
+                df2.at[p, POSX] = 1
+                if df2[POSX][p] == 1 and df2[POSX][p-1] < 1 and OpenPosList.get(j+1) == 'open':
+                    df2.at[p, 'WIN'] += 1
+                    # mark POSX as closed in library OpenPosList and continue to next j in for loop
+                    OpenPosList[POScnt] = 'closed'
+                    print(OpenPosList)
+                    continue
+
+            elif df2.POS[idx_j] < 0 and df2.high[p] >= df2.SL[idx_j]:
+                # short position lost
+                POSX = 'POS' + str(j + 1)
+                df2.at[p, POSX] = -1
+                if df2[POSX][p] == -1 and df2[POSX][p-1] > -1 and OpenPosList.get(j+1) == 'open':
+                    df2.at[p, 'LOSS'] += - 1
+                    OpenPosList[POScnt] = 'closed'
+                    print(OpenPosList)
+                    continue
+
+            # Long Positions
+            if df2.POS[idx_j] > 0 and df2.high[p] >= df2.TP[idx_j]:
+                # long position won
+                POSX = 'POS' + str(j+1)
+                df2.at[p, POSX] = 1
+                if df2[POSX][p] == 1 and df2[POSX][p-1] < 1 and OpenPosList.get(j+1) == 'open':
+                    df2.at[p, 'WIN'] += 1
+                    OpenPosList[POScnt] = 'closed'
+                    print(OpenPosList)
+                    continue
+
+            elif df2.POS[idx_j] > 0 and df2.low[p] <= df2.SL[idx_j]:
+                # long position lost
+                POSX = 'POS' + str(j + 1)
+                df2.at[p, POSX] = -1
+                if df2[POSX][p] == -1 and df2[POSX][p-1] > -1 and OpenPosList.get(j+1) == 'open':
+                    df2.at[p, 'LOSS'] += - 1
+                    OpenPosList[POScnt] = 'closed'
+                    print(OpenPosList)
+                    continue
 
 # print Dataframe
 with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     print(df2)
+
+# print nr of wins and losses
+# wins = df2.loc[:'WIN'].values.sum()
+wins = df2['WIN'].values.sum()
+print(wins)
+losses = df2['LOSS'].values.sum()
+print(losses)
 
 # Plot closing prices, HMA, positions with SL and TP
 # crop arrays to correct size
