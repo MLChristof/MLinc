@@ -8,6 +8,9 @@ Created on Th Oct 29 13:33:12 2017
 This script goes long and short on minima and maxima of the Hull Moving Average
 """
 
+# TODO script gets slower when more positions are opened.
+# TODO delete dataframe columns after position is closed?
+
 import pandas as pd
 import numpy as np
 import glob
@@ -188,7 +191,6 @@ for p in range(q-1, k):
             df2.at[p, 'TP'] = np.NaN
 
         # Account Wins / Losses
-        # TODO Positions can now be won or lost and positions are closed afterwards. Cannot close when 2 are open
         for j in range(int(POScnt)):
             # Short Positions
             # get row index of position j+1
@@ -200,7 +202,7 @@ for p in range(q-1, k):
                 if df2[POSX][p] == 1 and df2[POSX][p-1] < 1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'WIN'] += 1
                     # mark POSX as closed in library OpenPosList and continue to next j in for loop
-                    OpenPosList[POScnt] = 'closed'
+                    OpenPosList[j+1] = 'closed'
                     print(OpenPosList)
                     continue
 
@@ -210,7 +212,7 @@ for p in range(q-1, k):
                 df2.at[p, POSX] = -1
                 if df2[POSX][p] == -1 and df2[POSX][p-1] > -1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'LOSS'] += - 1
-                    OpenPosList[POScnt] = 'closed'
+                    OpenPosList[j+1] = 'closed'
                     print(OpenPosList)
                     continue
 
@@ -221,7 +223,7 @@ for p in range(q-1, k):
                 df2.at[p, POSX] = 1
                 if df2[POSX][p] == 1 and df2[POSX][p-1] < 1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'WIN'] += 1
-                    OpenPosList[POScnt] = 'closed'
+                    OpenPosList[j+1] = 'closed'
                     print(OpenPosList)
                     continue
 
@@ -231,7 +233,7 @@ for p in range(q-1, k):
                 df2.at[p, POSX] = -1
                 if df2[POSX][p] == -1 and df2[POSX][p-1] > -1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'LOSS'] += - 1
-                    OpenPosList[POScnt] = 'closed'
+                    OpenPosList[j+1] = 'closed'
                     print(OpenPosList)
                     continue
 
