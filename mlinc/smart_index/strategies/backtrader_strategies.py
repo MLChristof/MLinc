@@ -7,6 +7,7 @@ import sys  # To find out the script name (in argv[0])
 
 # Import the backtrader platform
 import backtrader as bt
+import numpy as n
 
 
 # Create a Stratey
@@ -173,14 +174,14 @@ class BenchMarkStrategy(bt.Strategy):
 
 class BaconBuyerStrategy(bt.Strategy):
     params = (
-        ('maperiod', 15),
+        ('maperiod', 14),
     )
 
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
-        print('%s' % (dt.isoformat()))
+        # print('%s, %s' % (dt.isoformat(), txt))
+        # print('%s' % (dt.isoformat()))
 
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
@@ -191,7 +192,8 @@ class BaconBuyerStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
 
-        self.month = [1, 2]
+        self.indicator = bt.indicators.HullMovingAverage(self.datas[0], period=self.params.maperiod)
+        self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -239,13 +241,24 @@ class BaconBuyerStrategy(bt.Strategy):
         if self.order:
             return
 
-        self.month.append(self.datas[0].datetime.date(0).month)
+        hma_data = n.array((self.indicator.lines.hma[-5],
+                            self.indicator.lines.hma[-4],
+                            self.indicator.lines.hma[-3],
+                            self.indicator.lines.hma[-2],
+                            self.indicator.lines.hma[-1],
+                            self.indicator.lines.hma[0]))
 
-        if self.month[-1] != self.month[-2]:
-            self.log('BUY CREATE, %.2f' % self.dataclose[0])
-            self.order = self.buy()
-        else:
-            return
+        hma_diff = n.diff(hma_data)
+
+        print(hma_diff)
+
+        # self.month.append(self.datas[0].datetime.date(0).month)
+        #
+        # if self.month[-1] != self.month[-2]:
+        #     self.log('BUY CREATE, %.2f' % self.dataclose[0])
+        #     self.order = self.buy()
+        # else:
+        #     return
 
 
 if __name__ == '__main__':
@@ -254,7 +267,7 @@ if __name__ == '__main__':
     # cerebro.addanalyzer(bt.analyzers.TimeReturn, timeframe=bt.TimeFrame.Years)
 
     # Add a strategy
-    cerebro.addstrategy(TestStrategy)
+    cerebro.addstrategy(BaconBuyerStrategy)
     # cerebro.addstrategy(BenchMarkStrategy)
 
     # Datas are in a subfolder of the samples. Need to find where the script is
