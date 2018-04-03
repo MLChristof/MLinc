@@ -1,0 +1,2 @@
+from mlinc.smart_index.strategies.backtrader_strategies import BenchMarkStrategy
+
