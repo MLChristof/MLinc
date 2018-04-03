@@ -16,8 +16,8 @@ import pandas as pd
 
 # number of timesteps(days/hours/seconds) to normalize data over
 timeFrame = 85
-ThresholdLong = -0.6
-ThresholdShort = 0.65
+ThresholdLong = -0.7
+ThresholdShort = 0.95
 
 timeFrameStr = str(timeFrame)+' days'
 timeFrameDelta = pd.Timedelta(timeFrameStr)
