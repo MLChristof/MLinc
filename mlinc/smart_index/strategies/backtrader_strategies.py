@@ -175,6 +175,7 @@ class BenchMarkStrategy(bt.Strategy):
 class BaconBuyerStrategy(bt.Strategy):
     params = (
         ('maperiod', 14),
+        ('RRR', 1),
     )
 
     def log(self, txt, dt=None):
@@ -193,7 +194,7 @@ class BaconBuyerStrategy(bt.Strategy):
         self.buycomm = None
 
         self.indicator = bt.indicators.HullMovingAverage(self.datas[0], period=self.params.maperiod)
-        self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
+        # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -241,7 +242,8 @@ class BaconBuyerStrategy(bt.Strategy):
         if self.order:
             return
 
-        hma_data = n.array((self.indicator.lines.hma[-5],
+        hma_data = n.array((self.indicator.lines.hma[-6],
+                            self.indicator.lines.hma[-5],
                             self.indicator.lines.hma[-4],
                             self.indicator.lines.hma[-3],
                             self.indicator.lines.hma[-2],
@@ -249,8 +251,16 @@ class BaconBuyerStrategy(bt.Strategy):
                             self.indicator.lines.hma[0]))
 
         hma_diff = n.diff(hma_data)
+        # Open Long Position
+        if hma_diff[5] - hma_diff[4] > 0 \
+            and hma_diff[4] - hma_diff[3] < 0 \
+            and hma_diff[3] - hma_diff[2] < 0 \
+            and hma_diff[2] - hma_diff[1] < 0 \
+            and hma_diff[1] - hma_diff[0] < 0:
 
-        print(hma_diff)
+            self.log('BUY CREATE, %.2f' % self.dataclose[0])
+            self.order = self.buy(exectype=bt.Order.StopTrail, trailamount=0.25)
+
 
         # self.month.append(self.datas[0].datetime.date(0).month)
         #
