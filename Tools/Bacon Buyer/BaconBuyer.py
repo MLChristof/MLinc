@@ -25,7 +25,7 @@ RRR = 1
 file_names = glob.glob('*.csv')
 name1 = file_names[0]
 
-# dataframe1
+# DataFrame1
 df1 = pd.read_csv(name1, header=None, names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
 
 A1 = df1['date'] + " " + df1['time']
