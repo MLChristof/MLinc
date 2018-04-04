@@ -15,11 +15,11 @@ import pandas as pd
 
 
 # number of timesteps(days/hours/seconds) to normalize data over
-timeFrame = 85
+timeFrame = 200
 ThresholdLong = -0.6
-ThresholdShort = 0.65
+ThresholdShort = 0.8
 
-timeFrameStr = str(timeFrame)+' days'
+timeFrameStr = str(timeFrame)+' hours'
 timeFrameDelta = pd.Timedelta(timeFrameStr)
 
 # i is amount of days to backtest from end date (backwards in time)
@@ -35,7 +35,7 @@ StartDate = pd.to_datetime(StartDate)
 EndDate = pd.DataFrame.max(LoadTwoCSV.df1['DateTime'])
 EndDate = pd.to_datetime(EndDate)
 
-StartTimeFrame = EndDate - timeFrameDelta - pd.Timedelta('1 days')
+StartTimeFrame = EndDate - timeFrameDelta - pd.Timedelta('1 hours')
 print('Indicator up-to-date until:')
 print(EndDate)    
 
@@ -60,6 +60,7 @@ for j in range(i):
         SlidingEnd_row = LoadTwoCSV.D12_date.get_loc(SlidingEnd)
         SlidingEnd_count = SlidingEnd_row - j
         closest_time_end = LoadTwoCSV.D12[SlidingEnd_count]
+        print(closest_time_end)
         
     # Dates for plot (end date of backward sliding data frame is start date plot)
         if j==(i-1):
