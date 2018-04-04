@@ -8,8 +8,10 @@ Created on Th Oct 29 13:33:12 2017
 This script goes long and short on minima and maxima of the Hull Moving Average
 """
 
-# TODO Make position entry condition on minimum slope of HWA on most recent day
+# TODO Add Spread!
+# TODO Make position entry condition on minimum slope steepness of HWA on most recent day
 # TODO Trailing Stop Loss
+# TODO Delete columns in df2 if Position is closed to limit df size. should speed up script with more positions
 
 import pandas as pd
 import numpy as np
@@ -19,10 +21,15 @@ from bokeh.plotting import figure, output_file, show
 # INPUT
 # Set Moving Average Period
 MAPeriod = 150
-# Set Minimum Stop Loss (at least larger than spread)
-MinSL = 0.002
 # Risk Reward Ratio
-RRR = 0.3
+RRR = 0.1
+# Set Minimum Stop Loss in pips (at least larger than spread)
+MinSL = 100
+if RRR < 1:
+    MinSL = (MinSL/1E5)/RRR
+else:
+    MinSL = MinSL/1E5
+
 
 # Read CSVs
 file_names = glob.glob('*.csv')
@@ -144,11 +151,15 @@ for p in range(q-1, k):
             df2.at[p, 'POSnr'] = POScnt
             # mark position as open in OpenPosList Dictionary
             OpenPosList[POScnt] = 'open'
-            print(OpenPosList)
+            # print(OpenPosList)
             # create column in df2 for new position
             column_name = 'POS' + str(POScnt)
             POScol = np.zeros(A1.size)
             df2[column_name] = POScol
+            # delete dataframe column 10 positions prior to opened position to save memory
+            if POScnt > 10:
+                delcolumn = 'POS' + str(POScnt - 10)
+                del df2[delcolumn]
             # determine Stop Loss Price
             if df2.close[p] - df2.HMA[p] > MinSL:
                 df2.at[p, 'SL'] = df2.HMA[p]
@@ -172,11 +183,15 @@ for p in range(q-1, k):
             df2.at[p, 'POSnr'] = POScnt
             # mark position as open in OpenPosList Dictionary
             OpenPosList[POScnt] = 'open'
-            print(OpenPosList)
+            # print(OpenPosList)
             # create column in df2 for new position
             column_name = 'POS' + str(POScnt)
             POScol = np.zeros(A1.size)
             df2[column_name] = POScol
+            # delete dataframe column 10 positions prior to opened position to save memory
+            if POScnt > 10:
+                delcolumn = 'POS' + str(POScnt - 10)
+                del df2[delcolumn]
             # determine Stop Loss Price
             if df2.HMA[p] - df2.close[p] > MinSL:
                 df2.at[p, 'SL'] = df2.HMA[p]
@@ -212,7 +227,6 @@ for p in range(q-1, k):
                     df2.at[p, 'WIN'] += 1
                     # mark POSX as closed in library OpenPosList and continue to next j in for loop
                     OpenPosList[j+1] = 'closed'
-                    print(OpenPosList)
                     continue
 
             elif df2.POS[idx_j] < 0 and df2.high[p] >= df2.SL[idx_j]:
@@ -222,7 +236,6 @@ for p in range(q-1, k):
                 if df2[POSX][p] == -1 and df2[POSX][p-1] > -1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'LOSS'] += - 1
                     OpenPosList[j+1] = 'closed'
-                    print(OpenPosList)
                     continue
 
             # Long Positions
@@ -233,7 +246,6 @@ for p in range(q-1, k):
                 if df2[POSX][p] == 1 and df2[POSX][p-1] < 1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'WIN'] += 1
                     OpenPosList[j+1] = 'closed'
-                    print(OpenPosList)
                     continue
 
             elif df2.POS[idx_j] > 0 and df2.low[p] <= df2.SL[idx_j]:
@@ -243,7 +255,6 @@ for p in range(q-1, k):
                 if df2[POSX][p] == -1 and df2[POSX][p-1] > -1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'LOSS'] += - 1
                     OpenPosList[j+1] = 'closed'
-                    print(OpenPosList)
                     continue
 
 # # print Dataframe
@@ -252,10 +263,11 @@ for p in range(q-1, k):
 
 # print nr of wins and losses
 # wins = df2.loc[:'WIN'].values.sum()
+print('RRR = ' + str('%.1f' % RRR))
 wins = df2['WIN'].values.sum()
-print('wins = ' + str(wins))
+print('wins = ' + str('%.0f' % wins))
 losses = -1*df2['LOSS'].values.sum()
-print('losses = ' + str(losses))
+print('losses = ' + str('%.0f' % losses))
 PI = RRR*(wins/losses)
 print('Profitability Index = ' + str('%.2f' % PI))
 
