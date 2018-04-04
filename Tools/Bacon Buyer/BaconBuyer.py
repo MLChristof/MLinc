@@ -8,9 +8,6 @@ Created on Th Oct 29 13:33:12 2017
 This script goes long and short on minima and maxima of the Hull Moving Average
 """
 
-# TODO script gets slower when more positions are opened.
-# TODO delete dataframe columns after position is closed?
-
 import pandas as pd
 import numpy as np
 import glob
@@ -191,7 +188,16 @@ for p in range(q-1, k):
             df2.at[p, 'TP'] = np.NaN
 
         # Account Wins / Losses
-        for j in range(int(POScnt)):
+        # count open positions in OpenPosList
+        c1 = 0
+        c2 = 0
+        for k in OpenPosList.values():
+            c1 += 1
+            if OpenPosList.get(c1) == 'open':
+                c2 += 1
+        # print(c2)
+        # loop through open positions only
+        for j in range(int(POScnt)-c2, int(POScnt)):
             # Short Positions
             # get row index of position j+1
             idx_j = df2.loc[df2['POSnr'] == (j+1)].index[0]
