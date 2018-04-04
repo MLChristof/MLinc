@@ -8,6 +8,9 @@ Created on Th Oct 29 13:33:12 2017
 This script goes long and short on minima and maxima of the Hull Moving Average
 """
 
+# TODO Make position entry condition on minimum slope of HWA on most recent day
+# TODO Trailing Stop Loss
+
 import pandas as pd
 import numpy as np
 import glob
@@ -19,7 +22,7 @@ MAPeriod = 150
 # Set Minimum Stop Loss (at least larger than spread)
 MinSL = 0.002
 # Risk Reward Ratio
-RRR = 1
+RRR = 0.3
 
 # Read CSVs
 file_names = glob.glob('*.csv')
@@ -250,9 +253,11 @@ with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 # print nr of wins and losses
 # wins = df2.loc[:'WIN'].values.sum()
 wins = df2['WIN'].values.sum()
-print(wins)
-losses = df2['LOSS'].values.sum()
-print(losses)
+print('wins = ' + str(wins))
+losses = -1*df2['LOSS'].values.sum()
+print('losses = ' + str(losses))
+PI = RRR*(wins/losses)
+print('Profitability Index = ' + str('%.2f' % PI))
 
 # Plot closing prices, HMA, positions with SL and TP
 # crop arrays to correct size
