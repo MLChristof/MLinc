@@ -22,7 +22,7 @@ from bokeh.plotting import figure, output_file, show
 # Set Moving Average Period
 MAPeriod = 150
 # Risk Reward Ratio
-RRR = 0.1
+RRR = 0.2
 # Set Minimum Stop Loss in pips (at least larger than spread)
 MinSL = 100
 if RRR < 1:
