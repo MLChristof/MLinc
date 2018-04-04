@@ -3,6 +3,9 @@ import backtrader as bt
 import os, sys
 import datetime
 
+# "BacktraderEvent" --> Maker Event
+# Rich notification app
+
 # Create a cerebro entity
 cerebro = bt.Cerebro()
 # cerebro.addanalyzer(bt.analyzers.TimeReturn, timeframe=bt.TimeFrame.Years)
