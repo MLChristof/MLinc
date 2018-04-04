@@ -11,7 +11,6 @@ This script goes long and short on minima and maxima of the Hull Moving Average
 # TODO Add Spread!
 # TODO Make position entry condition on minimum slope steepness of HWA on most recent day
 # TODO Trailing Stop Loss
-# TODO Delete columns in df2 if Position is closed to limit df size. should speed up script with more positions
 
 import pandas as pd
 import numpy as np
@@ -22,9 +21,14 @@ from bokeh.plotting import figure, output_file, show
 # Set Moving Average Period
 MAPeriod = 150
 # Risk Reward Ratio
-RRR = 0.2
+RRR = 0.5
+# Spread (pips)
+spread = 90
 # Set Minimum Stop Loss in pips (at least larger than spread)
 MinSL = 100
+
+# adjust input
+spread = spread/1E5
 if RRR < 1:
     MinSL = (MinSL/1E5)/RRR
 else:
@@ -165,7 +169,7 @@ for p in range(q-1, k):
                 df2.at[p, 'SL'] = df2.HMA[p]
             else:
                 df2.at[p, 'SL'] = df2.close[p]-MinSL
-            # determine Take Profit Price
+            # determine Take Profit Price (add spread)
             df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.SL[p]) + df2.close[p]
 
         # Short Position: identify maximum on Hull Moving Average
@@ -284,7 +288,11 @@ PlotTP = df2.TP.iloc[q+r:]
 
 output_file("MovingAverage.html")
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
-Title = 'Bacon Buyer Hull Moving Average; Period = ' + str(MAPeriod) + '; ' + str(name1)
+Title = 'Bacon Buyer Hull Moving Average; Period = ' + str(MAPeriod) + '; '\
+        + str(name1) + ';RRR =' + str('%.1f' % RRR)\
+        + ';wins =' + str('%.0f' % wins) + ';losses =' + str('%.0f' % losses) + ';PI =' + str('%.2f' % PI)
+
+
 # plot 1 - Close Prices & Hull Moving Average
 p1 = figure(plot_width=1400, plot_height=800, x_axis_type='datetime',
             tools=TOOLS, title=Title)
