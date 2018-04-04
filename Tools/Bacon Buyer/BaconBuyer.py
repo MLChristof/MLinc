@@ -246,9 +246,9 @@ for p in range(q-1, k):
                     print(OpenPosList)
                     continue
 
-# print Dataframe
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(df2)
+# # print Dataframe
+# with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+#     print(df2)
 
 # print nr of wins and losses
 # wins = df2.loc[:'WIN'].values.sum()
