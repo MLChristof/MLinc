@@ -16,14 +16,15 @@ import pandas as pd
 import numpy as np
 import glob
 from bokeh.plotting import figure, output_file, show
+import winsound
 
 # INPUT
 # Set Moving Average Period
-MAPeriod = 150
-# Risk Reward Ratio
-RRR = 0.5
+MAPeriod = 100
+# Risk Reward Ratio (spread not accounted for yet, impacts RRR)
+RRR = 0.2
 # Spread (pips)
-spread = 90
+spread = 20
 # Set Minimum Stop Loss in pips (at least larger than spread)
 MinSL = 100
 
@@ -223,7 +224,9 @@ for p in range(q-1, k):
             # Short Positions
             # get row index of position j+1
             idx_j = df2.loc[df2['POSnr'] == (j+1)].index[0]
-            if df2.POS[idx_j] < 0 and df2.low[p] <= df2.TP[idx_j]:
+            # Short Position can be closed (bought) if low ask price is lower than TP
+            # Data in csv are all bid prices, so spread has to be subtracted
+            if df2.POS[idx_j] < 0 and (df2.low[p]-spread) <= df2.TP[idx_j]:
                 # short position won
                 POSX = 'POS' + str(j+1)
                 df2.at[p, POSX] = 1
@@ -232,10 +235,10 @@ for p in range(q-1, k):
                     # mark POSX as closed in library OpenPosList and continue to next j in for loop
                     OpenPosList[j+1] = 'closed'
                     continue
-
-            elif df2.POS[idx_j] < 0 and df2.high[p] >= df2.SL[idx_j]:
+            # Short Position is closed (bought) if high ask price is higher than SL
+            elif df2.POS[idx_j] < 0 and (df2.high[p]-spread) >= df2.SL[idx_j]:
                 # short position lost
-                POSX = 'POS' + str(j + 1)
+                POSX = 'POS' + str(j+1)
                 df2.at[p, POSX] = -1
                 if df2[POSX][p] == -1 and df2[POSX][p-1] > -1 and OpenPosList.get(j+1) == 'open':
                     df2.at[p, 'LOSS'] += - 1
@@ -243,6 +246,7 @@ for p in range(q-1, k):
                     continue
 
             # Long Positions
+            # Position can be sold if bid price is higher than TP (data in csv are all bid prices)
             if df2.POS[idx_j] > 0 and df2.high[p] >= df2.TP[idx_j]:
                 # long position won
                 POSX = 'POS' + str(j+1)
@@ -274,6 +278,11 @@ losses = -1*df2['LOSS'].values.sum()
 print('losses = ' + str('%.0f' % losses))
 PI = RRR*(wins/losses)
 print('Profitability Index = ' + str('%.2f' % PI))
+
+#play sound if finished
+duration = 200
+freq = 1000
+winsound.Beep(freq, duration)
 
 # Plot closing prices, HMA, positions with SL and TP
 # crop arrays to correct size
