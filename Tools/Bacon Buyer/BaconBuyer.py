@@ -8,7 +8,7 @@ Created on Th Oct 29 13:33:12 2017
 This script goes long and short on minima and maxima of the Hull Moving Average
 """
 
-# TODO Add Spread!
+# TODO Take spread into account for SL and TP prices
 # TODO Make position entry condition on minimum slope steepness of HWA on most recent day
 # TODO Trailing Stop Loss
 
