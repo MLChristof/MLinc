@@ -1,16 +1,22 @@
 import requests
 
-file = open('C:/Data/2. Jelle Personal/personal_python_projects/ifttt_info.txt', 'r')
-line = file.readlines()
-event = line[0][0:-1]
-id = line[1]
+file_jelle = 'C:/Data/2. Jelle Personal/personal_python_projects/ifttt_info_jelle.txt'
+file_robert = 'C:/Data/2. Jelle Personal/personal_python_projects/ifttt_info_robert.txt'
+
+files = [file_jelle, file_robert]
 
 
 # notify
-def notification(priority, stock):
+def notification(fileID, message):
+    file = open(fileID, 'r')
+    line = file.readlines()
+    event = line[0][0:-1]
+    id = line[1]
+
     report = dict()
-    report["value1"] = priority
-    report["value2"] = stock
+    report["value1"] = message
     requests.post("https://maker.ifttt.com/trigger/{}/with/key/{}".format(event, id), data=report)
 
-notification(priority="HIGH", stock="MLinc_futures")
+
+if __name__ == '__main__':
+    notification(fileID=file_robert, message='MOAG! Test, test, test....')
