@@ -15,11 +15,11 @@ import pandas as pd
 
 
 # number of timesteps(days/hours/seconds) to normalize data over
-timeFrame = 200
-ThresholdLong = -0.6
-ThresholdShort = 0.8
+timeFrame = 85
+ThresholdLong = -0.7
+ThresholdShort = 0.9
 
-timeFrameStr = str(timeFrame)+' hours'
+timeFrameStr = str(timeFrame)+' days'
 timeFrameDelta = pd.Timedelta(timeFrameStr)
 
 # i is amount of days to backtest from end date (backwards in time)
@@ -35,7 +35,7 @@ StartDate = pd.to_datetime(StartDate)
 EndDate = pd.DataFrame.max(LoadTwoCSV.df1['DateTime'])
 EndDate = pd.to_datetime(EndDate)
 
-StartTimeFrame = EndDate - timeFrameDelta - pd.Timedelta('1 hours')
+StartTimeFrame = EndDate - timeFrameDelta - pd.Timedelta('1 days')
 print('Indicator up-to-date until:')
 print(EndDate)    
 
