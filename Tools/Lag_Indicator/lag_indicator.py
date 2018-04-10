@@ -9,7 +9,7 @@ This script plots a lag indicator for backtesting between 2 pairs
 loaded in Two_CSV2Candle
 """
 
-import LoadTwoCSV
+import Tools.Lag_Indicator.LoadTwoCSV
 import numpy as np
 import pandas as pd
 
@@ -110,7 +110,7 @@ TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
 
 # plot 1 - lagindicator
 p1 = figure(plot_width=1050, plot_height=320, x_axis_type='datetime',
-            tools=TOOLS, title = 'Lag Indicator')
+            tools=TOOLS, title = 'Lag_Indicator')
 p1.line(PlotDates,lagindexFlip, line_width=2, color='navy')
 
 # plot 2 - price linechart + positions
