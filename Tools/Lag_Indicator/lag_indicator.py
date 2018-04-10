@@ -9,7 +9,7 @@ This script plots a lag indicator for backtesting between 2 pairs
 loaded in Two_CSV2Candle
 """
 
-import Tools.Lag_Indicator.LoadTwoCSV
+import LoadTwoCSV
 import numpy as np
 import pandas as pd
 
