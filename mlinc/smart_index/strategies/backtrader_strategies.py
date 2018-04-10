@@ -9,6 +9,9 @@ import sys  # To find out the script name (in argv[0])
 import backtrader as bt
 import numpy as n
 
+# Import ML indicators
+from mlinc.smart_index.indicators.backtrader_indicators import MlLagIndicator
+
 
 # Create a Stratey
 class TestStrategy(bt.Strategy):
@@ -271,14 +274,87 @@ class BaconBuyerStrategy(bt.Strategy):
         #     return
 
 
+class MlLagIndicatorStrategy(bt.Strategy):
+    params = (
+        ('maperiod', 30),
+        )
+
+    def log(self, txt, dt=None):
+        ''' Logging function for this strategy'''
+        dt = dt or self.datas[0].datetime.date(0)
+        # print('%s, %s' % (dt.isoformat(), txt))
+        # print('%s' % (dt.isoformat()))
+
+    def __init__(self):
+        # Keep a reference to the "close" line in the data[0] dataseries
+        self.dataclose = self.datas[0].close
+
+        # To keep track of pending orders and buy price/commission
+        self.order = None
+        self.buyprice = None
+        self.buycomm = None
+
+        self.indicator = MlLagIndicator(self.datas[0], period=self.params.maperiod)
+        # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
+
+    def notify_order(self, order):
+        if order.status in [order.Submitted, order.Accepted]:
+            # Buy/Sell order submitted/accepted to/by broker - Nothing to do
+            return
+
+        # Check if an order has been completed
+        # Attention: broker could reject order if not enough cash
+        if order.status in [order.Completed]:
+            if order.isbuy():
+                self.log(
+                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                    (order.executed.price,
+                     order.executed.value,
+                     order.executed.comm))
+
+                self.buyprice = order.executed.price
+                self.buycomm = order.executed.comm
+            else:  # Sell
+                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                         (order.executed.price,
+                          order.executed.value,
+                          order.executed.comm))
+
+            self.bar_executed = len(self)
+
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log('Order Canceled/Margin/Rejected')
+
+        # Write down: no pending order
+        self.order = None
+
+    def notify_trade(self, trade):
+        if not trade.isclosed:
+            return
+
+        self.log('OPERATION PROFIT, GROSS %.2f, NET %.2f' %
+                 (trade.pnl, trade.pnlcomm))
+
+    def next(self):
+        # Simply log the closing price of the series from the reference
+        self.log('Close, %.2f' % self.dataclose[0])
+
+        # Check if an order is pending ... if yes, we cannot send a 2nd one
+        if self.order:
+            return
+
+        print(self.indicator.test())
+
+
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # cerebro.addanalyzer(bt.analyzers.TimeReturn, timeframe=bt.TimeFrame.Years)
 
     # Add a strategy
-    cerebro.addstrategy(BaconBuyerStrategy)
+    # cerebro.addstrategy(BaconBuyerStrategy)
     # cerebro.addstrategy(BenchMarkStrategy)
+    cerebro.addstrategy(MlLagIndicatorStrategy)
 
     # Datas are in a subfolder of the samples. Need to find where the script is
     # because it could have been called from anywhere
