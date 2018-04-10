@@ -19,4 +19,5 @@ def notification(fileID, message):
 
 
 if __name__ == '__main__':
-    notification(fileID=file_robert, message='MOAG! Test, test, test....')
+    notification(fileID=file_robert, message='Gozertje!!! We gaan pompon!!! 16:45 in de Gym! Lets goooooooo...!!')
+    notification(fileID=file_jelle, message='Gozertje!!! We gaan pompon!!! 16:45 in de Gym! Lets goooooooo...!!')
