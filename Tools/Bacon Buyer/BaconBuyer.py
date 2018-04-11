@@ -11,6 +11,7 @@ This script goes long and short on minima and maxima of the Hull Moving Average
 # TODO Take spread into account for SL and TP prices
 # TODO Make position entry condition on minimum slope steepness of HWA on most recent day
 # TODO Trailing Stop Loss
+# TODO Write into class for backtrader
 
 import pandas as pd
 import numpy as np
