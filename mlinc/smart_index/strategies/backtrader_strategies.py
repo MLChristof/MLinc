@@ -10,7 +10,7 @@ import backtrader as bt
 import numpy as n
 
 # Import ML indicators
-from mlinc.smart_index.indicators.backtrader_indicators import MlLagIndicator
+from mlinc.smart_index.indicators.backtrader_indicators import *
 
 
 # Create a Stratey
@@ -276,7 +276,7 @@ class BaconBuyerStrategy(bt.Strategy):
 
 class MlLagIndicatorStrategy(bt.Strategy):
     params = (
-        ('maperiod', 30),
+        ('maperiod', 5),
         )
 
     def log(self, txt, dt=None):
@@ -294,7 +294,8 @@ class MlLagIndicatorStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
 
-        self.indicator = MlLagIndicator(self.datas[0], period=self.params.maperiod)
+        self.indicator = MlLagIndicator(self.data, period=self.params.maperiod)
+        # self.indicator = SimpleMovingAverage1(self.data, period=self.params.maperiod)
         # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
 
     def notify_order(self, order):
@@ -344,7 +345,9 @@ class MlLagIndicatorStrategy(bt.Strategy):
             return
 
         print(self.indicator.test())
-
+        # print(self.indicator.data_array)
+        # print(self.indicator.open_price)
+        # print(self.datas[0])
 
 if __name__ == '__main__':
     # Create a cerebro entity
@@ -360,17 +363,29 @@ if __name__ == '__main__':
     # because it could have been called from anywhere
     modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
     modpath = modpath[:-11]
-    datapath = os.path.join(modpath, 'data/^GSPC.csv')
+    datapath = os.path.join(modpath, 'data/1BrentOil1440.csv')
 
     # Create a Data Feed
-    data = bt.feeds.YahooFinanceCSVData(
+    # data = bt.feeds.YahooFinanceCSVData(
+    #     dataname=datapath,
+    #     # Do not pass values before this date
+    #     fromdate=datetime.datetime(2009, 2, 24),
+    #     # Do not pass values before this date
+    #     todate=datetime.datetime(2013, 2, 24),
+    #     # Do not pass values after this date
+    #     reverse=False)
+
+    data = bt.feeds.GenericCSVData(
         dataname=datapath,
         # Do not pass values before this date
-        fromdate=datetime.datetime(2009, 2, 24),
+        fromdate=datetime.datetime(2014, 3, 11),
         # Do not pass values before this date
-        todate=datetime.datetime(2013, 2, 24),
-        # Do not pass values after this date
-        reverse=False)
+        todate=datetime.datetime(2018, 4, 10),
+        nullvalue=0.0,
+        dtformat=('%Y-%m-%d'),
+        openinterest=-1,
+        seperator=','
+        )
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
