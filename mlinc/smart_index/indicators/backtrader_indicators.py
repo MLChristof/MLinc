@@ -17,14 +17,14 @@ class MlLagIndicator(bt.Indicator):
 
     @property
     def close_price(self):
-        return self.datas[0].close[0]
+        return self.data.close[0]
 
     @property
     def open_price(self):
-        return self.datas[0].open[0]
+        return self.data.open[0]
 
     def test(self):
-        return self.datas[0].open[0]
+        return self.data.open.get(size=self.p.period)
 
 
 # class SimpleMovingAverage1(bt.indicator):

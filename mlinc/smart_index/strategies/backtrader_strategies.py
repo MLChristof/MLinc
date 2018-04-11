@@ -294,7 +294,13 @@ class MlLagIndicatorStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
 
-        self.indicator = MlLagIndicator(self.data, period=self.params.maperiod)
+        print(self.data)
+        print(self.datas)
+
+        # Oil indicator
+        self.indicator = MlLagIndicator(self.datas[0], period=self.params.maperiod)
+        # Alu indicator
+        self.indicator = MlLagIndicator(self.datas[1], period=self.params.maperiod)
         # self.indicator = SimpleMovingAverage1(self.data, period=self.params.maperiod)
         # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
 
@@ -363,7 +369,8 @@ if __name__ == '__main__':
     # because it could have been called from anywhere
     modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
     modpath = modpath[:-11]
-    datapath = os.path.join(modpath, 'data/1BrentOil1440.csv')
+    datapath1 = os.path.join(modpath, 'data/1BrentOil1440.csv')
+    datapath2 = os.path.join(modpath, 'data/Aluminium1440.csv')
 
     # Create a Data Feed
     # data = bt.feeds.YahooFinanceCSVData(
@@ -375,8 +382,8 @@ if __name__ == '__main__':
     #     # Do not pass values after this date
     #     reverse=False)
 
-    data = bt.feeds.GenericCSVData(
-        dataname=datapath,
+    data_oil = bt.feeds.GenericCSVData(
+        dataname=datapath1,
         # Do not pass values before this date
         fromdate=datetime.datetime(2014, 3, 11),
         # Do not pass values before this date
@@ -387,8 +394,21 @@ if __name__ == '__main__':
         seperator=','
         )
 
+    data_alu = bt.feeds.GenericCSVData(
+        dataname=datapath2,
+        # Do not pass values before this date
+        fromdate=datetime.datetime(2014, 3, 11),
+        # Do not pass values before this date
+        todate=datetime.datetime(2018, 4, 10),
+        nullvalue=0.0,
+        dtformat=('%Y.%m.%d'),
+        openinterest=-1,
+        seperator=','
+    )
+
     # Add the Data Feed to Cerebro
-    cerebro.adddata(data)
+    cerebro.adddata(data_oil, name='Oil')
+    cerebro.adddata(data_alu, name='Alu')
 
     # Set our desired cash start
     cerebro.broker.setcash(100000.0)
@@ -413,5 +433,5 @@ if __name__ == '__main__':
     print('Percentage profit: %.3f' % ans)
 
     # Plot the result
-    cerebro.plot()
+    cerebro.plot(style='candle')
 
