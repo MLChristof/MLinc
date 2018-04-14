@@ -276,7 +276,7 @@ class BaconBuyerStrategy(bt.Strategy):
 
 class MlLagIndicatorStrategy(bt.Strategy):
     params = (
-        ('maperiod', 5),
+        ('maperiod', 10),
         )
 
     def log(self, txt, dt=None):
@@ -294,13 +294,14 @@ class MlLagIndicatorStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
 
-        print(self.data)
-        print(self.datas)
+        self.lagindex = [0, 0, 0]
+        self.threshold_long = -0.65
+        self.threshold_short = 0.9
 
         # Oil indicator
-        self.indicator = MlLagIndicator(self.datas[0], period=self.params.maperiod)
+        self.indicator1 = MlLagIndicator(self.datas[0], period=self.params.maperiod)
         # Alu indicator
-        self.indicator = MlLagIndicator(self.datas[1], period=self.params.maperiod)
+        self.indicator2 = MlLagIndicator(self.datas[1], period=self.params.maperiod)
         # self.indicator = SimpleMovingAverage1(self.data, period=self.params.maperiod)
         # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
 
@@ -346,11 +347,26 @@ class MlLagIndicatorStrategy(bt.Strategy):
         # Simply log the closing price of the series from the reference
         self.log('Close, %.2f' % self.dataclose[0])
 
+        # Create lag index
+        try:
+            self.lagindex.append(self.indicator2.normalize() - self.indicator1.normalize())
+        except IndexError:
+            self.lagindex.append(0)
+
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
             return
 
-        print(self.indicator.test())
+        if self.lagindex[-3] < self.lagindex[-2] and self.lagindex[-2] > self.lagindex[-1] and \
+                self.lagindex[-2] < self.threshold_long:
+            self.order = self.buy(data=self.datas[1])
+        elif self.lagindex[-3] > self.lagindex[-2] and self.lagindex[-2] < self.lagindex[-1] and \
+                self.lagindex[-2] > self.threshold_short:
+            self.order = self.sell(data=self.datas[1])
+        else:
+            return
+
+        # print(self.indicator1.normalize())
         # print(self.indicator.data_array)
         # print(self.indicator.open_price)
         # print(self.datas[0])
@@ -385,7 +401,7 @@ if __name__ == '__main__':
     data_oil = bt.feeds.GenericCSVData(
         dataname=datapath1,
         # Do not pass values before this date
-        fromdate=datetime.datetime(2014, 3, 11),
+        fromdate=datetime.datetime(2017, 5, 1),
         # Do not pass values before this date
         todate=datetime.datetime(2018, 4, 10),
         nullvalue=0.0,
@@ -397,7 +413,7 @@ if __name__ == '__main__':
     data_alu = bt.feeds.GenericCSVData(
         dataname=datapath2,
         # Do not pass values before this date
-        fromdate=datetime.datetime(2014, 3, 11),
+        fromdate=datetime.datetime(2017, 5, 1),
         # Do not pass values before this date
         todate=datetime.datetime(2018, 4, 10),
         nullvalue=0.0,

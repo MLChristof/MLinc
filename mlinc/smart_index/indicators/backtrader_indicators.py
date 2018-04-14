@@ -7,21 +7,17 @@ class MlLagIndicator(bt.Indicator):
     lines = ('mlli',)
     params = (('period', 3),)
 
-    # def __init__(self):
-        # self.lines.mlli = 100
-        # self.data = self.datas[0]
+    def normalize(self):
+        """ Normalize closing prices sliding matrices """
+        norm = (self.open_price()[-1] - n.min(self.open_price())) / \
+               (n.max(self.open_price()) - n.min(self.open_price()))
+        return norm
 
-    @property
-    def data_array(self):
-        return self.data.get(size=self.p.period)
-
-    @property
     def close_price(self):
-        return self.data.close[0]
+        return self.data.close.get(size=self.p.period)
 
-    @property
     def open_price(self):
-        return self.data.open[0]
+        return self.data.open.get(size=self.p.period)
 
     def test(self):
         return self.data.open.get(size=self.p.period)

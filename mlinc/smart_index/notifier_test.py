@@ -1,6 +1,7 @@
 import requests
 
-file_jelle = 'C:/Data/2. Jelle Personal/personal_python_projects/ifttt_info_jelle.txt'
+# file_jelle = 'C:/Data/2. Jelle Personal/personal_python_projects/ifttt_info_jelle.txt'
+file_jelle = 'C:/Users/Jelle/Desktop/ifttt_jelle.txt'
 file_robert = 'C:/Data/2. Jelle Personal/personal_python_projects/ifttt_info_robert.txt'
 
 files = [file_jelle, file_robert]
@@ -19,5 +20,5 @@ def notification(fileID, message):
 
 
 if __name__ == '__main__':
-    notification(fileID=file_robert, message='Gozertje!!! We gaan pompon!!! 16:45 in de Gym! Lets goooooooo...!!')
+    # notification(fileID=file_robert, message='Gozertje!!! We gaan pompon!!! 16:45 in de Gym! Lets goooooooo...!!')
     notification(fileID=file_jelle, message='Gozertje!!! We gaan pompon!!! 16:45 in de Gym! Lets goooooooo...!!')
