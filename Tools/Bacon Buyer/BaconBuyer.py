@@ -26,7 +26,7 @@ RRR = 0.2
 # Spread (pips)
 spread = 20
 # Set Minimum Stop Loss in pips (at least larger than spread)
-MinSL = 100
+MinSL = 80
 
 # adjust input
 spread = spread/1E5
