@@ -79,15 +79,8 @@ for j in range(i):
         Normdf2 = (df2SlidingMatrix.tail(1) - min(df2SlidingMatrix))/(max(df2SlidingMatrix)-min(df2SlidingMatrix))
         lagindex[j] = Normdf2 - Normdf1
         
-        
-#    # Take Positions (test is backwards in time, so logical operators are reversed) 
-#        if lagindex[j-1] > ThresholdLong and lagindex[j] < ThresholdLong:
-#            Position[j] = 1 # Take Long Position
-#        elif lagindex[j-1] < ThresholdShort and lagindex[j] > ThresholdShort:
-#            Position[j] = -1 # Take Short Position
-#        else: Position[j] = np.NaN # No Action
-        
-    # Take Positions (test is backwards in time, so logical operators are reversed)
+
+    # Take Positions
         if lagindex[j-2] > lagindex[j-1] and lagindex[j-1] < lagindex[j] and lagindex[j-1] < ThresholdLong:
             Position[j] = 1 # Take Long Position in local minimum of lagindicator
         elif lagindex[j-2] < lagindex[j-1] and lagindex[j-1] > lagindex[j] and lagindex[j-1] > ThresholdShort:
