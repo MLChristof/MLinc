@@ -10,6 +10,7 @@ This script goes long and short on minima and maxima of the Hull Moving Average
 
 # TODO Make position entry condition on minimum slope steepness of HWA on most recent day
 # TODO Trailing Stop Loss
+# TODO Or if not practical due to high RRRs: at inflection point or next min or max on HMA
 
 
 import pandas as pd
@@ -22,7 +23,7 @@ import winsound
 # Set Moving Average Period
 MAPeriod = 100
 # Risk Reward Ratio
-RRR = 15
+RRR = 2
 # Spread (pips)
 spread = 20
 # Set Minimum Stop Loss in pips (at least larger than spread)
