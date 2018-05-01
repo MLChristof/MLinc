@@ -265,8 +265,8 @@ class BaconBuyerStrategy(bt.Strategy):
             and hma_diff[0] < 0:
             self.log('BUY CREATE, %.2f' % self.dataclose[0])
             # self.order = self.buy_bracket(limitprice=self.indicator.lines.hma[0], data=self.datas[0], stopprice=self.params['RRR']*self.indicator.lines.hma[0])
-            SL = 0.9*self.datas[0]
-            TP = 1.1*self.datas[0]
+            SL = 0.95*self.datas[0]
+            TP = 1.05*self.datas[0]
             self.order = self.buy_bracket(limitprice=TP, data=self.datas[0], stopprice=SL)
         # Open Short Position on local maximum HMA
         # (if slope on last day of HMA is neg and 5 days before pos)
