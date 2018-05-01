@@ -178,10 +178,9 @@ class BenchMarkStrategy(bt.Strategy):
 class BaconBuyerStrategy(bt.Strategy):
     params = (
         ('maperiod', 20),
-        ('RRR', 5),
-        ('minSL', 80/1E5),
+        ('RRR', 1),
+        ('minSL', 2000/1E5), # in pips
     )
-
 
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
@@ -276,7 +275,7 @@ class BaconBuyerStrategy(bt.Strategy):
 
             TP_long = (1/self.params.RRR)*(EntryLong-SL_long)+EntryLong
             # place order
-            self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long)
+            self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, )
 
         # Open Short Position on local maximum HMA
         # (if slope on last day of HMA is neg and 5 days before pos)
@@ -457,10 +456,10 @@ if __name__ == '__main__':
     cerebro.broker.setcash(10000.0)
 
     # Add a FixedSize sizer according to the stake
-    cerebro.addsizer(bt.sizers.FixedSize, stake=2000)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=500)
 
-    # Set the commission
-    cerebro.broker.setcommission(commission=0.00)
+    # Set the commission and leverage
+    cerebro.broker.setcommission(commission=0.005, mult=50.0, name='EURUSD')
 
     # Print out the starting conditions
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
