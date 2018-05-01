@@ -178,8 +178,10 @@ class BenchMarkStrategy(bt.Strategy):
 class BaconBuyerStrategy(bt.Strategy):
     params = (
         ('maperiod', 20),
-        ('RRR', 1),
+        ('RRR', 5),
+        ('minSL', 80/1E5),
     )
+
 
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
@@ -265,9 +267,9 @@ class BaconBuyerStrategy(bt.Strategy):
             and hma_diff[0] < 0:
             self.log('BUY CREATE, %.2f' % self.dataclose[0])
             # self.order = self.buy_bracket(limitprice=self.indicator.lines.hma[0], data=self.datas[0], stopprice=self.params['RRR']*self.indicator.lines.hma[0])
-            SL = 0.95*self.datas[0]
-            TP = 1.05*self.datas[0]
-            self.order = self.buy_bracket(limitprice=TP, data=self.datas[0], stopprice=SL)
+            SL_long = self.indicator.lines.hma[0]
+            TP_long = 1/(self.params.RRR)*(self.datas[0]-self.indicator.lines.hma[0])+self.datas[0]
+            self.order = self.buy_bracket(limitprice=TP_long, price=self.datas[0], stopprice=SL_long)
         # Open Short Position on local maximum HMA
         # (if slope on last day of HMA is neg and 5 days before pos)
         if hma_diff[5] < 0 \
@@ -276,8 +278,10 @@ class BaconBuyerStrategy(bt.Strategy):
                 and hma_diff[2] > 0 \
                 and hma_diff[1] > 0 \
                 and hma_diff[0] > 0:
-            self.log('SELL CREATE, %.2f' % self.dataclose[0])
-            self.order = self.sell(data=self.datas[0])
+            SL_short = self.indicator.lines.hma[0]
+            TP_short = 0.98 * self.datas[0]
+            # self.log('SELL CREATE, %.2f' % self.dataclose[0])
+            # self.order = self.buy_bracket(limitprice=TP_short, price=self.datas[0], stopprice=SL_short)
 
 
         # self.month.append(self.datas[0].datetime.date(0).month)
@@ -416,9 +420,9 @@ if __name__ == '__main__':
     data_EURUSD = bt.feeds.GenericCSVData(
         dataname=datapath1,
         # Do not pass values before this date
-        fromdate=datetime.datetime(2010, 4, 23),
+        fromdate=datetime.datetime(2010, 9, 20),
         # Do not pass values before this date
-        todate=datetime.datetime(2018, 8, 11),
+        todate=datetime.datetime(2017, 8, 11),
         nullvalue=0.0,
         dtformat=('%Y-%m-%d'),
         openinterest=-1,
