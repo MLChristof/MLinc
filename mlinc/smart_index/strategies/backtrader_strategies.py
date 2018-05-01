@@ -176,6 +176,8 @@ class BenchMarkStrategy(bt.Strategy):
 
 
 class BaconBuyerStrategy(bt.Strategy):
+    # TODO Add smart staking/sizing
+    # TODO Check Commission settings
     params = (
         ('maperiod', 20),
         ('RRR', 1),
