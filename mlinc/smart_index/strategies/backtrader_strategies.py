@@ -177,7 +177,7 @@ class BenchMarkStrategy(bt.Strategy):
 
 class BaconBuyerStrategy(bt.Strategy):
     params = (
-        ('maperiod', 14),
+        ('maperiod', 20),
         ('RRR', 1),
     )
 
@@ -254,15 +254,30 @@ class BaconBuyerStrategy(bt.Strategy):
                             self.indicator.lines.hma[0]))
 
         hma_diff = n.diff(hma_data)
-        # Open Long Position
-        if hma_diff[5] - hma_diff[4] > 0 \
-            and hma_diff[4] - hma_diff[3] < 0 \
-            and hma_diff[3] - hma_diff[2] < 0 \
-            and hma_diff[2] - hma_diff[1] < 0 \
-            and hma_diff[1] - hma_diff[0] < 0:
 
+        # Open Long Position on local minimum HMA
+        # (if slope on last day of HMA is pos and 5 days before neg)
+        if hma_diff[5] > 0 \
+            and hma_diff[4] < 0 \
+            and hma_diff[3] < 0 \
+            and hma_diff[2] < 0 \
+            and hma_diff[1] < 0 \
+            and hma_diff[0] < 0:
             self.log('BUY CREATE, %.2f' % self.dataclose[0])
-            self.order = self.buy(exectype=bt.Order.StopTrail, trailamount=0.25)
+            # self.order = self.buy_bracket(limitprice=self.indicator.lines.hma[0], data=self.datas[0], stopprice=self.params['RRR']*self.indicator.lines.hma[0])
+            SL = 0.9*self.datas[0]
+            TP = 1.1*self.datas[0]
+            self.order = self.buy_bracket(limitprice=TP, data=self.datas[0], stopprice=SL)
+        # Open Short Position on local maximum HMA
+        # (if slope on last day of HMA is neg and 5 days before pos)
+        if hma_diff[5] < 0 \
+                and hma_diff[4] > 0 \
+                and hma_diff[3] > 0 \
+                and hma_diff[2] > 0 \
+                and hma_diff[1] > 0 \
+                and hma_diff[0] > 0:
+            self.log('SELL CREATE, %.2f' % self.dataclose[0])
+            self.order = self.sell(data=self.datas[0])
 
 
         # self.month.append(self.datas[0].datetime.date(0).month)
@@ -377,16 +392,16 @@ if __name__ == '__main__':
     # cerebro.addanalyzer(bt.analyzers.TimeReturn, timeframe=bt.TimeFrame.Years)
 
     # Add a strategy
-    # cerebro.addstrategy(BaconBuyerStrategy)
+    cerebro.addstrategy(BaconBuyerStrategy)
     # cerebro.addstrategy(BenchMarkStrategy)
-    cerebro.addstrategy(MlLagIndicatorStrategy)
+    # cerebro.addstrategy(MlLagIndicatorStrategy)
 
     # Datas are in a subfolder of the samples. Need to find where the script is
     # because it could have been called from anywhere
     modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
     modpath = modpath[:-11]
-    datapath1 = os.path.join(modpath, 'data/1BrentOil1440.csv')
-    datapath2 = os.path.join(modpath, 'data/Aluminium1440.csv')
+    datapath1 = os.path.join(modpath, 'data/EURUSD14402.csv')
+    # datapath2 = os.path.join(modpath, 'data/Aluminium1440.csv')
 
     # Create a Data Feed
     # data = bt.feeds.YahooFinanceCSVData(
@@ -398,33 +413,33 @@ if __name__ == '__main__':
     #     # Do not pass values after this date
     #     reverse=False)
 
-    data_oil = bt.feeds.GenericCSVData(
+    data_EURUSD = bt.feeds.GenericCSVData(
         dataname=datapath1,
         # Do not pass values before this date
-        fromdate=datetime.datetime(2017, 5, 1),
+        fromdate=datetime.datetime(2010, 4, 23),
         # Do not pass values before this date
-        todate=datetime.datetime(2018, 4, 10),
+        todate=datetime.datetime(2018, 8, 11),
         nullvalue=0.0,
         dtformat=('%Y-%m-%d'),
         openinterest=-1,
         seperator=','
         )
 
-    data_alu = bt.feeds.GenericCSVData(
-        dataname=datapath2,
-        # Do not pass values before this date
-        fromdate=datetime.datetime(2017, 5, 1),
-        # Do not pass values before this date
-        todate=datetime.datetime(2018, 4, 10),
-        nullvalue=0.0,
-        dtformat=('%Y.%m.%d'),
-        openinterest=-1,
-        seperator=','
-    )
+    # data_alu = bt.feeds.GenericCSVData(
+    #     dataname=datapath2,
+    #     # Do not pass values before this date
+    #     fromdate=datetime.datetime(2017, 5, 1),
+    #     # Do not pass values before this date
+    #     todate=datetime.datetime(2018, 4, 10),
+    #     nullvalue=0.0,
+    #     dtformat=('%Y.%m.%d'),
+    #     openinterest=-1,
+    #     seperator=','
+    # )
 
     # Add the Data Feed to Cerebro
-    cerebro.adddata(data_oil, name='Oil')
-    cerebro.adddata(data_alu, name='Alu')
+    cerebro.adddata(data_EURUSD, name='EURUSD')
+    # cerebro.adddata(data_alu, name='Alu')
 
     # Set our desired cash start
     cerebro.broker.setcash(100000.0)
