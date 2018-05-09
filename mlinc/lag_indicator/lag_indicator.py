@@ -374,57 +374,31 @@ class MlLagIndicatorStrategy(bt.Strategy):
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
-    # cerebro.addanalyzer(bt.analyzers.TimeReturn, timeframe=bt.TimeFrame.Years)
 
     # Add a strategy
+    cerebro.addstrategy(TestStrategy)
     # cerebro.addstrategy(BaconBuyerStrategy)
     # cerebro.addstrategy(BenchMarkStrategy)
-    cerebro.addstrategy(MlLagIndicatorStrategy)
+    # cerebro.addstrategy(MlLagIndicatorStrategy)
 
     # Datas are in a subfolder of the samples. Need to find where the script is
     # because it could have been called from anywhere
-    modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
-    modpath = modpath[:-11]
-    datapath1 = os.path.join(modpath, '../smart_index/data/1BrentOil1440.csv')
-    datapath2 = os.path.join(modpath, '../smart_index/data/Aluminium1440.csv')
+    # modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
+    # modpath = modpath[:-11]
+    # datapath1 = os.path.join(modpath, '../smart_index/data/1BrentOil1440.csv')
+    # datapath2 = os.path.join(modpath, '../smart_index/data/Aluminium1440.csv')
 
-    # Create a Data Feed
-    # data = bt.feeds.YahooFinanceCSVData(
-    #     dataname=datapath,
-    #     # Do not pass values before this date
-    #     fromdate=datetime.datetime(2009, 2, 24),
-    #     # Do not pass values before this date
-    #     todate=datetime.datetime(2013, 2, 24),
-    #     # Do not pass values after this date
-    #     reverse=False)
-
-    data_oil = bt.feeds.GenericCSVData(
-        dataname=datapath1,
-        # Do not pass values before this date
-        fromdate=datetime.datetime(2017, 5, 1),
-        # Do not pass values before this date
-        todate=datetime.datetime(2018, 4, 10),
-        nullvalue=0.0,
-        dtformat=('%Y-%m-%d'),
-        openinterest=-1,
-        seperator=','
-        )
-
-    data_alu = bt.feeds.GenericCSVData(
-        dataname=datapath2,
-        # Do not pass values before this date
-        fromdate=datetime.datetime(2017, 5, 1),
-        # Do not pass values before this date
-        todate=datetime.datetime(2018, 4, 10),
-        nullvalue=0.0,
-        dtformat=('%Y.%m.%d'),
-        openinterest=-1,
-        seperator=','
+    data = bt.feeds.Quandl(
+        dataname='AAPL',
+        fromdate=datetime.datetime(2016, 1, 1),
+        todate=datetime.datetime(2017, 1, 1),
+        buffered=True
     )
 
     # Add the Data Feed to Cerebro
-    cerebro.adddata(data_oil, name='Oil')
-    cerebro.adddata(data_alu, name='Alu')
+    # cerebro.adddata(data_oil, name='Oil')
+    # cerebro.adddata(data_alu, name='Alu')
+    cerebro.adddata(data)
 
     # Set our desired cash start
     cerebro.broker.setcash(100000.0)
