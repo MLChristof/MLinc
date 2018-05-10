@@ -389,10 +389,11 @@ if __name__ == '__main__':
     # datapath2 = os.path.join(modpath, '../smart_index/data/Aluminium1440.csv')
 
     data = bt.feeds.Quandl(
-        dataname='AAPL',
-        fromdate=datetime.datetime(2016, 1, 1),
-        todate=datetime.datetime(2017, 1, 1),
-        buffered=True
+        dataname='PR_AL',
+        dataset='LME',
+        fromdate=datetime.datetime(2017, 10, 1),
+        todate=datetime.datetime(2018, 1, 13),
+        buffered=True,
     )
 
     # Add the Data Feed to Cerebro
