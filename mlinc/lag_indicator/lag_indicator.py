@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import datetime  # For datetime objects
 import os.path  # To manage paths
 import sys  # To find out the script name (in argv[0])
+import time
 
 # Import the backtrader platform
 import backtrader as bt
@@ -11,6 +12,10 @@ import numpy as n
 
 # Import ML indicators
 from mlinc.smart_index.indicators.backtrader_indicators import *
+from mlinc.quandl_get import QuandlGet
+
+with open("C:\\Users\Jelle\Desktop\quandl_api.txt", 'r') as f:
+    api_key = f.read()
 
 
 # Create a Stratey
@@ -347,11 +352,14 @@ class MlLagIndicatorStrategy(bt.Strategy):
         # Simply log the closing price of the series from the reference
         self.log('Close, %.2f' % self.dataclose[0])
 
-        # Create lag index
+
         try:
             self.lagindex.append(self.indicator2.normalize() - self.indicator1.normalize())
         except IndexError:
             self.lagindex.append(0)
+
+        # Add a line
+        # self.line[0] = math.fsum(self.data.get(0, size=self.p.maperiod)) / self.p.maperiod
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
@@ -371,35 +379,43 @@ class MlLagIndicatorStrategy(bt.Strategy):
         # print(self.indicator.open_price)
         # print(self.datas[0])
 
+
 if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    cerebro.addstrategy(TestStrategy)
+    # cerebro.addstrategy(TestStrategy)
     # cerebro.addstrategy(BaconBuyerStrategy)
     # cerebro.addstrategy(BenchMarkStrategy)
-    # cerebro.addstrategy(MlLagIndicatorStrategy)
+    cerebro.addstrategy(MlLagIndicatorStrategy)
 
-    # Datas are in a subfolder of the samples. Need to find where the script is
-    # because it could have been called from anywhere
-    # modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
-    # modpath = modpath[:-11]
-    # datapath1 = os.path.join(modpath, '../smart_index/data/1BrentOil1440.csv')
-    # datapath2 = os.path.join(modpath, '../smart_index/data/Aluminium1440.csv')
+    end_date = datetime.datetime.today() - datetime.timedelta(days=10)
 
-    data = bt.feeds.Quandl(
+    data_alu = bt.feeds.Quandl(
         dataname='PR_AL',
         dataset='LME',
         fromdate=datetime.datetime(2017, 10, 1),
-        todate=datetime.datetime(2018, 1, 13),
+        todate=end_date,
         buffered=True,
     )
 
+    quandl_oil = QuandlGet(quandl_key='CHRIS/ICE_B1',
+                           api_key=api_key,
+                           start_date=datetime.datetime(2017, 10, 1),
+                           end_date=end_date
+                           )
+    quandl_oil.save_to_csv(os.getcwd() + '\\data\\ICE_B1.csv')
+    data_oil = bt.feeds.GenericCSVData(
+        dataname=os.getcwd() + '\\data\\ICE_B1.csv',
+        volume=7,
+        openinterest=8,
+        dtformat='%Y-%m-%d'
+    )
+
     # Add the Data Feed to Cerebro
-    # cerebro.adddata(data_oil, name='Oil')
-    # cerebro.adddata(data_alu, name='Alu')
-    cerebro.adddata(data)
+    cerebro.adddata(data_alu, name='Alu')
+    cerebro.adddata(data_oil, name='Oil')
 
     # Set our desired cash start
     cerebro.broker.setcash(100000.0)
@@ -424,5 +440,6 @@ if __name__ == '__main__':
     print('Percentage profit: %.3f' % ans)
 
     # Plot the result
-    cerebro.plot(style='candle')
+    # cerebro.plot(style='candle')
+    cerebro.plot()
 
