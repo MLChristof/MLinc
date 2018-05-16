@@ -14,8 +14,8 @@ import numpy as n
 from mlinc.smart_index.indicators.backtrader_indicators import *
 from mlinc.quandl_get import QuandlGet
 
-with open("C:\\Users\Jelle\Desktop\quandl_api.txt", 'r') as f:
-    api_key = f.read()
+# with open("C:\\Users\Jelle\Desktop\quandl_api.txt", 'r') as f:
+#     api_key = f.read()
 
 
 # Create a Stratey
@@ -390,18 +390,31 @@ if __name__ == '__main__':
     # cerebro.addstrategy(BenchMarkStrategy)
     cerebro.addstrategy(MlLagIndicatorStrategy)
 
-    end_date = datetime.datetime.today() - datetime.timedelta(days=10)
+    end_date = datetime.datetime.today() - datetime.timedelta(days=0)
 
-    data_alu = bt.feeds.Quandl(
-        dataname='PR_AL',
-        dataset='LME',
-        fromdate=datetime.datetime(2017, 10, 1),
-        todate=end_date,
-        buffered=True,
+    quandl_alu = QuandlGet(quandl_key='LME/PR_AL',
+                           api_key=None,
+                           start_date=datetime.datetime(2017, 10, 1),
+                           end_date=end_date
+                           )
+    quandl_alu.save_to_csv(os.getcwd() + '\\data\\LME_PR_AL.csv')
+    data_alu = bt.feeds.GenericCSVData(
+        dataname=os.getcwd() + '\\data\\LME_PR_AL.csv',
+        close=2,
+        dtformat='%Y-%m-%d',
+        start_date=datetime.datetime(2017, 10, 1),
+        end_date=end_date
     )
+    # data_alu = bt.feeds.Quandl(
+    #     dataname='PR_AL',
+    #     dataset='LME',
+    #     fromdate=datetime.datetime(2017, 10, 1),
+    #     todate=end_date,
+    #     buffered=True,
+    # )
 
     quandl_oil = QuandlGet(quandl_key='CHRIS/ICE_B1',
-                           api_key=api_key,
+                           api_key=None,
                            start_date=datetime.datetime(2017, 10, 1),
                            end_date=end_date
                            )
@@ -410,7 +423,9 @@ if __name__ == '__main__':
         dataname=os.getcwd() + '\\data\\ICE_B1.csv',
         volume=7,
         openinterest=8,
-        dtformat='%Y-%m-%d'
+        dtformat='%Y-%m-%d',
+        start_date=datetime.datetime(2017, 10, 1),
+        end_date=end_date
     )
 
     # Add the Data Feed to Cerebro
@@ -441,5 +456,5 @@ if __name__ == '__main__':
 
     # Plot the result
     # cerebro.plot(style='candle')
-    cerebro.plot()
+    cerebro.plot(volume=False)
 

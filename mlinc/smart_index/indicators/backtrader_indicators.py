@@ -8,14 +8,14 @@ class MlLagIndicator(bt.Indicator):
     params = (('period', 3),)
 
     # def __init__(self):
-    #     self.lines.mlli =
-
-        # try:
-        #     self.lines[0] = bt.indicators.Average(self.normalize(), period=self.p.period)
-        # except:
-        #     self.lines[0] = bt.indicators.Average(0, period=self.p.period)
-
-        # super(MlLagIndicator, self).__init__()
+    #     # self.lines.mlli =
+    #
+    #     try:
+    #         self.lines[0] = bt.indicators.Average(self.normalize(), period=self.p.period)
+    #     except:
+    #         self.lines[0] = bt.indicators.Average(0, period=self.p.period)
+    #
+    #     super(MlLagIndicator, self).__init__()
 
     def normalize(self):
         """ Normalize closing prices sliding matrices """
