@@ -13,9 +13,13 @@ import numpy as n
 # Import ML indicators
 from mlinc.smart_index.indicators.backtrader_indicators import *
 from mlinc.quandl_get import QuandlGet
+from mlinc.notifier import notification
 
 with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
     api_key = f.read()
+
+file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
+file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 
 
 # Create a Stratey
@@ -287,7 +291,7 @@ class MlLagIndicatorStrategy(bt.Strategy):
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
-        # print('%s, %s' % (dt.isoformat(), txt))
+        print('%s, %s' % (dt.isoformat(), txt))
         # print('%s' % (dt.isoformat()))
 
     def __init__(self):
@@ -300,16 +304,10 @@ class MlLagIndicatorStrategy(bt.Strategy):
         self.buycomm = None
 
         self.lagindex = [0, 0, 0]
-        self.threshold_long = -0.5
-        self.threshold_short = 0.5
+        self.threshold_long = -0.6
+        self.threshold_short = 0.95
 
-        # Oil indicator
         self.indicator = MlLagIndicator(self.datas[0], self.datas[1], period=self.params.maperiod)
-        # self.indicator1 = MlLagIndicator(self.datas[0], period=self.params.maperiod)
-        # Alu indicator
-        # self.indicator2 = MlLagIndicator(self.datas[1], period=self.params.maperiod)
-        # self.indicator = SimpleMovingAverage1(self.data, period=self.params.maperiod)
-        # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -351,17 +349,24 @@ class MlLagIndicatorStrategy(bt.Strategy):
 
     def next(self):
         # Simply log the closing price of the series from the reference
-        self.log('Close, %.2f' % self.dataclose[0])
+        # self.log('Close, %.2f' % self.dataclose[0])
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
             return
 
         self.lagindex.append(self.indicator.lag_index())
+        # print(self.lagindex[-1])
 
-        if self.lagindex[-3] < self.lagindex[-2] > self.lagindex[-1] and self.lagindex[-2] < self.threshold_long:
+        if self.lagindex[-3] > self.lagindex[-2] < self.lagindex[-1] and self.lagindex[-2] < self.threshold_long:
+            self.log('Go Long!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
+                                                                          self.lagindex[-2],
+                                                                          self.lagindex[-1]))
             self.order = self.buy(data=self.datas[0])
-        elif self.lagindex[-3] > self.lagindex[-2] < self.lagindex[-1] and self.lagindex[-2] > self.threshold_short:
+        elif self.lagindex[-3] < self.lagindex[-2] > self.lagindex[-1] and self.lagindex[-2] > self.threshold_short:
+            self.log('Go Short!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
+                                                                           self.lagindex[-2],
+                                                                           self.lagindex[-1]))
             self.order = self.sell(data=self.datas[0])
         else:
             return
@@ -372,15 +377,12 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    # cerebro.addstrategy(TestStrategy)
-    # cerebro.addstrategy(BaconBuyerStrategy)
-    # cerebro.addstrategy(BenchMarkStrategy)
     cerebro.addstrategy(MlLagIndicatorStrategy)
 
     end_date = datetime.datetime.today() - datetime.timedelta(days=0)
 
     quandl_alu = QuandlGet(quandl_key='LME/PR_AL',
-                           api_key=None,
+                           api_key=api_key,
                            start_date=datetime.datetime(2017, 10, 1),
                            end_date=end_date
                            )
@@ -392,16 +394,9 @@ if __name__ == '__main__':
         start_date=datetime.datetime(2017, 10, 1),
         end_date=end_date
     )
-    # data_alu = bt.feeds.Quandl(
-    #     dataname='PR_AL',
-    #     dataset='LME',
-    #     fromdate=datetime.datetime(2017, 10, 1),
-    #     todate=end_date,
-    #     buffered=True,
-    # )
 
     quandl_oil = QuandlGet(quandl_key='CHRIS/ICE_B1',
-                           api_key=None,
+                           api_key=api_key,
                            start_date=datetime.datetime(2017, 10, 1),
                            end_date=end_date
                            )
