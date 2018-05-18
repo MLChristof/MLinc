@@ -14,8 +14,8 @@ import numpy as n
 from mlinc.smart_index.indicators.backtrader_indicators import *
 from mlinc.quandl_get import QuandlGet
 
-# with open("C:\\Users\Jelle\Desktop\quandl_api.txt", 'r') as f:
-#     api_key = f.read()
+with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
+    api_key = f.read()
 
 
 # Create a Stratey
@@ -300,13 +300,14 @@ class MlLagIndicatorStrategy(bt.Strategy):
         self.buycomm = None
 
         self.lagindex = [0, 0, 0]
-        self.threshold_long = -0.65
-        self.threshold_short = 0.9
+        self.threshold_long = -0.5
+        self.threshold_short = 0.5
 
         # Oil indicator
-        self.indicator1 = MlLagIndicator(self.datas[0], period=self.params.maperiod)
+        self.indicator = MlLagIndicator(self.datas[0], self.datas[1], period=self.params.maperiod)
+        # self.indicator1 = MlLagIndicator(self.datas[0], period=self.params.maperiod)
         # Alu indicator
-        self.indicator2 = MlLagIndicator(self.datas[1], period=self.params.maperiod)
+        # self.indicator2 = MlLagIndicator(self.datas[1], period=self.params.maperiod)
         # self.indicator = SimpleMovingAverage1(self.data, period=self.params.maperiod)
         # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
 
@@ -352,32 +353,18 @@ class MlLagIndicatorStrategy(bt.Strategy):
         # Simply log the closing price of the series from the reference
         self.log('Close, %.2f' % self.dataclose[0])
 
-
-        try:
-            self.lagindex.append(self.indicator2.normalize() - self.indicator1.normalize())
-        except IndexError:
-            self.lagindex.append(0)
-
-        # Add a line
-        # self.line[0] = math.fsum(self.data.get(0, size=self.p.maperiod)) / self.p.maperiod
-
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
             return
 
-        if self.lagindex[-3] < self.lagindex[-2] and self.lagindex[-2] > self.lagindex[-1] and \
-                self.lagindex[-2] < self.threshold_long:
-            self.order = self.buy(data=self.datas[1])
-        elif self.lagindex[-3] > self.lagindex[-2] and self.lagindex[-2] < self.lagindex[-1] and \
-                self.lagindex[-2] > self.threshold_short:
-            self.order = self.sell(data=self.datas[1])
+        self.lagindex.append(self.indicator.lag_index())
+
+        if self.lagindex[-3] < self.lagindex[-2] > self.lagindex[-1] and self.lagindex[-2] < self.threshold_long:
+            self.order = self.buy(data=self.datas[0])
+        elif self.lagindex[-3] > self.lagindex[-2] < self.lagindex[-1] and self.lagindex[-2] > self.threshold_short:
+            self.order = self.sell(data=self.datas[0])
         else:
             return
-
-        # print(self.indicator1.normalize())
-        # print(self.indicator.data_array)
-        # print(self.indicator.open_price)
-        # print(self.datas[0])
 
 
 if __name__ == '__main__':
