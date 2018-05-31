@@ -10,21 +10,22 @@ file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 
 # This script returns the latest RSI and HMA values
 
-HMA_period = 10
+HMA_period = 14
 
 # Commodity: Rough Rice
-df1 = quandl.get('CHRIS/CME_RR1.6', start_date='2018-04-01', api_key=api_key)
-
-print(df1)
+df1 = quandl.get('CHRIS/CME_RR1.6', start_date='2018-01-01', api_key=api_key)
+data = df1.values.ravel()
 
 # code from:
 # http://pythonexample.com/user/JohnGraber
+
 
 def trinum(n):
     # calculates the "triangular number" of a number
     # https://www.mathsisfun.com/algebra/triangular-numbers.html
 
     return n * (n + 1) / 2
+
 
 def wma(values, window):
     # requires trinum.py
@@ -48,6 +49,7 @@ def wma(values, window):
 
     return weighted_moving_averages
 
+
 def hma(values, window):
     # requires wma.py
 
@@ -59,12 +61,17 @@ def hma(values, window):
     # hull_moving_averages = np.empty(window)
     # hull_moving_averages[:] = np.NAN
 
-    wma1 = 2 * wma(values, window / 2)
+    wma1 = 2 * wma(values, np.int(window/2))
     wma2 = wma(values, window)
 
     hull_moving_averages = wma((wma1 - wma2), period)
 
     return hull_moving_averages
 
-hma = hma(df1.Settle, HMA_period)
-print(hma)
+
+hm = hma(data, HMA_period)
+
+fig, ax = plt.subplots()
+ax.plot(df1.index, data, df1.index, hm)
+plt.grid()
+plt.show()
