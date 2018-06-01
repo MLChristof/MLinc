@@ -8,7 +8,6 @@ import pandas as pd
 with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
     api_key = f.read()
 
-# This script returns the latest RSI and HMA values
 
 HMA_period = 14
 
