@@ -1,10 +1,9 @@
 import requests
 
-# file_jelle = 'C:/Data/2. Jelle Personal/personal_python_projects/ifttt_info_jelle.txt'
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-
-files = [file_jelle, file_robert]
+file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
+file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 
 
 # notify
@@ -13,6 +12,8 @@ def notification(fileID, message):
     line = file.readlines()
     event = line[0][0:-1]
     id = line[1]
+    print(event)
+    print(id)
 
     report = dict()
     report["value1"] = message
@@ -20,5 +21,8 @@ def notification(fileID, message):
 
 
 if __name__ == '__main__':
-    notification(fileID=file_robert, message='Gozertje!!! We gaan pompon!!! 16:45 in de Gym! Lets goooooooo...!!')
-    notification(fileID=file_jelle, message='Gozertje!!! We gaan pompon!!! 16:45 in de Gym! Lets goooooooo...!!')
+    message = 'Test voor Daniel!..'
+    # notification(fileID=file_robert, message=message)
+    notification(fileID=file_jelle, message=message)
+    # notification(fileID=file_christof, message=message)
+    # notification(fileID=file_vincent, message=message)
