@@ -5,8 +5,9 @@ import pandas as pd
 
 with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
     api_key = f.read()
+    # print(api_key)
 
-file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+# file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 
 # This script returns the latest RSI and HMA values
 
@@ -72,6 +73,8 @@ def hma(values, window):
 hm = hma(data, HMA_period)
 
 fig, ax = plt.subplots()
-ax.plot(df1.index, data, df1.index, hm)
+ax.plot(df1.index, data, label='Data')
+ax.plot(df1.index, hm, label='HM')
+plt.legend()
 plt.grid()
 plt.show()
