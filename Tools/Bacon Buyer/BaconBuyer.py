@@ -8,9 +8,9 @@ Created on Th Oct 29 13:33:12 2017
 This script goes long and short on minima and maxima of the Hull Moving Average
 """
 
-# TODO Take spread into account for SL and TP prices
 # TODO Make position entry condition on minimum slope steepness of HWA on most recent day
 # TODO Trailing Stop Loss
+
 
 import pandas as pd
 import numpy as np
@@ -21,8 +21,8 @@ import winsound
 # INPUT
 # Set Moving Average Period
 MAPeriod = 100
-# Risk Reward Ratio (spread not accounted for yet, impacts RRR)
-RRR = 0.2
+# Risk Reward Ratio
+RRR = 15
 # Spread (pips)
 spread = 20
 # Set Minimum Stop Loss in pips (at least larger than spread)
@@ -30,8 +30,10 @@ MinSL = 80
 
 # adjust input
 spread = spread/1E5
-if RRR < 1:
-    MinSL = (MinSL/1E5)/RRR
+# take profit should not be smaller than spread
+# therefore MinSL is adjusted for RRR > 1
+if RRR > 1:
+    MinSL = (MinSL/1E5)*RRR
 else:
     MinSL = MinSL/1E5
 
@@ -170,8 +172,8 @@ for p in range(q-1, k):
                 df2.at[p, 'SL'] = df2.HMA[p]
             else:
                 df2.at[p, 'SL'] = df2.close[p]-MinSL
-            # determine Take Profit Price (add spread)
-            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.SL[p]) + df2.close[p]
+            # determine Take Profit Price
+            df2.at[p, 'TP'] = (1/RRR) * (df2.close[p] - df2.SL[p] + spread) + df2.close[p] + spread
 
         # Short Position: identify maximum on Hull Moving Average
         elif df2.dHMA[p] < 0 \
@@ -197,13 +199,13 @@ for p in range(q-1, k):
             if POScnt > 10:
                 delcolumn = 'POS' + str(POScnt - 10)
                 del df2[delcolumn]
-            # determine Stop Loss Price
+            # determine Stop Loss Price (spread added to SL to have same strategy as Long SL)
             if df2.HMA[p] - df2.close[p] > MinSL:
-                df2.at[p, 'SL'] = df2.HMA[p]
+                df2.at[p, 'SL'] = df2.HMA[p] + spread
             else:
-                df2.at[p, 'SL'] = df2.close[p] + MinSL
+                df2.at[p, 'SL'] = df2.close[p] + MinSL + spread
             # determine Take Profit Price
-            df2.at[p, 'TP'] = RRR * (df2.close[p] - df2.SL[p]) + df2.close[p]
+            df2.at[p, 'TP'] = (1/RRR) * (df2.close[p] - df2.SL[p]) + df2.close[p]
         else:
             df2.at[p, 'POS'] = np.NaN
             df2.at[p, 'POSnr'] = np.NaN
@@ -276,7 +278,7 @@ wins = df2['WIN'].values.sum()
 print('wins = ' + str('%.0f' % wins))
 losses = -1*df2['LOSS'].values.sum()
 print('losses = ' + str('%.0f' % losses))
-PI = RRR*(wins/losses)
+PI = (1/RRR)*(wins/losses)
 print('Profitability Index = ' + str('%.2f' % PI))
 
 #play sound if finished
@@ -295,7 +297,8 @@ PlotPOS = df2.POS.iloc[q+r:]
 PlotSL = df2.SL.iloc[q+r:]
 PlotTP = df2.TP.iloc[q+r:]
 
-output_file("MovingAverage.html")
+output_file('BaconBuyerHullMovingAverage_Period'+ str(MAPeriod)\
+         + '.html')
 TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover,crosshair"
 Title = 'Bacon Buyer Hull Moving Average; Period = ' + str(MAPeriod) + '; '\
         + str(name1) + ';RRR =' + str('%.1f' % RRR)\
@@ -315,7 +318,7 @@ p1.line(PlotDates, PlotHMA, line_width=2, color='navy')
 # Convert 'Position' to entry prices for Long & Short Positions
 PositionPlotLong = np.clip(PlotPOS, 0, 1)
 PositionPlotLong[PositionPlotLong == 0] = np.nan
-PositionPlotLong = PositionPlotLong*PlotClose
+PositionPlotLong = PositionPlotLong*(PlotClose+spread)
 
 PositionPlotShort = np.clip(PlotPOS, -1, 0)
 PositionPlotShort[PositionPlotShort == 0] = np.nan
