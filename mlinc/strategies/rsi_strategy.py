@@ -78,7 +78,7 @@ class RsiStrategy(bt.Strategy):
         #     return
 
         print(self.indicator.array)
-        print(self.indicator.)
+        # print(self.indicator.)
         # print(self.code())
 
     def code(self):

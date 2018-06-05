@@ -3,6 +3,7 @@ import datetime
 import os
 
 from mlinc.strategies.rsi_strategy import RsiStrategy
+from mlinc.strategies.lag_indicator_strategy import MlLagIndicatorStrategy
 from mlinc.quandl_get import QuandlGet
 
 
@@ -30,8 +31,8 @@ class Trader(object):
         # self.cerebro.addsizer(bt.sizers.FixedSize, stake=0.5)
         # self.cerebro.broker.setcommission(commission=0.02)
 
-    def import_quandl_data(self, name, open=None, close=None):
-        stock = QuandlGet(quandl_key=self.stock,
+    def import_quandl_data(self, name, stock, open=None, close=None):
+        stock = QuandlGet(quandl_key=stock,
                           api_key=self.api_key,
                           start_date=self.start_date,
                           end_date=self.end_date)
@@ -42,7 +43,7 @@ class Trader(object):
                                        dtformat='%Y-%m-%d',
                                        start_date=self.start_date,
                                        end_date=self.end_date)
-        self.cerebro.adddata(feed, name=self.stock)
+        self.cerebro.adddata(feed, name=name)
 
     def run(self):
         self.cerebro.run()
@@ -62,8 +63,19 @@ if __name__ == '__main__':
                  stock='LME/PR_AL',
                  api_key=api_key,
                  start_cash=10000)
-    RSI.import_quandl_data(name='ALU', close=2)
+    RSI.import_quandl_data(name='ALU', stock='LME/PR_AL', close=2)
     RSI.run()
     RSI.plot()
+
+    # LagIndicator = Trader(MlLagIndicatorStrategy,
+    #                       datetime.datetime(2016, 1, 1),
+    #                       datetime.datetime(2018, 1, 1),
+    #                       None,
+    #                       api_key,
+    #                       10000)
+    # LagIndicator.import_quandl_data('ALU', 'LME/PR_AL', close=2)
+    # LagIndicator.import_quandl_data('BRENT', 'CHRIS/ICE_B1', close=4)
+    # LagIndicator.run()
+    # LagIndicator.plot()
 
 

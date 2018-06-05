@@ -33,3 +33,4 @@ class MlLagIndicator(bt.Indicator):
 
     def close_price_1(self):
         return self.datas[1].close.get(size=self.p.period)
+
