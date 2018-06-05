@@ -4,6 +4,8 @@ import os
 
 from mlinc.strategies.rsi_strategy import RsiStrategy
 from mlinc.strategies.lag_indicator_strategy import MlLagIndicatorStrategy
+from mlinc.strategies.bacon_buyer_strategy import BaconBuyerStrategy
+
 from mlinc.quandl_get import QuandlGet
 
 
@@ -57,25 +59,35 @@ if __name__ == '__main__':
     with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
         api_key = f.read()
 
-    RSI = Trader(strategy=RsiStrategy,
-                 start_date=datetime.datetime(2017, 11, 1),
-                 end_date=datetime.datetime(2018, 1, 1),
-                 stock='LME/PR_AL',
-                 api_key=api_key,
-                 start_cash=10000)
-    RSI.import_quandl_data(name='ALU', stock='LME/PR_AL', close=2)
-    RSI.run()
-    RSI.plot()
+    # RSI = Trader(strategy=RsiStrategy,
+    #              start_date=datetime.datetime(2016, 11, 1),
+    #              end_date=datetime.datetime(2018, 1, 1),
+    #              stock='LME/PR_AL',
+    #              api_key=api_key,
+    #              start_cash=10000)
+    # RSI.import_quandl_data(name='ALU', stock='LME/PR_AL', close=2)
+    # RSI.run()
+    # RSI.plot()
+    #
+    # BB = Trader(strategy=BaconBuyerStrategy,
+    #              start_date=datetime.datetime(2016, 11, 1),
+    #              end_date=datetime.datetime(2018, 1, 1),
+    #              stock='LME/PR_AL',
+    #              api_key=api_key,
+    #              start_cash=10000)
+    # BB.import_quandl_data(name='ALU', stock='LME/PR_AL', close=2)
+    # BB.run()
+    # BB.plot()
 
-    # LagIndicator = Trader(MlLagIndicatorStrategy,
-    #                       datetime.datetime(2016, 1, 1),
-    #                       datetime.datetime(2018, 1, 1),
-    #                       None,
-    #                       api_key,
-    #                       10000)
-    # LagIndicator.import_quandl_data('ALU', 'LME/PR_AL', close=2)
-    # LagIndicator.import_quandl_data('BRENT', 'CHRIS/ICE_B1', close=4)
-    # LagIndicator.run()
-    # LagIndicator.plot()
+    LagIndicator = Trader(MlLagIndicatorStrategy,
+                          datetime.datetime(2016, 1, 1),
+                          datetime.datetime(2018, 1, 1),
+                          None,
+                          api_key,
+                          10000)
+    LagIndicator.import_quandl_data('ALU', 'LME/PR_AL', close=2)
+    LagIndicator.import_quandl_data('BRENT', 'CHRIS/ICE_B1', close=4)
+    LagIndicator.run()
+    LagIndicator.plot()
 
 
