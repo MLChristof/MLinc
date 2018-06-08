@@ -79,6 +79,16 @@ if __name__ == '__main__':
     RSI.run()
     RSI.plot()
 
+    HMA = Trader(strategy=BaconBuyerStrategy,
+                 start_date=datetime.datetime(2018, 1, 1),
+                 end_date=None,
+                 stock='FSE/ALV_X',
+                 api_key=api_key,
+                 start_cash=10000)
+    HMA.import_quandl_data(name='ALLIANZ', stock='FSE/ALV_X', close=4, open=1)
+    HMA.run()
+    HMA.plot()
+
     # LagIndicator = Trader(MlLagIndicatorStrategy,
     #                       datetime.datetime(2017, 10, 1),
     #                       None,

@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 # import os.path
 # import sys
 # import time
+import numpy as n
 
 import backtrader as bt
 
@@ -13,7 +14,7 @@ class BaconBuyerStrategy(bt.Strategy):
     # TODO Add smart staking/sizing
     # TODO Check Commission settings
     params = (
-        ('maperiod', 20),
+        ('maperiod', 14),
         ('RRR', 1),
         ('minSL', 2000/1E5), # in pips
     )
