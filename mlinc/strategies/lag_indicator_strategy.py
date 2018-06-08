@@ -16,7 +16,7 @@ from mlinc.indicators.lag_indicator import MlLagIndicator
 
 class MlLagIndicatorStrategy(bt.Strategy):
     params = (
-        ('maperiod', 10),
+        ('maperiod', 5),
         )
 
     def log(self, txt, dt=None):
@@ -81,24 +81,24 @@ class MlLagIndicatorStrategy(bt.Strategy):
     def next(self):
         # Simply log the closing price of the series from the reference
         # self.log('Close, %.2f' % self.dataclose[0])
-        pass
+        # pass
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
-        # if self.order:
-        #     return
-        #
-        # self.lagindex.append(self.indicator.lag_index())
-        # # print(self.lagindex[-1])
-        #
-        # if self.lagindex[-3] > self.lagindex[-2] < self.lagindex[-1] and self.lagindex[-2] < self.threshold_long:
-        #     self.log('Go Long!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
-        #                                                                   self.lagindex[-2],
-        #                                                                   self.lagindex[-1]))
-        #     self.order = self.buy(data=self.datas[0])
-        # elif self.lagindex[-3] < self.lagindex[-2] > self.lagindex[-1] and self.lagindex[-2] > self.threshold_short:
-        #     self.log('Go Short!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
-        #                                                                    self.lagindex[-2],
-        #                                                                    self.lagindex[-1]))
-        #     self.order = self.sell(data=self.datas[0])
-        # else:
-        #     return
+        if self.order:
+            return
+
+        self.lagindex.append(self.indicator.lag_index())
+        # print(self.lagindex[-1])
+
+        if self.lagindex[-3] > self.lagindex[-2] < self.lagindex[-1] and self.lagindex[-2] < self.threshold_long:
+            self.log('Go Long!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
+                                                                          self.lagindex[-2],
+                                                                          self.lagindex[-1]))
+            self.order = self.buy()
+        elif self.lagindex[-3] < self.lagindex[-2] > self.lagindex[-1] and self.lagindex[-2] > self.threshold_short:
+            self.log('Go Short!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
+                                                                           self.lagindex[-2],
+                                                                           self.lagindex[-1]))
+            self.order = self.sell()
+        else:
+            return
