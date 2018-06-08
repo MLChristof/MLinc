@@ -1,17 +1,12 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 # datapath = os.path.join(modpath, 'backtrader-master\datas\orcl-1995-2014.txt')
-import datetime  # For datetime objects
-import os.path  # To manage paths
-import sys  # To find out the script name (in argv[0])
-import time
+# import datetime
+# import os.path
+# import sys
+# import time
 
-# Import the backtrader platform
 import backtrader as bt
-import numpy as n
-
-# Import ML indicators
-from mlinc.smart_index.indicators.backtrader_indicators import *
 
 
 class BaconBuyerStrategy(bt.Strategy):
@@ -139,11 +134,20 @@ class BaconBuyerStrategy(bt.Strategy):
             # place order
             self.order = self.sell_bracket(price=EntryShort,stopprice=SL_short,limitprice=TP_short)
 
+    def code(self):
+        if self.threshold_short > self.indicator > self.threshold_short-10:
+            return 'Code Yellow: RSI={}'.format(self.indicator)
+        elif self.indicator >= self.threshold_short:
+            return 'Code Red: RSI={}, Possibility to go short!'.format(self.indicator)
+        elif self.threshold_long+10 > self.indicator > self.threshold_long:
+            return 'Code Yellow: RSI={}'.format(self.indicator)
+        elif self.indicator <= self.threshold_long:
+            return 'Code Red: RSI={}, Possibility to go long!'.format(self.indicator.lines)
+        else:
+            return
 
-        # self.month.append(self.datas[0].datetime.date(0).month)
-        #
-        # if self.month[-1] != self.month[-2]:
-        #     self.log('BUY CREATE, %.2f' % self.dataclose[0])
-        #     self.order = self.buy()
-        # else:
-        #     return
+
+
+
+
+

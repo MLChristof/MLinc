@@ -4,6 +4,7 @@ import os
 
 from mlinc.strategies.rsi_strategy import RsiStrategy
 from mlinc.strategies.lag_indicator_strategy import MlLagIndicatorStrategy
+from mlinc.strategies.bacon_buyer_strategy import BaconBuyerStrategy
 from mlinc.quandl_get import QuandlGet
 
 
