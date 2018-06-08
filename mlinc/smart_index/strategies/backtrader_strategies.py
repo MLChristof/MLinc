@@ -377,7 +377,7 @@ if __name__ == '__main__':
     # cerebro.addanalyzer(bt.analyzers.TimeReturn, timeframe=bt.TimeFrame.Years)
 
     # Add a strategy
-    # cerebro.addstrategy(BaconBuyerStrategy)
+    cerebro.addstrategy(BaconBuyerStrategy)
     # cerebro.addstrategy(BenchMarkStrategy)
     cerebro.addstrategy(MlLagIndicatorStrategy)
 

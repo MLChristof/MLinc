@@ -18,7 +18,12 @@ class Trader(object):
         self.start_cash = start_cash
 
         self.cerebro = bt.Cerebro()
-        self.cerebro.addstrategy(self.strategy)
+
+        if isinstance(self.strategy, list):
+            for strat in self.strategy:
+                self.cerebro.addstrategy(strat)
+        else:
+            self.cerebro.addstrategy(self.strategy)
 
         # # Add a FixedSize sizer according to the stake
         # self.cerebro.addsizer(bt.sizers.FixedSize, stake=0.5)
