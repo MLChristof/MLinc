@@ -15,9 +15,12 @@ from mlinc.smart_index.indicators.backtrader_indicators import *
 
 
 class BaconBuyerStrategy(bt.Strategy):
+    # TODO Add smart staking/sizing
+    # TODO Check Commission settings
     params = (
-        ('maperiod', 14),
+        ('maperiod', 20),
         ('RRR', 1),
+        ('minSL', 2000/1E5), # in pips
     )
 
     def log(self, txt, dt=None):
@@ -93,15 +96,48 @@ class BaconBuyerStrategy(bt.Strategy):
                             self.indicator.lines.hma[0]))
 
         hma_diff = n.diff(hma_data)
-        # Open Long Position
-        if hma_diff[5] - hma_diff[4] > 0 \
-            and hma_diff[4] - hma_diff[3] < 0 \
-            and hma_diff[3] - hma_diff[2] < 0 \
-            and hma_diff[2] - hma_diff[1] < 0 \
-            and hma_diff[1] - hma_diff[0] < 0:
 
+        # Open Long Position on local minimum HMA
+        # (if slope on last day of HMA is pos and 5 days before neg)
+        if hma_diff[5] > 0 \
+            and hma_diff[4] < 0 \
+            and hma_diff[3] < 0 \
+            and hma_diff[2] < 0 \
+            and hma_diff[1] < 0 \
+            and hma_diff[0] < 0:
             self.log('BUY CREATE, %.2f' % self.dataclose[0])
-            self.order = self.buy(exectype=bt.Order.StopTrail, trailamount=0.25)
+            # determine Entry price, SL & TP
+            EntryLong = self.datas[0]
+            SL_long = self.indicator.lines.hma[0]
+            if EntryLong - SL_long > self.params.minSL:
+                SL_long = self.indicator.lines.hma[0]
+            else:
+                SL_long = EntryLong - self.params.minSL
+
+            TP_long = (1/self.params.RRR)*(EntryLong-SL_long)+EntryLong
+            # place order
+            self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, )
+
+        # Open Short Position on local maximum HMA
+        # (if slope on last day of HMA is neg and 5 days before pos)
+        if hma_diff[5] < 0 \
+            and hma_diff[4] > 0 \
+            and hma_diff[3] > 0 \
+            and hma_diff[2] > 0 \
+            and hma_diff[1] > 0 \
+            and hma_diff[0] > 0:
+            self.log('SELL CREATE, %.2f' % self.dataclose[0])
+            # determine Entry price, SL & TP
+            EntryShort = self.datas[0]
+            SL_short = self.indicator.lines.hma[0]
+            if  SL_short - EntryShort > self.params.minSL:
+                SL_short = self.indicator.lines.hma[0]
+            else:
+                SL_short = EntryShort + self.params.minSL
+
+            TP_short = (-1/self.params.RRR)*(SL_short - EntryShort) + EntryShort
+            # place order
+            self.order = self.sell_bracket(price=EntryShort,stopprice=SL_short,limitprice=TP_short)
 
 
         # self.month.append(self.datas[0].datetime.date(0).month)
