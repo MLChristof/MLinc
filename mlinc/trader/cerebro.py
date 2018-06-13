@@ -49,11 +49,11 @@ class Trader(object):
         # self.cerebro.broker.setcommission(commission=0.02)
 
     def import_quandl_data(self, name, stock, open=None, close=None):
-        # stock = QuandlGet(quandl_key=stock,
-        #                   api_key=self.api_key,
-        #                   start_date=self.start_date,
-        #                   end_date=self.end_date)
-        # stock.save_to_csv(os.getcwd() + '\data\{}.csv'.format(name))
+        stock = QuandlGet(quandl_key=stock,
+                          api_key=self.api_key,
+                          start_date=self.start_date,
+                          end_date=self.end_date)
+        stock.save_to_csv(os.getcwd() + '\data\{}.csv'.format(name))
         feed = bt.feeds.GenericCSVData(dataname=os.getcwd() + '\data\{}.csv'.format(name),
                                        open=open,
                                        close=close,
@@ -62,11 +62,12 @@ class Trader(object):
                                        end_date=self.end_date)
         self.cerebro.adddata(feed, name=name)
 
+    @property
     def run(self):
-        self.cerebro.run()
+        return self.cerebro.run()
 
     def plot(self):
-        self.run()
+        self.cerebro.run()
         self.cerebro.plot(volume=False)
 
 
@@ -77,22 +78,20 @@ if __name__ == '__main__':
     RSI = Trader(strategy=RsiStrategy,
                  start_date=datetime.datetime(2018, 1, 1),
                  end_date=None,
-                 stock='FSE/ALV_X',
+                 stock='CHRIS/ODE_TR1',
                  api_key=api_key,
                  start_cash=10000)
-    RSI.import_quandl_data(name='ALLIANZ', stock='FSE/ALV_X', close=4, open=1)
-    RSI.run()
+    RSI.import_quandl_data(name='RICE', stock='CHRIS/ODE_TR1', close=1)
     RSI.plot()
 
-    HMA = Trader(strategy=BaconBuyerStrategy,
-                 start_date=datetime.datetime(2018, 1, 1),
-                 end_date=None,
-                 stock='FSE/ALV_X',
-                 api_key=api_key,
-                 start_cash=10000)
-    HMA.import_quandl_data(name='ALLIANZ', stock='FSE/ALV_X', close=4, open=1)
-    HMA.run()
-    HMA.plot()
+    # HMA = Trader(strategy=BaconBuyerStrategy,
+    #              start_date=datetime.datetime(2018, 1, 1),
+    #              end_date=None,
+    #              stock='FSE/ALV_X',
+    #              api_key=api_key,
+    #              start_cash=10000)
+    # HMA.import_quandl_data(name='ALLIANZ', stock='FSE/ALV_X', close=4, open=1)
+    # HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,
     #                       datetime.datetime(2017, 10, 1),

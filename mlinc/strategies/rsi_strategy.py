@@ -76,8 +76,9 @@ class RsiStrategy(bt.Strategy):
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         # if self.order:
         #     return
-
-        print(self.indicator.array)
+        if self.indicator < self.threshold_long:
+            self.rsivalue = self.indicator
+        # print(self.indicator.array)
         # print(self.indicator.)
         # print(self.code())
 
