@@ -75,23 +75,25 @@ if __name__ == '__main__':
     with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
         api_key = f.read()
 
-    RSI = Trader(strategy=RsiStrategy,
-                 start_date=datetime.datetime(2018, 1, 1),
-                 end_date=None,
-                 stock='CHRIS/ODE_TR1',
-                 api_key=api_key,
-                 start_cash=10000)
-    RSI.import_quandl_data(name='RICE', stock='CHRIS/ODE_TR1', close=1)
-    RSI.plot()
-
-    # HMA = Trader(strategy=BaconBuyerStrategy,
+    # RSI = Trader(strategy=RsiStrategy,
     #              start_date=datetime.datetime(2018, 1, 1),
     #              end_date=None,
-    #              stock='FSE/ALV_X',
+    #              stock='CHRIS/ODE_TR1',
     #              api_key=api_key,
     #              start_cash=10000)
-    # HMA.import_quandl_data(name='ALLIANZ', stock='FSE/ALV_X', close=4, open=1)
-    # HMA.plot()
+    # RSI.import_quandl_data(name='RICE', stock='CHRIS/ODE_TR1', close=1)
+    # RSI.plot()
+
+    HMA = Trader(strategy=BaconBuyerStrategy,
+                 start_date=datetime.datetime(2001, 1, 1),
+                 end_date=None,
+                 stock=None,
+                 api_key=api_key,
+                 start_cash=10000)
+    HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
+    HMA.cerebro.broker.setcommission(commission=0.01, mult=50)
+    HMA.import_quandl_data(name='EUROFX', stock='CHRIS/CME_EC1', close=6, open=1)
+    HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,
     #                       datetime.datetime(2017, 10, 1),
