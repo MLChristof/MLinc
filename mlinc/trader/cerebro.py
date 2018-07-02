@@ -85,14 +85,15 @@ if __name__ == '__main__':
     # RSI.plot()
 
     HMA = Trader(strategy=BaconBuyerStrategy,
-                 start_date=datetime.datetime(2001, 1, 1),
+                 start_date=datetime.datetime(2002, 1, 1),
                  end_date=None,
                  stock=None,
                  api_key=api_key,
                  start_cash=10000)
-    HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
+    # HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=100)
+    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=10)
     HMA.cerebro.broker.setcommission(commission=0.01, mult=50)
-    HMA.import_quandl_data(name='EUROFX', stock='CHRIS/CME_EC1', close=6, open=1)
+    HMA.import_quandl_data(name='BRENT', stock='CHRIS/ICE_B4', close=4, open=1)
     HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,
