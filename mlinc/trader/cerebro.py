@@ -48,7 +48,7 @@ class Trader(object):
         # self.cerebro.addsizer(bt.sizers.FixedSize, stake=0.5)
         # self.cerebro.broker.setcommission(commission=0.02)
 
-    def import_quandl_data(self, name, stock, open=None, close=None):
+    def import_quandl_data(self, name, stock, open=None, high=None, low=None, close=None, volume=None ):
         stock = QuandlGet(quandl_key=stock,
                           api_key=self.api_key,
                           start_date=self.start_date,
@@ -57,6 +57,9 @@ class Trader(object):
         feed = bt.feeds.GenericCSVData(dataname=os.getcwd() + '\data\{}.csv'.format(name),
                                        open=open,
                                        close=close,
+                                       high=high,
+                                       low=low,
+                                       volume=volume,
                                        dtformat='%Y-%m-%d',
                                        start_date=self.start_date,
                                        end_date=self.end_date)
@@ -68,7 +71,7 @@ class Trader(object):
 
     def plot(self):
         self.cerebro.run()
-        self.cerebro.plot(volume=False)
+        self.cerebro.plot(volume=True)
 
 
 if __name__ == '__main__':
@@ -94,7 +97,7 @@ if __name__ == '__main__':
     HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=1)
 
     HMA.cerebro.broker.setcommission(commission=0.01, mult=300)
-    HMA.import_quandl_data(name='BRENT', stock='CHRIS/ICE_B4', close=4, open=1)
+    HMA.import_quandl_data(name='BRENT', stock='CHRIS/ICE_B4', open=1, high=2, low=3, close=4, volume=7)
     HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,
