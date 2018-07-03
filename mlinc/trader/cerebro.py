@@ -72,6 +72,7 @@ class Trader(object):
     def plot(self):
         self.cerebro.run()
         self.cerebro.plot(volume=True)
+        self.cerebro.plot(style='candle')
 
 
 if __name__ == '__main__':
