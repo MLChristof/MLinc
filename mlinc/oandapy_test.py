@@ -21,4 +21,8 @@ try:
             s.terminate("maxrecs received: {}".format(MAXREC))
 
 except V20Error as e:
+<<<<<<< Updated upstream
     print("Error: {}".format(e))
+=======
+    print("Error: {}".format(e))
+>>>>>>> Stashed changes

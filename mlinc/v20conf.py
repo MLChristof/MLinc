@@ -1,2 +1,2 @@
-account_id = 'INSERT OANDA V20 ACCOUNT ID HERE'
-account_key = 'INSERT OANDA V20 TOKEN HERE'
+account_id = '101-004-8368887-001'
+account_key = 'ff620cddbf2c1c1a2b2b660a93000b34-37ba2d050f73e3a0ef652073f95c37dc'
