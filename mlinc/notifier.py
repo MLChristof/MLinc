@@ -21,8 +21,8 @@ def notification(fileID, message):
 
 
 if __name__ == '__main__':
-    message = 'Test voor Daniel!..'
-    # notification(fileID=file_robert, message=message)
-    notification(fileID=file_jelle, message=message)
-    # notification(fileID=file_christof, message=message)
-    # notification(fileID=file_vincent, message=message)
+    message = 'Twee Belgen lopen over een treinrails. Zegt die ene: “Wat een lange trap hè?” Zegt die andere :”Dat valt nog wel mee, maar de leuning zit zo laag”.'
+    notification(fileID=file_robert, message=message)
+    # notification(fileID=file_jelle, message=message)
+    notification(fileID=file_christof, message=message)
+    notification(fileID=file_vincent, message=message)
