@@ -1,2 +1,0 @@
-account_id = 'INSERT OANDA V20 ACCOUNT ID HERE'
-account_key = 'INSERT OANDA V20 TOKEN HERE'
