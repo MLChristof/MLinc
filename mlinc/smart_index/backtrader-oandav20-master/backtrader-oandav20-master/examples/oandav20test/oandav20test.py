@@ -24,14 +24,21 @@ from __future__ import (absolute_import, division, print_function,
 import argparse
 import datetime
 
-# The above could be sent to an independent module
 import backtrader as bt
 from backtrader.utils import flushfile  # win32 quick stdout flushing
 
-StoreCls = bt.stores.OandaStore
-DataCls = bt.feeds.OandaData
-BrokerCls = bt.brokers.OandaBroker
+import btoandav20
 
+StoreCls = btoandav20.stores.OandaV20Store
+DataCls = btoandav20.feeds.OandaV20Data
+# BrokerCls = btoandav20.brokers.OandaV20Broker
+
+# available timeframes for oanda
+TIMEFRAMES = [bt.TimeFrame.Names[bt.TimeFrame.Seconds],
+         bt.TimeFrame.Names[bt.TimeFrame.Minutes],
+         bt.TimeFrame.Names[bt.TimeFrame.Days],
+         bt.TimeFrame.Names[bt.TimeFrame.Weeks],
+         bt.TimeFrame.Names[bt.TimeFrame.Months]]
 
 class TestStrategy(bt.Strategy):
     params = dict(
@@ -321,7 +328,7 @@ def runstrategy():
 def parse_args(pargs=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description='Test Oanda integration')
+        description='Test Oanda v20 integration')
 
     parser.add_argument('--exactbars', default=1, type=int,
                         required=False, action='store',
@@ -407,17 +414,17 @@ def parse_args(pargs=None):
                         required=False, action='store_true',
                         help='resample to chosen timeframe')
 
-    parser.add_argument('--timeframe', default=bt.TimeFrame.Names[1],
-                        choices=bt.TimeFrame.Names,
+    parser.add_argument('--timeframe', default=TIMEFRAMES[0],
+                        choices=TIMEFRAMES,
                         required=False, action='store',
                         help='TimeFrame for Resample/Replay')
 
-    parser.add_argument('--compression', default=1, type=int,
+    parser.add_argument('--compression', default=5, type=int,
                         required=False, action='store',
                         help='Compression for Resample/Replay')
 
     parser.add_argument('--timeframe1', default=None,
-                        choices=bt.TimeFrame.Names,
+                        choices=TIMEFRAMES,
                         required=False, action='store',
                         help='TimeFrame for Resample/Replay - Data1')
 

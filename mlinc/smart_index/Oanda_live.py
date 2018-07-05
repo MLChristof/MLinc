@@ -1,89 +1,53 @@
-from mlinc.smart_index.strategies.backtrader_strategies import *
+import argparse
+import datetime
 import backtrader as bt
+
+apikey = '0bfaffb667afd6db474f8ec3d3a54540-bc042d7e21b87eb55d958edc2997fd2a'
+acc = '101-004-7108173-001'
+
+# Create a Stratey
+class TestStrategy(bt.Strategy):
+
+    def __init__(self):
+        pass
+
+    #Provides any noticficaitons about the data.
+    def notify_data(self, data, status, *args, **kwargs):
+        print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
+
+    def notify_store(self, msg, *args, **kwargs):
+        print('*' * 5, 'STORE NOTIF:', msg)
+
+    def next(self):
+        # Simply log the closing price of the series from the reference
+        print('O: {} H: {} L: {} C: {}'.format(
+                self.data.open[0],
+                self.data.high[0],
+                self.data.low[0],
+                self.data.close[0],
+                ))
+
+
+    def start(self):
+        if self.data0.contractdetails is not None:
+            print('-- Contract Details:')
+            print(self.data0.contractdetails)
+        print('Started')
+        acc_cash = cerebro.broker.getcash()
+        acc_val = cerebro.broker.getvalue()
+        print('Account Cash = {}'.format(acc_cash))
+        print('Account Value = {}'.format(acc_val))
 
 
 if __name__ == '__main__':
-    # Create a cerebro entity
     cerebro = bt.Cerebro()
-    oandastore = bt.stores.OandaStore()
+    oandastore = bt.stores.OandaStore(token=apikey, account=acc, practice=True)
     cerebro.broker = oandastore.getbroker()
-    # cerebro.addanalyzer(bt.analyzers.TimeReturn, timeframe=bt.TimeFrame.Years)
 
-    # Add a strategy
-    cerebro.addstrategy()
-    # cerebro.addstrategy(BenchMarkStrategy)
-    # cerebro.addstrategy(MlLagIndicatorStrategy)
+    data0 = oandastore.getdata(dataname="GBP_USD", timeframe=bt.TimeFrame.Ticks, compression=1, backfill_start=False, backfill=False)
 
-    # Datas are in a subfolder of the samples. Need to find where the script is
-    # because it could have been called from anywhere
-    # modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
-    # modpath = modpath[:-11]
-    # datapath1 = os.path.join(modpath, 'data/EURUSD14402.csv')
-    # datapath2 = os.path.join(modpath, 'data/Aluminium1440.csv')
+    #This is setting what timeframe we want to use.
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=5)
 
-    # Create a Data Feed
-    # data = bt.feeds.YahooFinanceCSVData(
-    #     dataname=datapath,
-    #     # Do not pass values before this date
-    #     fromdate=datetime.datetime(2009, 2, 24),
-    #     # Do not pass values before this date
-    #     todate=datetime.datetime(2013, 2, 24),
-    #     # Do not pass values after this date
-    #     reverse=False)
-
-    # data_EURUSD = bt.feeds.GenericCSVData(
-    #     dataname=datapath1,
-    #     # Do not pass values before this date
-    #     fromdate=datetime.datetime(2010, 9, 20),
-    #     # Do not pass values before this date
-    #     todate=datetime.datetime(2017, 8, 11),
-    #     nullvalue=0.0,
-    #     dtformat=('%Y-%m-%d'),
-    #     openinterest=-1,
-    #     seperator=','
-    #     )
-
-    # data_alu = bt.feeds.GenericCSVData(
-    #     dataname=datapath2,
-    #     # Do not pass values before this date
-    #     fromdate=datetime.datetime(2017, 5, 1),
-    #     # Do not pass values before this date
-    #     todate=datetime.datetime(2018, 4, 10),
-    #     nullvalue=0.0,
-    #     dtformat=('%Y.%m.%d'),
-    #     openinterest=-1,
-    #     seperator=','
-    # )
-
-    # Add the Data Feed to Cerebro
-    # cerebro.adddata(data_EURUSD, name='EURUSD')
-    # cerebro.adddata(data_alu, name='Alu')
-
-    # Set our desired cash start
-    # cerebro.broker.setcash(10000.0)
-
-    # Add a FixedSize sizer according to the stake
-    # cerebro.addsizer(bt.sizers.FixedSize, stake=500)
-
-    # Set the commission and leverage
-    # cerebro.broker.setcommission(commission=0.005, mult=50.0, name='EURUSD')
-
-    # Print out the starting conditions
-    # print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    # start = cerebro.broker.getvalue()
-
-    # Run over everything
+    cerebro.addstrategy(TestStrategy)
     cerebro.run()
-
-    # Print out the final result
-    # print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    # end = cerebro.broker.getvalue()
-    # ans = (end - start) / end * 100
-    # print('Percentage profit: %.3f' % ans)
-
-    # Plot the result
-    # cerebro.plot(style='candle')
-
-
-
-
