@@ -12,7 +12,7 @@ import oandapyV20
 import oandapyV20.endpoints.positions as positions
 
 ########### Account Setup ###########
-from mlinc.v20conf import account_id, account_key
+from archive.v20conf import account_id, account_key
 api = oandapyV20.API(access_token=account_key)
 
 instrument = "EUR_USD"

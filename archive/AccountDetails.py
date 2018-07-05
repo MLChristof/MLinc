@@ -10,7 +10,7 @@ import oandapyV20
 import oandapyV20.endpoints.accounts as accounts
 
 ########### Account Setup ###########
-from mlinc.v20conf import account_id, account_key
+from archive.v20conf import account_id, account_key
 api = oandapyV20.API(access_token=account_key)
 
 ############# Account Details ##############

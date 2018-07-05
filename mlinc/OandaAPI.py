@@ -3,16 +3,10 @@
 #@author: Robert Weegenaar, based on code from ratnadeepb on GitHub
 
 import oandapyV20
-import oandapyV20.endpoints.accounts as accounts
-import oandapyV20.endpoints.orders as orders
 import oandapyV20.endpoints.positions as positions
-import oandapyV20.endpoints.pricing as pricing
-import oandapyV20.endpoints.trades as trades
-from os import environ
-import json
 
 ########### Account Setup ###########
-from mlinc.v20conf import account_id, account_key
+from archive.v20conf import account_id, account_key
 api = oandapyV20.API(access_token=account_key)
 
 # ############# Account Details ##############

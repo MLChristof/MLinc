@@ -3,46 +3,52 @@
 """
 Created on Wed Nov  8 21:06:29 2017
 
-@author: rweegenaar, based on code from ratnadeepb on GitHub
+@author: rweegenaar
 """
+
+# Market order (position entry at current price) with SL & TP
+# Market orders can also be used to immediately close a position
+# Developer Guide: http://developer.oanda.com/rest-live-v20/transaction-df/
 
 import oandapyV20
 import oandapyV20.endpoints.orders as orders
 
 ########### Account Setup ###########
-from mlinc.v20conf import account_id, account_key
+from archive.v20conf import account_id, account_key
 api = oandapyV20.API(access_token=account_key)
 
-Instrument = 'USD_JPY'
-OrderPrice = 113.00
-SLPrice    = 112.50
-Units      = 100 #positive number is long and negative is short
+Instrument = 'USD_DKK'
+SLPrice    = 6.4428
+TPPrice    = 6.3776
+Units      = -100 # positive number is long, negative short
 
-
-########## Sell Limit Order Creation ############
-# The stop is set within the order
+########## Market Order Creation ############
+# The SL and TP are set within the order
 # Client Extensions are also set
 data = {
         "order": {
-                "price": OrderPrice,
                 "stopLossOnFill": {
                         "timeInForce": "GTC",
                         "price": SLPrice
                 },
-                "timeInForce": "GTC",
+                "takeProfitOnFill": {
+                        "timeInForce": "GTC",
+                        "price": TPPrice
+                },
+                "timeInForce": "FOK", # FOK = Fill or Kill; IOC = Immediate Or Cancel
                 "instrument": Instrument,
                 "units": Units,
                 "clientExtensions": {
                         "comment": "Tryout API",
                         "tag": "beginner",
-                        "id": "my_test_order"
+                        "id": "My first market order"
                         },
-                "type": "LIMIT",
+                "type": "MARKET",
                 "positionFill": "DEFAULT"
                 }
         }
 
 r = orders.OrderCreate(accountID=account_id, data=data)
 api.request(r)
-LOResponse = r.response
+MOResponse = r.response
 print(r.response)
