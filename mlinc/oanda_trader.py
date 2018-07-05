@@ -1,4 +1,6 @@
 import numpy as n
+import pandas as pd
+
 
 def hma(values, window):
     # requires wma.py
@@ -47,3 +49,7 @@ def trinum(num):
     # https://www.mathsisfun.com/algebra/triangular-numbers.html
 
     return num * (num + 1) / 2
+
+
+if __name__ == '__main__':
+    pass
