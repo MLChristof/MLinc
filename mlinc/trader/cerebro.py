@@ -18,21 +18,37 @@ class Trader(object):
         self.start_cash = start_cash
 
         self.cerebro = bt.Cerebro()
-        self.cerebro.addstrategy(self.strategy)
 
-        try:
-            self.cerebro.adddata(stock)
-        except:
-            pass
-            # print('Failed to add stock. Please run import_quandl_data method.')
+        if isinstance(self.strategy, list):
+            for strat in self.strategy:
+                self.cerebro.addstrategy(strat)
+        else:
+            self.cerebro.addstrategy(self.strategy)
 
-        if self.start_cash:
-            self.cerebro.broker.set_cash(100000)
+        # # Add a FixedSize sizer according to the stake
+        # self.cerebro.addsizer(bt.sizers.FixedSize, stake=0.5)
+        #
+        # # Set the commission
+        # self.cerebro.broker.setcommission(commission=0.02)
+
+        # if self.stock is None:
+        #     pass
+        # else:
+        #     try:
+        #         self.cerebro.adddata(stock)
+        #     except:
+        #         pass
+        # print('Failed to add stock. Please run import_quandl_data method.')
+
+        # if self.start_cash is None:
+        #     self.cerebro.broker.setcash(100000)
+        # else:
+        #     self.cerebro.broker.setcash(self.start_cash)
 
         # self.cerebro.addsizer(bt.sizers.FixedSize, stake=0.5)
         # self.cerebro.broker.setcommission(commission=0.02)
 
-    def import_quandl_data(self, name, stock, open=None, close=None):
+    def import_quandl_data(self, name, stock, open=None, high=None, low=None, close=None, volume=None ):
         stock = QuandlGet(quandl_key=stock,
                           api_key=self.api_key,
                           start_date=self.start_date,
@@ -41,42 +57,62 @@ class Trader(object):
         feed = bt.feeds.GenericCSVData(dataname=os.getcwd() + '\data\{}.csv'.format(name),
                                        open=open,
                                        close=close,
+                                       high=high,
+                                       low=low,
+                                       volume=volume,
                                        dtformat='%Y-%m-%d',
                                        start_date=self.start_date,
                                        end_date=self.end_date)
         self.cerebro.adddata(feed, name=name)
 
+    @property
     def run(self):
-        self.cerebro.run()
+        return self.cerebro.run()
 
     def plot(self):
-        self.run()
-        self.cerebro.plot(volume=False)
+        self.cerebro.run()
+        self.cerebro.plot(volume=True)
+        self.cerebro.plot(style='candle')
 
 
 if __name__ == '__main__':
     with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
         api_key = f.read()
 
-    RSI = Trader(strategy=RsiStrategy,
-                 start_date=datetime.datetime(2017, 11, 1),
-                 end_date=datetime.datetime(2018, 1, 1),
-                 stock='LME/PR_AL',
+    # RSI = Trader(strategy=RsiStrategy,
+    #              start_date=datetime.datetime(2018, 1, 1),
+    #              end_date=None,
+    #              stock='CHRIS/ODE_TR1',
+    #              api_key=api_key,
+    #              start_cash=10000)
+    # RSI.import_quandl_data(name='RICE', stock='CHRIS/ODE_TR1', close=1)
+    # RSI.plot()
+
+    HMA = Trader(strategy=BaconBuyerStrategy,
+                 start_date=datetime.datetime(2002, 1, 1),
+                 end_date=None,
+                 stock=None,
                  api_key=api_key,
                  start_cash=10000)
-    RSI.import_quandl_data(name='ALU', stock='LME/PR_AL', close=2)
-    RSI.run()
-    RSI.plot()
+    # HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=100)
+    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=1)
+
+    HMA.cerebro.broker.setcommission(commission=0.01, mult=300)
+    HMA.import_quandl_data(name='BRENT', stock='CHRIS/ICE_B4', open=1, high=2, low=3, close=4, volume=7)
+    HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,
-    #                       datetime.datetime(2016, 1, 1),
-    #                       datetime.datetime(2018, 1, 1),
+    #                       datetime.datetime(2017, 10, 1),
+    #                       None,
     #                       None,
     #                       api_key,
-    #                       10000)
+    #                       1000000000000000000000000)
     # LagIndicator.import_quandl_data('ALU', 'LME/PR_AL', close=2)
     # LagIndicator.import_quandl_data('BRENT', 'CHRIS/ICE_B1', close=4)
-    # LagIndicator.run()
+    # LagIndicator.cerebro.broker.setcash(100)
+    # LagIndicator.cerebro.addsizer(bt.sizers.FixedSize, stake=0.00005)
+    # LagIndicator.cerebro.broker.setcommission(commission=0.02)
+    # # LagIndicator.run()
     # LagIndicator.plot()
 
 

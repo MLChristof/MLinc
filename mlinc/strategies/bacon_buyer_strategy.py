@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 # import os.path
 # import sys
 # import time
+import numpy as n
 
 import backtrader as bt
 
@@ -13,9 +14,10 @@ class BaconBuyerStrategy(bt.Strategy):
     # TODO Add smart staking/sizing
     # TODO Check Commission settings
     params = (
-        ('maperiod', 20),
-        ('RRR', 1),
-        ('minSL', 2000/1E5), # in pips
+        ('maperiod', 14),
+        ('RRR', 3),
+        ('minSL', 2),  # in pips
+        ('stakepercent', 5)
     )
 
     def log(self, txt, dt=None):
@@ -110,8 +112,13 @@ class BaconBuyerStrategy(bt.Strategy):
                 SL_long = EntryLong - self.params.minSL
 
             TP_long = (1/self.params.RRR)*(EntryLong-SL_long)+EntryLong
+            #Stake Size
+            stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(EntryLong-SL_long)
+            print(EntryLong-SL_long)
+            print(self.broker.getvalue())
+            print(stake_size)
             # place order
-            self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, )
+            self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, size=stake_size)
 
         # Open Short Position on local maximum HMA
         # (if slope on last day of HMA is neg and 5 days before pos)
@@ -131,20 +138,14 @@ class BaconBuyerStrategy(bt.Strategy):
                 SL_short = EntryShort + self.params.minSL
 
             TP_short = (-1/self.params.RRR)*(SL_short - EntryShort) + EntryShort
+            #Stake Size
+            stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(SL_short-EntryShort)
+            print(SL_short-EntryShort)
+            print(self.broker.getvalue())
+            print(stake_size)
             # place order
-            self.order = self.sell_bracket(price=EntryShort,stopprice=SL_short,limitprice=TP_short)
+            self.order = self.sell_bracket(price=EntryShort,stopprice=SL_short,limitprice=TP_short, size=stake_size)
 
-    def code(self):
-        if self.threshold_short > self.indicator > self.threshold_short-10:
-            return 'Code Yellow: RSI={}'.format(self.indicator)
-        elif self.indicator >= self.threshold_short:
-            return 'Code Red: RSI={}, Possibility to go short!'.format(self.indicator)
-        elif self.threshold_long+10 > self.indicator > self.threshold_long:
-            return 'Code Yellow: RSI={}'.format(self.indicator)
-        elif self.indicator <= self.threshold_long:
-            return 'Code Red: RSI={}, Possibility to go long!'.format(self.indicator.lines)
-        else:
-            return
 
 
 

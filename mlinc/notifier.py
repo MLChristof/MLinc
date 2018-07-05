@@ -12,8 +12,8 @@ def notification(fileID, message):
     line = file.readlines()
     event = line[0][0:-1]
     id = line[1]
-    print(event)
-    print(id)
+    # print(event)
+    # print(id)
 
     report = dict()
     report["value1"] = message
