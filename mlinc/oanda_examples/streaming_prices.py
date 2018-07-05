@@ -25,52 +25,61 @@ parser.add_argument('--instruments', type=str, nargs='?',
                     action='append', help='instruments')
 
 
-accountID, access_token = exampleAuth()
+def stream(count, instruments, nice, timeout=None):
+    accountID, access_token = exampleAuth()
 
-# commandline args ...
-clargs = parser.parse_args()
-if not clargs.instruments:
-    parser.parse_args(["--help"])
+    request_params = {}
+    if timeout:
+        request_params = {"timeout": timeout}
 
-request_params = {}
-if clargs.timeout:
-    request_params = {"timeout": clargs.timeout}
+    # fetch MAXREC stream records
+    MAXREC = count
 
-# fetch MAXREC stream records
-MAXREC = clargs.count
+    api = API(access_token=access_token,
+              environment="practice",
+              request_params=request_params)
 
-api = API(access_token=access_token,
-          environment="practice",
-          request_params=request_params)
+    # setup the stream request
+    r = PricingStream(accountID=accountID,
+                      params={"instruments": ",".join(instruments)})
 
-# setup the stream request
-r = PricingStream(accountID=accountID,
-                  params={"instruments": ",".join(clargs.instruments)})
+    n = 0
+    R_list = list()
+    while True:
+        try:
+            for R in api.request(r):
+                if nice:
+                    R = json.dumps(R, indent=2)
+                print('Collecting Data.. Please wait..')
+                R_list.append(R)
+                n += 1
+                if MAXREC and n >= MAXREC:
+                    r.terminate("maxrecs received: {}".format(MAXREC))
 
-n = 0
-while True:
-    try:
-        for R in api.request(r):
-            if clargs.nice:
-                R = json.dumps(R, indent=2)
-            print(R)
-            n += 1
-            if MAXREC and n >= MAXREC:
-                r.terminate("maxrecs received: {}".format(MAXREC))
+        except V20Error as e:
+            # catch API related errors that may occur
+            with open("LOG", "a") as LOG:
+                LOG.write("V20Error: {}\n".format(e))
+            break
+        except ConnectionError as e:
+            with open("LOG", "a") as LOG:
+                LOG.write("Error: {}\n".format(e))
+        except StreamTerminated as e:
+            with open("LOG", "a") as LOG:
+                LOG.write("Stopping: {}\n".format(e))
+            break
+        except Exception as e:
+            with open("LOG", "a") as LOG:
+                LOG.write("??? : {}\n".format(e))
+            break
 
-    except V20Error as e:
-        # catch API related errors that may occur
-        with open("LOG", "a") as LOG:
-            LOG.write("V20Error: {}\n".format(e))
-        break
-    except ConnectionError as e:
-        with open("LOG", "a") as LOG:
-            LOG.write("Error: {}\n".format(e))
-    except StreamTerminated as e:
-        with open("LOG", "a") as LOG:
-            LOG.write("Stopping: {}\n".format(e))
-        break
-    except Exception as e:
-        with open("LOG", "a") as LOG:
-            LOG.write("??? : {}\n".format(e))
-        break
+    return R_list
+
+
+
+if __name__ == '__main__':
+    x = stream(2, ['EUR_USD'], True, timeout=5)
+    print(x)
+
+
+
