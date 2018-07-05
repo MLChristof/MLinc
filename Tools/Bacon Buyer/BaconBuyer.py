@@ -22,7 +22,7 @@ import winsound
 # Set Moving Average Period
 MAPeriod = 100
 # Risk Reward Ratio
-RRR = 15
+RRR = 5
 # Spread (pips)
 spread = 20
 # Set Minimum Stop Loss in pips (at least larger than spread)
