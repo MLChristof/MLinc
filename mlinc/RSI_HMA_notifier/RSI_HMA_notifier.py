@@ -6,7 +6,7 @@ import pandas as pd
 with open("C:\Data\\2_Personal\quandl_api.txt", 'r') as f:
     api_key = f.read()
 
-file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+# file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 
 # This script returns the latest RSI and HMA values
 

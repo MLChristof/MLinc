@@ -1,14 +1,8 @@
 import numpy as n
 import pandas as pd
-import backtrader as bt
 import os
 
 from mlinc.oanda_examples.candle_data import candles
-
-# test_list = {'instrument': 'EUR_USD', 'granularity': 'H1', 'candles': [{'complete': True, 'volume': 3138, 'time': '2018-07-09T15:00:00.000000000Z',
-#               'mid': {'o': '1.17590', 'h': '1.17618', 'l': '1.17406', 'c': '1.17444'}},
-#              {'complete': True, 'volume': 1988, 'time': '2018-07-09T16:00:00.000000000Z',
-#               'mid': {'o': '1.17450', 'h': '1.17510', 'l': '1.17418', 'c': '1.17466'}}]}
 
 
 def hma(values, window):
@@ -48,6 +42,8 @@ def wma(values, window):
     weighted_moving_averages[:] = n.NAN
 
     # then append the wma's onto the end
+    # print(values)
+    # print(weights)
     weighted_moving_averages = n.append(weighted_moving_averages, n.convolve(values, weights, 'valid'))
 
     return weighted_moving_averages
@@ -60,16 +56,44 @@ def trinum(num):
     return num * (num + 1) / 2
 
 
+def rsi(prices, window):
+    deltas = n.diff(prices)
+    seed = deltas[:window + 1]
+    up = seed[seed>=0].sum() / window
+    down = -seed[seed<0].sum() / window
+    rs = up/down
+    rsi = n.zeros_like(prices)
+    rsi[:window] = 100. - 100. / (1. + rs)
+
+    for i in range(window, len(prices)):
+        delta = deltas[i-1] # cause the diff is 1 shorter
+
+        if delta>0:
+            upval = delta
+            downval = 0.
+        else:
+            upval = 0.
+            downval = -delta
+
+        up = (up * (window - 1) + upval) / window
+        down = (down * (window - 1) + downval) / window
+
+        rs = up/down
+        rsi[i] = 100. - 100./(1.+rs)
+
+    return rsi
+
+
 def oanda_to_dataframe(oanda_output):
     oanda_list = list()
     for i, item in enumerate(oanda_output['candles']):
         d = {'complete': item['complete'],
              'volume': item['volume'],
              'time': item['time'],
-             'open': item['mid']['o'],
-             'high': item['mid']['h'],
-             'low': item['mid']['l'],
-             'close': item['mid']['c']}
+             'open': float(item['mid']['o']),
+             'high': float(item['mid']['h']),
+             'low': float(item['mid']['l']),
+             'close': float(item['mid']['c'])}
         oanda_list.append(d)
 
     dataframe = pd.DataFrame(oanda_list)
@@ -84,18 +108,31 @@ def oanda_to_csv(oanda_output):
                      index=False)
 
 
-    # feed = bt.feeds.GenericCSVData(dataname=os.getcwd() + '\data\{}.csv'.format(name),
-    #                                open=open,
-    #                                close=close,
-    #                                high=high,
-    #                                low=low,
-    #                                volume=volume,
-    #                                dtformat='%Y-%m-%d',
-    #                                start_date=self.start_date,
-    #                                end_date=self.end_date)
+def oanda_baconbuyer(oanda_output, hma_window=14, rsi_window=14):
+    dataframe = oanda_to_dataframe(oanda_output)
+
+    df_hma = hma(n.array(dataframe['close'].tolist()), hma_window)
+    dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
+
+    df_rsi = rsi(n.array(dataframe['close'].tolist()), rsi_window)
+    dataframe['rsi'] = pd.Series(df_rsi, index=dataframe.index)
+
+    return dataframe
 
 
 if __name__ == '__main__':
-    test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[20], From=None, to=None, price=None, nice=True)
-    oanda_to_dataframe(test_data)
+    test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[100], From=None, to=None, price=None, nice=True)
+
+    df = oanda_baconbuyer(test_data, hma_window=14, rsi_window=14)
+    print(df)
+
+    # print(rsi(n.array(df['close'].tolist()), 14))
+
+
+    # df = oanda_to_dataframe(test_data)
+
+    # df_hma = hma(n.array(df['close'].tolist()), 6)
+    # print(df['close'].tolist())
+    # print(df_hma)
+
 
