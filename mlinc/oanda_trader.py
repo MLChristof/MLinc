@@ -60,7 +60,7 @@ def trinum(num):
     return num * (num + 1) / 2
 
 
-def oanda_to_csv(oanda_output):
+def oanda_to_dataframe(oanda_output):
     oanda_list = list()
     for i, item in enumerate(oanda_output['candles']):
         d = {'complete': item['complete'],
@@ -73,9 +73,14 @@ def oanda_to_csv(oanda_output):
         oanda_list.append(d)
 
     dataframe = pd.DataFrame(oanda_list)
+    return dataframe
+
+
+def oanda_to_csv(oanda_output):
+    dataframe = oanda_to_dataframe(oanda_output)
     dataframe.to_csv(os.getcwd() + '\\oanda_data\\' + oanda_output['instrument'],
                      sep=',',
-                     columns=['time', 'open', 'high', 'low', 'close'],
+                     columns=['time', 'open', 'high', 'low', 'close', 'volume'],
                      index=False)
 
 
@@ -90,10 +95,7 @@ def oanda_to_csv(oanda_output):
     #                                end_date=self.end_date)
 
 
-
-
-
 if __name__ == '__main__':
     test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[20], From=None, to=None, price=None, nice=True)
-    oanda_to_csv(test_data)
+    oanda_to_dataframe(test_data)
 
