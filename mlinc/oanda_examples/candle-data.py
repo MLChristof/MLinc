@@ -36,49 +36,44 @@ parser.add_argument('--instruments', type=str, nargs='?',
                     action='append', help='instruments')
 
 
-class Main(object):
-    def __init__(self, api, accountID, clargs):
-        self._accountID = accountID
-        self.clargs = clargs
-        self.api = api
+def candles(inst, granularity, count, From, to, price, nice):
 
-    def main(self):
-        def check_date(s):
-            dateFmt = "[\d]{4}-[\d]{2}-[\d]{2}T[\d]{2}:[\d]{2}:[\d]{2}Z"
-            if not re.match(dateFmt, s):
-                raise ValueError("Incorrect date format: ", s)
+    instruments = inst
+    accountID, access_token = exampleAuth()
+    api = API(access_token=access_token)
 
-            return True
+    def check_date(s):
+        dateFmt = "[\d]{4}-[\d]{2}-[\d]{2}T[\d]{2}:[\d]{2}:[\d]{2}Z"
+        if not re.match(dateFmt, s):
+            raise ValueError("Incorrect date format: ", s)
 
-        if self.clargs.instruments:
-            params = {}
-            if self.clargs.granularity:
-                params.update({"granularity": self.clargs.granularity})
-            if self.clargs.count:
-                params.update({"count": self.clargs.count})
-            if self.clargs.From and check_date(self.clargs.From):
-                params.update({"from": self.clargs.From})
-            if self.clargs.to and check_date(self.clargs.to):
-                params.update({"to": self.clargs.to})
-            if self.clargs.price:
-                params.update({"price": self.clargs.price})
-            for i in self.clargs.instruments:
-                r = instruments.InstrumentsCandles(instrument=i, params=params)
-                rv = self.api.request(r)
-                kw = {}
-                if self.clargs.nice:
-                    kw = {"indent": self.clargs.nice}
-                print("{}".format(json.dumps(rv, **kw)))
+        return True
+
+    if instruments:
+        params = {}
+        if granularity:
+            params.update({"granularity": granularity})
+        if count:
+            params.update({"count": count})
+        if From and check_date(From):
+            params.update({"from": From})
+        if to and check_date(to):
+            params.update({"to": to})
+        if price:
+            params.update({"price": price})
+        for i in instruments:
+            r = instruments.InstrumentsCandles(instrument=i, params=params)
+            rv = api.request(r)
+            kw = {}
+            if nice:
+                kw = {"indent": nice}
+            print("{}".format(json.dumps(rv, **kw)))
 
 
 if __name__ == "__main__":
-    clargs = parser.parse_args()
 
-    accountID, token = exampleAuth()
-    api = API(access_token=token)
     try:
-        m = Main(api=api, accountID=accountID, clargs=clargs)
-        m.main()
+        m = candles(inst=['EUR_USD'],granularity=['H1'], count=[5000], From=None,to=None,price=None,nice=True)
     except V20Error as v20e:
         print("ERROR {} {}".format(v20e.code, v20e.msg))
     except ValueError as e:
