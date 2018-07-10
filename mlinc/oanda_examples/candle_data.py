@@ -16,7 +16,7 @@ from oandapyV20 import API
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.instruments as instruments
 from oandapyV20.definitions.instruments import CandlestickGranularity
-from exampleauth import exampleAuth
+from mlinc.oanda_examples.exampleauth import exampleAuth
 import re
 
 price = ['M', 'B', 'A', 'BA', 'MBA']
@@ -37,8 +37,6 @@ parser.add_argument('--instruments', type=str, nargs='?',
 
 
 def candles(inst, granularity, count, From, to, price, nice):
-
-    instruments = inst
     accountID, access_token = exampleAuth()
     api = API(access_token=access_token)
 
@@ -49,7 +47,7 @@ def candles(inst, granularity, count, From, to, price, nice):
 
         return True
 
-    if instruments:
+    if inst:
         params = {}
         if granularity:
             params.update({"granularity": granularity})
@@ -61,19 +59,21 @@ def candles(inst, granularity, count, From, to, price, nice):
             params.update({"to": to})
         if price:
             params.update({"price": price})
-        for i in instruments:
+        for i in inst:
             r = instruments.InstrumentsCandles(instrument=i, params=params)
             rv = api.request(r)
             kw = {}
             if nice:
                 kw = {"indent": nice}
-            print("{}".format(json.dumps(rv, **kw)))
+            # print("{}".format(json.dumps(rv, **kw)))
+            return rv
+
 
 
 if __name__ == "__main__":
-
     try:
-        m = candles(inst=['EUR_USD'],granularity=['H1'], count=[5000], From=None,to=None,price=None,nice=True)
+        test = candles(inst=['EUR_USD'], granularity=['H1'], count=[2], From=None, to=None, price=None, nice=True)
+        print(test)
     except V20Error as v20e:
         print("ERROR {} {}".format(v20e.code, v20e.msg))
     except ValueError as e:
