@@ -1,6 +1,7 @@
 import numpy as n
 import pandas as pd
 import os
+from datetime import date as dt
 
 from mlinc.oanda_examples.candle_data import candles
 
@@ -57,6 +58,17 @@ def trinum(num):
 
 
 def rsi(prices, window):
+    """ Relative Strength Index
+    RSI < 30: Oversold, Potential rate increase -> Long
+    RSI > 70: Overbought, Potential rate decrease -> Short
+    RSI movement below the CL to above is seen as a rising trend
+    RSI crossover from above the CL to below, indicates a falling trend
+
+    Calculation:
+    Relative Strength (RS) = average gain (gain_avg) / average loss (loss_avg)
+    RSI = 100 - [100 / (1 + RS)] 
+    """
+
     deltas = n.diff(prices)
     seed = deltas[:window + 1]
     up = seed[seed>=0].sum() / window
@@ -68,7 +80,7 @@ def rsi(prices, window):
     for i in range(window, len(prices)):
         delta = deltas[i-1] # cause the diff is 1 shorter
 
-        if delta>0:
+        if delta > 0:
             upval = delta
             downval = 0.
         else:
@@ -121,10 +133,21 @@ def oanda_baconbuyer(oanda_output, hma_window=14, rsi_window=14):
 
 
 if __name__ == '__main__':
-    test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[100], From=None, to=None, price=None, nice=True)
+
+    para = {'inst': 'EUR_USD',
+            'granularity': 'H1',
+            'count': 100}
+
+    test_data = candles(inst=[para['inst']], granularity=[para['granularity']], count=[para['count']], From=None, to=None, price=None, nice=True)
 
     df = oanda_baconbuyer(test_data, hma_window=14, rsi_window=14)
     print(df)
+
+    df_name = para['inst'] + '_' + para['granularity'] + '_Count' + str(para['count']) + '_' + str(dt.today())
+
+    df_path = os.path.dirname(__file__) + r'\trader\data\\'
+
+    df.to_csv(df_path + df_name + '.csv')
 
     # print(rsi(n.array(df['close'].tolist()), 14))
 
