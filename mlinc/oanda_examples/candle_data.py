@@ -72,7 +72,7 @@ def candles(inst, granularity, count, From, to, price, nice):
 
 if __name__ == "__main__":
     try:
-        test = candles(inst=['EUR_USD'], granularity=['H1'], count=[2], From=None, to=None, price=None, nice=True)
+        test = candles(inst=['EUR_USD'], granularity=['H1'], count=[2], From=None, to=None, price=['BA'], nice=True)
         print(test)
     except V20Error as v20e:
         print("ERROR {} {}".format(v20e.code, v20e.msg))
