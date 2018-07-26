@@ -1,3 +1,8 @@
+""""
+copy of cerebro.py
+attempt to live trade with backtrader and use oanda instead of cerebro
+"""
+
 import backtrader as bt
 import datetime
 import os
