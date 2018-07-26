@@ -2,7 +2,7 @@ import numpy as n
 import pandas as pd
 import os
 from datetime import date as dt
-
+from mlinc.oanda_examples.exampleauth import exampleAuth
 from mlinc.oanda_examples.candle_data import candles
 
 
@@ -133,7 +133,7 @@ def oanda_baconbuyer(oanda_output, hma_window=14, rsi_window=14):
 
 
 if __name__ == '__main__':
-
+    accountID, access_token = exampleAuth()
     para = {'inst': 'EUR_USD',
             'granularity': 'H1',
             'count': 100}
