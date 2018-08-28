@@ -3,6 +3,12 @@ import pandas as pd
 import os
 
 from mlinc.oanda_examples.candle_data import candles
+from mlinc.notifier import notification
+
+file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
+file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
+file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 
 
 def hma(values, window):
@@ -63,7 +69,7 @@ def rsi(prices, window):
     down = -seed[seed<0].sum() / window
     rs = up/down
     rsi = n.zeros_like(prices)
-    rsi[:window] = 100. - 100. / (1. + rs)
+    rsi[:window] = 100.0 - (100.0 / (1.0 + rs))
 
     for i in range(window, len(prices)):
         delta = deltas[i-1] # cause the diff is 1 shorter
@@ -108,7 +114,7 @@ def oanda_to_csv(oanda_output):
                      index=False)
 
 
-def oanda_baconbuyer(oanda_output, hma_window=14, rsi_window=14):
+def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
     dataframe = oanda_to_dataframe(oanda_output)
 
     df_hma = hma(n.array(dataframe['close'].tolist()), hma_window)
@@ -117,14 +123,41 @@ def oanda_baconbuyer(oanda_output, hma_window=14, rsi_window=14):
     df_rsi = rsi(n.array(dataframe['close'].tolist()), rsi_window)
     dataframe['rsi'] = pd.Series(df_rsi, index=dataframe.index)
 
-    return dataframe
+    dataframe_days = dataframe.tail(10)
+    rsi_min_days, rsi_max_days = (dataframe_days['rsi'].min(), dataframe_days['rsi'].max())
+    hma_diff = dataframe_days.tail(7)['hma'].diff().reset_index()['hma']
+
+    hma_5 = list(hma_diff.iloc[1:6])
+    hma_1 = hma_diff.iloc[6]
+
+    if rsi_max_days > 60 and all(item > 0 for item in hma_5) and hma_1 < 0:
+        message = 'Go Short on {} beacuse: (RSI: {} and HMA: {})'.format(inst,
+                                                                         rsi_max_days,
+                                                                         'Just Changed RiCo')
+        notification(file_robert, message)
+        notification(file_christof, message)
+        print(message)
+    elif rsi_min_days < 30 and all(item < 0 for item in hma_5 and hma_1 > 0):
+        message = 'Go Long on {} beacuse: (RSI: {} and HMA: {})'.format(inst,
+                                                                        rsi_max_days,
+                                                                        'Just Changed RiCo')
+        notification(file_robert, message)
+        notification(file_christof, message)
+        print(message)
+
+
+    # return dataframe
 
 
 if __name__ == '__main__':
     test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[100], From=None, to=None, price=None, nice=True)
+    # oanda_to_csv(test_data)
+    #
+    # df = oanda_to_dataframe(test_data)
+    # print(df)
 
-    df = oanda_baconbuyer(test_data, hma_window=14, rsi_window=14)
-    print(df)
+    df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14)
+    # print(df)
 
     # print(rsi(n.array(df['close'].tolist()), 14))
 
