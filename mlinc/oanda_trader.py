@@ -3,6 +3,7 @@ import pandas as pd
 import os
 
 from mlinc.oanda_examples.candle_data import candles
+from mlinc.notifier import notification
 
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
@@ -147,7 +148,7 @@ def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
         notification(file_robert, message)
         notification(file_christof, message)
         print(message)
-    elif rsi_min_days < 30 and all(item < 0 for item in hma_5 and hma_1 > 0):
+    elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
         message = 'Go Long on {} beacuse: (RSI: {} and HMA: {})'.format(inst,
                                                                         rsi_max_days,
                                                                         'Just Changed RiCo')
