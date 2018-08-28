@@ -3,13 +3,12 @@ import pandas as pd
 import os
 
 from mlinc.oanda_examples.candle_data import candles
-from mlinc.notifier import notification
+
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
 file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
-
 
 def hma(values, window):
     # requires wma.py
@@ -63,6 +62,17 @@ def trinum(num):
 
 
 def rsi(prices, window):
+    """ Relative Strength Index
+    RSI < 30: Oversold, Potential rate increase -> Long
+    RSI > 70: Overbought, Potential rate decrease -> Short
+    RSI movement below the CL to above is seen as a rising trend
+    RSI crossover from above the CL to below, indicates a falling trend
+
+    Calculation:
+    Relative Strength (RS) = average gain (gain_avg) / average loss (loss_avg)
+    RSI = 100 - [100 / (1 + RS)]
+    """
+
     deltas = n.diff(prices)
     seed = deltas[:window + 1]
     up = seed[seed>=0].sum() / window
@@ -74,7 +84,7 @@ def rsi(prices, window):
     for i in range(window, len(prices)):
         delta = deltas[i-1] # cause the diff is 1 shorter
 
-        if delta>0:
+        if delta > 0:
             upval = delta
             downval = 0.
         else:

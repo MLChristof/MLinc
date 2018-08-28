@@ -114,9 +114,6 @@ class BaconBuyerStrategy(bt.Strategy):
             TP_long = (1/self.params.RRR)*(EntryLong-SL_long)+EntryLong
             #Stake Size
             stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(EntryLong-SL_long)
-            print(EntryLong-SL_long)
-            print(self.broker.getvalue())
-            print(stake_size)
             # place order
             self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, size=stake_size)
 
