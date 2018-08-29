@@ -141,34 +141,37 @@ def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
     hma_5 = list(hma_diff.iloc[1:6])
     hma_1 = hma_diff.iloc[6]
 
+    print(hma_1)
+
     if rsi_max_days > 60 and all(item > 0 for item in hma_5) and hma_1 < 0:
-        message = 'Go Short on {} beacuse: (RSI: {} and HMA: {})'.format(inst,
+        message = 'Go Short on {} because: (RSI: {} and HMA: {})'.format(inst,
                                                                          rsi_max_days,
                                                                          'Just Changed RiCo')
         notification(file_robert, message)
         notification(file_christof, message)
         print(message)
     elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
-        message = 'Go Long on {} beacuse: (RSI: {} and HMA: {})'.format(inst,
+        message = 'Go Long on {} because: (RSI: {} and HMA: {})'.format(inst,
                                                                         rsi_max_days,
                                                                         'Just Changed RiCo')
         notification(file_robert, message)
         notification(file_christof, message)
         print(message)
+    return dataframe
 
 
     # return dataframe
 
 
 if __name__ == '__main__':
-    test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[100], From=None, to=None, price=None, nice=True)
+    test_data = candles(inst=['IN50_USD'], granularity=['D'], count=[100], From=None, to=None, price=None, nice=True)
     # oanda_to_csv(test_data)
     #
     # df = oanda_to_dataframe(test_data)
     # print(df)
 
-    df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14)
-    # print(df)
+    df = oanda_baconbuyer('IN50_USD', test_data, hma_window=14, rsi_window=14)
+    print(df)
 
     # print(rsi(n.array(df['close'].tolist()), 14))
 
