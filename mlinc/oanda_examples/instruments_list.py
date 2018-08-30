@@ -4,7 +4,7 @@
 import json
 import oandapyV20
 import oandapyV20.endpoints.accounts as accounts
-from exampleauth import exampleAuth
+from mlinc.oanda_examples.exampleauth import exampleAuth
 
 accountID, token = exampleAuth()
 client = oandapyV20.API(access_token=token)
