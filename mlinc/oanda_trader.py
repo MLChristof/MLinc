@@ -1,8 +1,6 @@
 import numpy as n
 import pandas as pd
 import os
-import smtplib
-
 from mlinc.oanda_examples.candle_data import candles
 from mlinc.notifier import notification
 from mlinc.oanda_examples.instruments_list import instrument_list
@@ -143,8 +141,6 @@ def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
     hma_5 = list(hma_diff.iloc[1:6])
     hma_1 = hma_diff.iloc[6]
 
-    # print(dataframe.tail())
-
     if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
         message = 'Go Short on {} because: (RSI: {} and HMA: {})'.format(inst,
                                                                          rsi_max_days,
@@ -163,7 +159,6 @@ def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
 
 if __name__ == '__main__':
     # test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
-
     # df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14)
 
     instr_list = instrument_list()
@@ -171,19 +166,3 @@ if __name__ == '__main__':
         test_data = candles(inst=[i], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
         df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14)
         print(i)
-
-
-    # print(rsi(n.array(df['close'].tolist()), 14))
-    # oanda_to_csv(test_data)
-    #
-    # df = oanda_to_dataframe(test_data)
-    # print(df)
-
-    # df = oanda_to_dataframe(test_data)
-    # print(df)
-
-    # df_hma = hma(n.array(df['close'].tolist()), 6)
-    # print(df['close'].tolist())
-    # print(df_hma)
-
-
