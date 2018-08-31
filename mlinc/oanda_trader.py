@@ -5,6 +5,7 @@ import smtplib
 
 from mlinc.oanda_examples.candle_data import candles
 from mlinc.notifier import notification
+from mlinc.oanda_examples.instruments_list import instrument_list
 
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
@@ -142,34 +143,34 @@ def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
     hma_5 = list(hma_diff.iloc[1:6])
     hma_1 = hma_diff.iloc[6]
 
-    print(dataframe.tail())
+    # print(dataframe.tail())
 
     if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
         message = 'Go Short on {} because: (RSI: {} and HMA: {})'.format(inst,
                                                                          rsi_max_days,
                                                                          'Just Changed RiCo')
         notification(file_robert, message)
-        notification(file_christof, message)
         print(message)
     elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
         message = 'Go Long on {} because: (RSI: {} and HMA: {})'.format(inst,
                                                                         rsi_max_days,
                                                                         'Just Changed RiCo')
         notification(file_robert, message)
-        notification(file_christof, message)
         print(message)
 
     return dataframe
 
 
 if __name__ == '__main__':
-    test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[100], From=None, to=None, price=None, nice=True)
-    test_data2 = candles(inst=['USD_JPY'], granularity=['D'], count=[100], From=None, to=None, price=None, nice=True)
+    # test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
 
-    df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14)
-    df2 = oanda_baconbuyer('USD_JPY', test_data2, hma_window=14, rsi_window=14)
+    # df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14)
 
-
+    instr_list = instrument_list()
+    for i in instr_list:
+        test_data = candles(inst=[i], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
+        df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14)
+        print(i)
 
 
     # print(rsi(n.array(df['close'].tolist()), 14))
