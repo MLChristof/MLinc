@@ -125,7 +125,7 @@ def oanda_to_csv(oanda_output):
                      index=False)
 
 
-def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
+def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14, granularity=['D']):
     dataframe = oanda_to_dataframe(oanda_output)
 
     df_hma = hma(n.array(dataframe['close'].tolist()), hma_window)
@@ -142,16 +142,20 @@ def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14):
     hma_1 = hma_diff.iloc[6]
 
     if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
-        message = 'Go Short on {} because: (RSI: {} and HMA: {})'.format(inst,
-                                                                         rsi_max_days,
-                                                                         'Just Changed RiCo')
+        message = 'Possibility to go Short on {} because: RSI was > 70 (now {}) and HMA just peaked on {} chart.'.format(inst,
+                                                                         int(rsi_max_days),
+                                                                         granularity)
         notification(file_robert, message)
+        notification(file_vincent, message)
+        notification(file_christof, message)
         print(message)
     elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
-        message = 'Go Long on {} because: (RSI: {} and HMA: {})'.format(inst,
-                                                                        rsi_max_days,
-                                                                        'Just Changed RiCo')
+        message = 'Possibility to go Long on {} because: RSI was < 30 (now {}) and HMA just dipped on {} chart.'.format(inst,
+                                                                        int(rsi_max_days),
+                                                                        granularity)
         notification(file_robert, message)
+        notification(file_vincent, message)
+        notification(file_christof, message)
         print(message)
 
     return dataframe
@@ -161,8 +165,9 @@ if __name__ == '__main__':
     # test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
     # df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14)
 
+    # loop over instrument list to check all tradable instruments
     instr_list = instrument_list()
     for i in instr_list:
-        test_data = candles(inst=[i], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
-        df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14)
+        test_data = candles(inst=[i], granularity=['H1'], count=[50], From=None, to=None, price=None, nice=True)
+        df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14, granularity=['H1'])
         print(i)
