@@ -142,22 +142,23 @@ def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14, granulari
     hma_1 = hma_diff.iloc[6]
 
     if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
-        message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart.'.format(inst,
-                                                                         int(rsi_max_days),
-                                                                         granularity)
-        print(dataframe_days)
+        message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart.'.\
+            format(inst, int(rsi_max_days), granularity)
+
         notification(file_robert, message)
         notification(file_vincent, message)
         notification(file_christof, message)
+        print(dataframe_days)
         print(message)
+
     elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
-        message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart.'.format(inst,
-                                                                        int(rsi_max_days),
-                                                                        granularity)
-        print(dataframe_days)
+        message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart.'.\
+            format(inst, int(rsi_min_days), granularity)
+
         notification(file_robert, message)
         notification(file_vincent, message)
         notification(file_christof, message)
+        print(dataframe_days)
         print(message)
 
     return dataframe
