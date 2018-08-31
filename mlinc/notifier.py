@@ -12,9 +12,6 @@ def notification(fileID, message):
     line = file.readlines()
     event = line[0][0:-1]
     id = line[1]
-    # print(event)
-    # print(id)
-
     report = dict()
     report["value1"] = message
     requests.post("https://maker.ifttt.com/trigger/{}/with/key/{}".format(event, id), data=report)
@@ -24,5 +21,5 @@ if __name__ == '__main__':
     message = 'Twee Belgen lopen over een treinrails. Zegt die ene: “Wat een lange trap hè?” Zegt die andere :”Dat valt nog wel mee, maar de leuning zit zo laag”.'
     notification(fileID=file_robert, message=message)
     # notification(fileID=file_jelle, message=message)
-    # notification(fileID=file_christof, message=message)
-    # notification(fileID=file_vincent, message=message)
+    notification(fileID=file_christof, message=message)
+    notification(fileID=file_vincent, message=message)

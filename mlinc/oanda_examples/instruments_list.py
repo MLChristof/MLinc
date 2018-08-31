@@ -24,5 +24,5 @@ def instrument_list():
 
     return instr_list
 
-print(instrument_list())
+# print(instrument_list())
 
