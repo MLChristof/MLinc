@@ -11,6 +11,11 @@ from mlinc.oanda_examples.instruments_list import instrument_list
 # file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
 # file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 
+class IterRegistry(type):
+    def __iter__(cls):
+        return iter(cls._registry)
+
+
 def hma(values, window):
     period = int(n.sqrt(window))
 
@@ -79,7 +84,11 @@ def rsi(prices, window):
 
 
 class OandaTrader(object):
+    __metaclass__ = IterRegistry
+    _registry = []
     def __init__(self, instrument, granularity='D', count=50, **kwargs):
+        self._registry.append(self)
+
         self.instrument = instrument
         self.granularity = granularity
         self.count = count
