@@ -6,21 +6,13 @@ from mlinc.notifier import notification
 from mlinc.oanda_examples.instruments_list import instrument_list
 
 
-file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
-file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
-file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
+# file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
+# file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+# file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
+# file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 
 def hma(values, window):
-    # requires wma.py
-
-    # HMA = WMA(2*WMA(PRICE, N/2) - WMA(PRICE, N), SQRT(N))
-
     period = int(n.sqrt(window))
-
-    # created wma array with NaN values for indexes < window value
-    # hull_moving_averages = np.empty(window)
-    # hull_moving_averages[:] = np.NAN
 
     wma1 = 2 * wma(values, n.int(window/2))
     wma2 = wma(values, window)
@@ -31,15 +23,6 @@ def hma(values, window):
 
 
 def wma(values, window):
-    # requires trinum.py
-
-    # using definition provided at
-    # http://www.oanda.com/forex-trading/learn/forex-indicators/weighted-moving-average
-
-    # create an array of weights
-    # use floats when creating array, or the result is integer division below
-    # and, note that they are reversed.  why?  read this:
-    # http://stackoverflow.com/questions/12816011/weighted-moving-average-with-numpy-convolve
     weights = n.arange(window, 0, -1.0)
     weights /= trinum(window)
 
@@ -47,18 +30,12 @@ def wma(values, window):
     weighted_moving_averages = n.empty(window - 1)
     weighted_moving_averages[:] = n.NAN
 
-    # then append the wma's onto the end
-    # print(values)
-    # print(weights)
     weighted_moving_averages = n.append(weighted_moving_averages, n.convolve(values, weights, 'valid'))
 
     return weighted_moving_averages
 
 
 def trinum(num):
-    # calculates the "triangular number" of a number
-    # https://www.mathsisfun.com/algebra/triangular-numbers.html
-
     return num * (num + 1) / 2
 
 
@@ -101,77 +78,105 @@ def rsi(prices, window):
     return rsi
 
 
-def oanda_to_dataframe(oanda_output):
-    oanda_list = list()
-    for i, item in enumerate(oanda_output['candles']):
-        d = {'complete': item['complete'],
-             'volume': item['volume'],
-             'time': item['time'],
-             'open': float(item['mid']['o']),
-             'high': float(item['mid']['h']),
-             'low': float(item['mid']['l']),
-             'close': float(item['mid']['c'])}
-        oanda_list.append(d)
+class OandaTrader(object):
+    def __init__(self, instrument, granularity='D', count=50, **kwargs):
+        self.instrument = instrument
+        self.granularity = granularity
+        self.count = count
 
-    dataframe = pd.DataFrame(oanda_list)
-    return dataframe
+        self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
+        self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
+
+        self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
+
+    @property
+    def data(self):
+        try:
+            data = candles(inst=self.instrument,
+                           granularity=[self.granularity],
+                           count=[self.count],
+                           From=None, to=None, price=None, nice=True)
+            return data
+        except:
+            raise ValueError('Failed to load data from Oanda using instrument {}'.format(self.instrument))
+
+    @property
+    def data_as_dataframe(self):
+        oanda_list = list()
+        for i, item in enumerate(self.data['candles']):
+            d = {'complete': item['complete'],
+                 'volume': item['volume'],
+                 'time': item['time'],
+                 'open': float(item['mid']['o']),
+                 'high': float(item['mid']['h']),
+                 'low': float(item['mid']['l']),
+                 'close': float(item['mid']['c'])}
+            oanda_list.append(d)
+
+        dataframe = pd.DataFrame(oanda_list)
+        return dataframe
+
+    def save_data_to_csv(self):
+        dataframe = self.data_as_dataframe
+        dataframe.to_csv(os.getcwd() + '\\oanda_data\\' + self.data['instrument'],
+                         sep=',',
+                         columns=['time', 'open', 'high', 'low', 'close', 'volume'],
+                         index=False)
+
+    def baconbuyer(self):
+        dataframe = self.data_as_dataframe
+
+        df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
+        dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
+
+        df_rsi = rsi(n.array(dataframe['close'].tolist()), self.rsi_window)
+        dataframe['rsi'] = pd.Series(df_rsi, index=dataframe.index)
+
+        dataframe_days = dataframe.tail(10)
+        rsi_min_days, rsi_max_days = (dataframe_days['rsi'].min(), dataframe_days['rsi'].max())
+        hma_diff = dataframe_days.tail(7)['hma'].diff().reset_index()['hma']
+
+        hma_5 = list(hma_diff.iloc[1:6])
+        hma_1 = hma_diff.iloc[6]
+
+        if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
+            message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart.'. \
+                format(self.instrument, int(rsi_max_days), self.granularity)
+
+            # notification(file_robert, message)
+            # notification(file_vincent, message)
+            # notification(file_christof, message)
+            print(dataframe_days)
+            print(message)
+
+        elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
+            message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart.'. \
+                format(self.instrument, int(rsi_min_days), self.granularity)
+
+            # notification(file_robert, message)
+            # notification(file_vincent, message)
+            # notification(file_christof, message)
+            print(dataframe_days)
+            print(message)
+
+        return dataframe
 
 
-def oanda_to_csv(oanda_output):
-    dataframe = oanda_to_dataframe(oanda_output)
-    dataframe.to_csv(os.getcwd() + '\\oanda_data\\' + oanda_output['instrument'],
-                     sep=',',
-                     columns=['time', 'open', 'high', 'low', 'close', 'volume'],
-                     index=False)
 
-
-def oanda_baconbuyer(inst, oanda_output, hma_window=14, rsi_window=14, granularity=['D']):
-    dataframe = oanda_to_dataframe(oanda_output)
-
-    df_hma = hma(n.array(dataframe['close'].tolist()), hma_window)
-    dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
-
-    df_rsi = rsi(n.array(dataframe['close'].tolist()), rsi_window)
-    dataframe['rsi'] = pd.Series(df_rsi, index=dataframe.index)
-
-    dataframe_days = dataframe.tail(10)
-    rsi_min_days, rsi_max_days = (dataframe_days['rsi'].min(), dataframe_days['rsi'].max())
-    hma_diff = dataframe_days.tail(7)['hma'].diff().reset_index()['hma']
-
-    hma_5 = list(hma_diff.iloc[1:6])
-    hma_1 = hma_diff.iloc[6]
-
-    if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
-        message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart.'.\
-            format(inst, int(rsi_max_days), granularity)
-
-        notification(file_robert, message)
-        notification(file_vincent, message)
-        notification(file_christof, message)
-        print(dataframe_days)
-        print(message)
-
-    elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
-        message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart.'.\
-            format(inst, int(rsi_min_days), granularity)
-
-        notification(file_robert, message)
-        notification(file_vincent, message)
-        notification(file_christof, message)
-        print(dataframe_days)
-        print(message)
-
-    return dataframe
 
 
 if __name__ == '__main__':
     # for single instrument:
-    # test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
+    test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
+    print(test_data)
     # df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14, granularity=['D'])
 
     # for all tradable instruments (loop over most recent list)
-    instr_list = instrument_list()
-    for i in instr_list:
-        test_data = candles(inst=[i], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
-        df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14, granularity=['D'])
-        print(i)
+    # instr_list = instrument_list()
+    # for i in instr_list:
+    #     test_data = candles(inst=[i], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
+    #     df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14, granularity=['D'])
+    #     print(i)
+    # class_list = []
+    # for inst in instr_list:
+    #     trader = OandaTrader(inst, )
