@@ -21,7 +21,7 @@ class OandaV20Sizer(bt.Sizer):
             return position.size
 
         avail = 0
-        name = data.contractdetails['name']
+        name = data.contractdetails['instrument']
         price = self.o.get_pricing(name)
         if price is not None:
             if isbuy:
@@ -62,7 +62,7 @@ class OandaV20Risk(OandaV20Sizer):
         if position:
             return position.size
 
-        name = data.contractdetails['name']
+        name = data.contractdetails['instrument']
 
         sym_from = name[:3]
         sym_to = name[4:]

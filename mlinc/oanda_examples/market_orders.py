@@ -16,7 +16,7 @@ import logging
 logging.basicConfig(
     filename="log.out",
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s : %(message)s',
+    format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
 )
 
 accountID, token = exampleAuth()

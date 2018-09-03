@@ -46,7 +46,7 @@ from exampleauth import exampleAuth
 logging.basicConfig(
     filename="./simplebot.log",
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s : %(message)s',
+    format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
 )
 
 logger = logging.getLogger(__name__)

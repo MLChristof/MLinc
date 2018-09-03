@@ -89,7 +89,7 @@ if __name__ == '__main__':
     #              stock='CHRIS/ODE_TR1',
     #              api_key=api_key,
     #              start_cash=10000)
-    # RSI.import_quandl_data(name='RICE', stock='CHRIS/ODE_TR1', close=1)
+    # RSI.import_quandl_data(instrument='RICE', stock='CHRIS/ODE_TR1', close=1)
     # RSI.plot()
 
     HMA = Trader(strategy=BaconBuyerStrategy,

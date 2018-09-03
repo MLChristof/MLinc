@@ -66,7 +66,7 @@ api = API(access_token=access_token,
 logging.basicConfig(
     filename="./concurrent.log",
     level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s : %(message)s',
+    format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
 )
 
 logger = logging.getLogger(__name__)

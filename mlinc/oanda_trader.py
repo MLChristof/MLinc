@@ -6,10 +6,10 @@ from mlinc.notifier import notification
 from mlinc.oanda_examples.instruments_list import instrument_list
 
 
-# file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
-# file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-# file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
-# file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
+file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
+file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
+file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 
 class IterRegistry(type):
     def __iter__(cls):
@@ -84,11 +84,10 @@ def rsi(prices, window):
 
 
 class OandaTrader(object):
-    __metaclass__ = IterRegistry
-    _registry = []
-    def __init__(self, instrument, granularity='D', count=50, **kwargs):
-        self._registry.append(self)
+    id = 0
+    instruments = []
 
+    def __init__(self, instrument, granularity='D', count=50, **kwargs):
         self.instrument = instrument
         self.granularity = granularity
         self.count = count
@@ -98,10 +97,29 @@ class OandaTrader(object):
 
         self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
 
+        OandaTrader.instruments.append(self.instrument)
+        OandaTrader.id += 1
+
+    @property
+    def instrument(self):
+        return self.__instrument
+
+    @instrument.setter
+    def instrument(self, instrument):
+        count_instrument = "Instrument_%i" % self.id
+
+        if instrument is None:
+            self.__instrument = count_instrument
+        elif instrument in OandaTrader.instruments:
+            raise UserWarning("Instrument '{}' already in use, instrument given is {}.".format(
+                instrument, count_instrument))
+        else:
+            self.__instrument = instrument
+
     @property
     def data(self):
         try:
-            data = candles(inst=self.instrument,
+            data = candles(inst=[self.instrument],
                            granularity=[self.granularity],
                            count=[self.count],
                            From=None, to=None, price=None, nice=True)
@@ -155,6 +173,7 @@ class OandaTrader(object):
             # notification(file_robert, message)
             # notification(file_vincent, message)
             # notification(file_christof, message)
+            # notification(file_jelle, message)
             print(dataframe_days)
             print(message)
 
@@ -165,27 +184,33 @@ class OandaTrader(object):
             # notification(file_robert, message)
             # notification(file_vincent, message)
             # notification(file_christof, message)
+            # notification(file_jelle, message)
             print(dataframe_days)
             print(message)
 
         return dataframe
 
 
-
-
-
 if __name__ == '__main__':
     # for single instrument:
-    test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
-    print(test_data)
+    # test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
+    # print(test_data)
     # df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14, granularity=['D'])
 
     # for all tradable instruments (loop over most recent list)
     # instr_list = instrument_list()
-    # for i in instr_list:
+    # for i in instrument_list():
     #     test_data = candles(inst=[i], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
     #     df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14, granularity=['D'])
     #     print(i)
-    # class_list = []
-    # for inst in instr_list:
-    #     trader = OandaTrader(inst, )
+
+    class_list = []
+    for inst in instrument_list():
+        trader = OandaTrader(inst)
+        class_list.append(trader)
+        trader.baconbuyer()
+        print(trader.instrument)
+
+
+
+

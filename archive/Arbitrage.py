@@ -15,7 +15,7 @@ class TradeEngine(object):
         Parameters
         ----------
         DB_name = str
-            DB_name is the name of the validated database.
+            DB_name is the instrument of the validated database.
         """
         self.db_name = db_name
 

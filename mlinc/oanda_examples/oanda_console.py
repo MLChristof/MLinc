@@ -65,7 +65,7 @@ monkey.patch_all()
 logging.basicConfig(
     filename="./console.log",
     level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s : %(message)s',
+    format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
 )
 
 logger = logging.getLogger(__name__)
