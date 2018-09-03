@@ -190,25 +190,17 @@ class OandaTrader(object):
 
         return dataframe
 
+    def analyse(self):
+        if self.strategy == 'Baconbuyer':
+            return self.baconbuyer()
+
 
 if __name__ == '__main__':
-    # for single instrument:
-    # test_data = candles(inst=['EUR_USD'], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
-    # print(test_data)
-    # df = oanda_baconbuyer('EUR_USD', test_data, hma_window=14, rsi_window=14, granularity=['D'])
-
-    # for all tradable instruments (loop over most recent list)
-    # instr_list = instrument_list()
-    # for i in instrument_list():
-    #     test_data = candles(inst=[i], granularity=['D'], count=[50], From=None, to=None, price=None, nice=True)
-    #     df = oanda_baconbuyer(i, test_data, hma_window=14, rsi_window=14, granularity=['D'])
-    #     print(i)
-
     class_list = []
     for inst in instrument_list():
         trader = OandaTrader(inst)
         class_list.append(trader)
-        trader.baconbuyer()
+        trader.analyse()
         print(trader.instrument)
 
 
