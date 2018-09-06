@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 # datapath = os.path.join(modpath, 'backtrader-master\datas\orcl-1995-2014.txt')
 import datetime  # For datetime objects
 import os.path  # To manage paths
-import sys  # To find out the script name (in argv[0])
+import sys  # To find out the script instrument (in argv[0])
 import time
 
 # Import the backtrader platform

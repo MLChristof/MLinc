@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 # datapath = os.path.join(modpath, 'backtrader-master\datas\orcl-1995-2014.txt')
 import datetime  # For datetime objects
 import os.path  # To manage paths
-import sys  # To find out the script name (in argv[0])
+import sys  # To find out the script instrument (in argv[0])
 
 # Import the backtrader platform
 import backtrader as bt
@@ -452,7 +452,7 @@ if __name__ == '__main__':
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data_EURUSD, name='EURUSD')
-    # cerebro.adddata(data_alu, name='Alu')
+    # cerebro.adddata(data_alu, instrument='Alu')
 
     # Set our desired cash start
     cerebro.broker.setcash(10000.0)

@@ -1,3 +1,8 @@
+""""
+copy of cerebro.py
+attempt to live trade with backtrader and use oanda instead of cerebro
+"""
+
 import backtrader as bt
 import datetime
 import os
@@ -88,7 +93,7 @@ if __name__ == '__main__':
     # RSI.plot()
 
     HMA = Trader(strategy=BaconBuyerStrategy,
-                 start_date=datetime.datetime(2015, 1, 1),
+                 start_date=datetime.datetime(2002, 1, 1),
                  end_date=None,
                  stock=None,
                  api_key=api_key,
@@ -97,7 +102,7 @@ if __name__ == '__main__':
     HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=1)
 
     HMA.cerebro.broker.setcommission(commission=0.01, mult=300)
-    HMA.import_quandl_data(name='SOY', stock='CHRIS/CME_S1', open=1, high=2, low=3, close=4, volume=7)
+    HMA.import_quandl_data(name='BRENT', stock='CHRIS/ICE_B4', open=1, high=2, low=3, close=4, volume=7)
     HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,

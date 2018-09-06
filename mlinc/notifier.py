@@ -12,9 +12,6 @@ def notification(fileID, message):
     line = file.readlines()
     event = line[0][0:-1]
     id = line[1]
-    # print(event)
-    # print(id)
-
     report = dict()
     report["value1"] = message
     requests.post("https://maker.ifttt.com/trigger/{}/with/key/{}".format(event, id), data=report)

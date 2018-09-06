@@ -93,7 +93,7 @@ exclude_patterns = ['_build']
 # If true, '()' will be appended to :func: etc. cross-reference text.
 # add_function_parentheses = True
 
-# If true, the current module name will be prepended to all description
+# If true, the current module instrument will be prepended to all description
 # unit titles (such as .. function::).
 # add_module_names = True
 
@@ -101,7 +101,7 @@ exclude_patterns = ['_build']
 # output. They are ignored by default.
 # show_authors = False
 
-# The name of the Pygments (syntax highlighting) style to use.
+# The instrument of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
@@ -125,7 +125,7 @@ html_theme = 'alabaster'
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
 
-# The name for this set of Sphinx documents.  If None, it defaults to
+# The instrument for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 try:
     from mlinc import __version__ as version
@@ -137,11 +137,11 @@ else:
 # A shorter title for the navigation bar.  Default is the same as html_title.
 # html_short_title = None
 
-# The name of an image file (relative to this directory) to place at the top
+# The instrument of an image file (relative to this directory) to place at the top
 # of the sidebar.
 # html_logo = ""
 
-# The name of an image file (within the static path) to use as favicon of the
+# The instrument of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 # html_favicon = None
@@ -189,10 +189,10 @@ html_static_path = ['_static']
 # base URL from which the finished HTML is served.
 # html_use_opensearch = ''
 
-# This is the file name suffix for HTML files (e.g. ".xhtml").
+# This is the file instrument suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
-# Output file base name for HTML help builder.
+# Output file base instrument for HTML help builder.
 htmlhelp_basename = 'mlinc-doc'
 
 
@@ -210,13 +210,13 @@ latex_elements = {
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass [howto/manual]).
+# (source start file, target instrument, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'user_guide.tex', u'MLinc Documentation',
    u'JELLETB', 'manual'),
 ]
 
-# The name of an image file (relative to this directory) to place at the top of
+# The instrument of an image file (relative to this directory) to place at the top of
 # the title page.
 # latex_logo = ""
 

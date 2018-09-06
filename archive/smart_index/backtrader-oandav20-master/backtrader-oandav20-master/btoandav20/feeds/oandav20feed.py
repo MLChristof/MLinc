@@ -382,7 +382,7 @@ class OandaV20Data(with_metaclass(MetaOandaV20Data, DataBase)):
                     self._state = self._ST_START
                     continue
 
-                # copy lines of the same name
+                # copy lines of the same instrument
                 for alias in self.lines.getlinealiases():
                     lsrc = getattr(self.p.backfill_from.lines, alias)
                     ldst = getattr(self.lines, alias)
