@@ -151,6 +151,11 @@ class OandaTrader(object):
                          index=False)
 
     def baconbuyer(self):
+        # TODO   Bacon buyer should be triggered if the peak or dip of the HMA occurred day before yesterday
+        # TODO   Currently peak or dip is set on yesterday
+        # TODO   (so should be set one day earlier since the price change of today is still changing, potentially making the trigger invalid)
+
+
         dataframe = self.data_as_dataframe
 
         df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
@@ -165,6 +170,10 @@ class OandaTrader(object):
 
         hma_5 = list(hma_diff.iloc[1:6])
         hma_1 = hma_diff.iloc[6]
+
+        # TODO   SL & TP: Include in message as suggestion. SL on max or min of HMA with variable margin.
+        # TODO   In case of long position: TP = (latest_close - SL)/RRR + latest_close
+        # TODO   In case of short position: TP = latest_close - (SL - latest_close)/RRR
 
         if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
             message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart.'. \
