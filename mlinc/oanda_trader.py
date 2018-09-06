@@ -6,10 +6,13 @@ from mlinc.notifier import notification
 from mlinc.oanda_examples.instruments_list import instrument_list
 
 
-file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
-file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
-file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
+# file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
+# file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+# file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
+# file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
+
+file_jelle = 'ifttt_info_jelle.txt'
+
 
 class IterRegistry(type):
     def __iter__(cls):
@@ -83,6 +86,35 @@ def rsi(prices, window):
     return rsi
 
 
+def notify(message, *args):
+    if 'v' in args or 'vincent' in args:
+        try:
+            notification(file_vincent, message)
+        except:
+            print('vincent could not be reached')
+    if 'b' in args or 'bastijn' in args:
+        try:
+            notification(file_bastijn, message)
+        except:
+            print('bastijn could not be reached')
+    if 'c' in args or 'christof' in args:
+        try:
+            notification(file_christof, message)
+        except:
+            print('christof could not be reached')
+    if 'r' in args or 'robert' in args:
+        try:
+            notification(file_robert, message)
+        except:
+            print('robert could not be reached')
+    if 'j' in args or 'jelle' in args:
+        try:
+            notification(file_jelle, message)
+        except:
+            print('jelle could not be reached')
+
+
+
 class OandaTrader(object):
     id = 0
     instruments = []
@@ -96,6 +128,8 @@ class OandaTrader(object):
         self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
 
         self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
+
+        self.rrr = kwargs.get('rrr') if kwargs.get('rrr') else 3
 
         OandaTrader.instruments.append(self.instrument)
         OandaTrader.id += 1
@@ -151,11 +185,6 @@ class OandaTrader(object):
                          index=False)
 
     def baconbuyer(self):
-        # TODO   Bacon buyer should be triggered if the peak or dip of the HMA occurred day before yesterday
-        # TODO   Currently peak or dip is set on yesterday
-        # TODO   (so should be set one day earlier since the price change of today is still changing, potentially making the trigger invalid)
-
-
         dataframe = self.data_as_dataframe
 
         df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
@@ -164,37 +193,39 @@ class OandaTrader(object):
         df_rsi = rsi(n.array(dataframe['close'].tolist()), self.rsi_window)
         dataframe['rsi'] = pd.Series(df_rsi, index=dataframe.index)
 
-        dataframe_days = dataframe.tail(10)
-        rsi_min_days, rsi_max_days = (dataframe_days['rsi'].min(), dataframe_days['rsi'].max())
-        hma_diff = dataframe_days.tail(7)['hma'].diff().reset_index()['hma']
+        rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
+        hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
-        hma_5 = list(hma_diff.iloc[1:6])
-        hma_1 = hma_diff.iloc[6]
+        if rsi_max_days > 70 and all(item > 0 for item in hma_diff[-8:-3]) and hma_diff[-2] < 0:
+            sl = dataframe.tail(7)['hma'].max()
+            close = float(dataframe.tail(1)['close'])
+            tp = close - (sl - close) / self.rrr
 
-        # TODO   SL & TP: Include in message as suggestion. SL on max or min of HMA with variable margin.
-        # TODO   In case of long position: TP = (latest_close - SL)/RRR + latest_close
-        # TODO   In case of short position: TP = latest_close - (SL - latest_close)/RRR
+            message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
+                      'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
+                format(self.instrument,
+                       int(rsi_max_days),
+                       self.granularity,
+                       sl,
+                       tp)
 
-        if rsi_max_days > 70 and all(item > 0 for item in hma_5) and hma_1 < 0:
-            message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart.'. \
-                format(self.instrument, int(rsi_max_days), self.granularity)
-
-            # notification(file_robert, message)
-            # notification(file_vincent, message)
-            # notification(file_christof, message)
-            # notification(file_jelle, message)
-            print(dataframe_days)
+            notify(message, 'j')
             print(message)
 
-        elif rsi_min_days < 30 and all(item < 0 for item in hma_5) and hma_1 > 0:
-            message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart.'. \
-                format(self.instrument, int(rsi_min_days), self.granularity)
+        elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-8:-3]) and hma_diff[-2] > 0:
+            sl = dataframe.tail(7)['hma'].min()
+            close = float(dataframe.tail(1)['close'])
+            tp = (close - sl) / self.rrr + close
 
-            # notification(file_robert, message)
-            # notification(file_vincent, message)
-            # notification(file_christof, message)
-            # notification(file_jelle, message)
-            print(dataframe_days)
+            message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
+                      'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
+                format(self.instrument,
+                       int(rsi_min_days),
+                       self.granularity,
+                       sl,
+                       tp)
+
+            notify(message, 'j')
             print(message)
 
         return dataframe
@@ -211,6 +242,9 @@ if __name__ == '__main__':
         class_list.append(trader)
         trader.analyse()
         print(trader.instrument)
+        break
+
+
 
 
 
