@@ -114,7 +114,6 @@ def notify(message, *args):
             print('jelle could not be reached')
 
 
-
 class OandaTrader(object):
     id = 0
     instruments = []
@@ -242,7 +241,7 @@ if __name__ == '__main__':
         class_list.append(trader)
         trader.analyse()
         print(trader.instrument)
-        break
+
 
 
 
