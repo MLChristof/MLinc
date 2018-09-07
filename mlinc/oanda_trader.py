@@ -193,7 +193,7 @@ class OandaTrader(object):
         rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
-        if rsi_max_days > 70 and all(item > 0 for item in hma_diff[-8:-3]) and hma_diff[-2] < 0:
+        if rsi_max_days > 70 and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             sl = dataframe.tail(7)['hma'].max()
             close = float(dataframe.tail(1)['close'])
             tp = close - (sl - close) / self.rrr
@@ -207,9 +207,10 @@ class OandaTrader(object):
                        tp)
 
             notify(message, 'j', 'r', 'c', 'v')
+            print(dataframe.tail(10))
             print(message)
 
-        elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-8:-3]) and hma_diff[-2] > 0:
+        elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
             tp = (close - sl) / self.rrr + close
@@ -223,6 +224,7 @@ class OandaTrader(object):
                        tp)
 
             notify(message, 'j', 'r', 'c', 'v')
+            print(dataframe.tail(10))
             print(message)
 
         return dataframe
@@ -238,10 +240,13 @@ if __name__ == '__main__':
 
     class_list = []
     for inst in instrument_list():
-        trader = OandaTrader(inst)
+        trader = OandaTrader(inst, granularity='D')
         class_list.append(trader)
         trader.analyse()
         print(trader.instrument)
+
+    # trader = OandaTrader('CHF_JPY')
+    # trader.analyse()
 
 
 
