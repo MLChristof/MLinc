@@ -6,12 +6,10 @@ from mlinc.notifier import notification
 from mlinc.oanda_examples.instruments_list import instrument_list
 
 
-# file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
-# file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-# file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
-# file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
-
-file_jelle = 'ifttt_info_jelle.txt'
+file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
+file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
+file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 
 
 class IterRegistry(type):
@@ -208,7 +206,7 @@ class OandaTrader(object):
                        sl,
                        tp)
 
-            notify(message, 'j')
+            notify(message, 'j', 'r', 'c', 'v')
             print(message)
 
         elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-8:-3]) and hma_diff[-2] > 0:
@@ -224,7 +222,7 @@ class OandaTrader(object):
                        sl,
                        tp)
 
-            notify(message, 'j')
+            notify(message, 'j', 'r', 'c', 'v')
             print(message)
 
         return dataframe
@@ -235,6 +233,9 @@ class OandaTrader(object):
 
 
 if __name__ == '__main__':
+    message_fritsie = 'This is your daily update from Fritsie'
+    notify(message_fritsie, 'j', 'r', 'c', 'v')
+
     class_list = []
     for inst in instrument_list():
         trader = OandaTrader(inst)
