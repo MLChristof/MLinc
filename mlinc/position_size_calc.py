@@ -101,16 +101,19 @@ def get_trade_volume3(SL, current_price, balance, max_exp, inst, account_cur='EU
         account currency
     max_exp: float
         percentage
+    inst: basestring
+        trading instrument (e.g. GBP_USD)
     account_cur: string
         account currency (default set to EUR)
     ----------
     Returns units (int)
     """
-    # exchange rate conversion pair
+    # conversion pair
     conv_pair = inst[4:]+'_'+account_cur
 
-    # exhange rate GBP/USD
-    price_conv_pair= get_price(inst)
+    # conversion pair exchange rate GBP/USD
+    # price_conv_pair = 1.75 # baby pips example
+    price_conv_pair = float(get_bid_price(conv_pair))
 
     # max exposure in account currency (e.g. USD)
     max_exp_cur = balance*max_exp/100
@@ -126,6 +129,5 @@ def get_trade_volume3(SL, current_price, balance, max_exp, inst, account_cur='EU
 
 # print(get_trade_volume1(SL=12.00000, current_price=12.31031, balance=10000, max_exp=2))
 # print(get_trade_volume2(SL=1.15, current_price=1.15551, balance=10000, max_exp=2))
-# print(get_trade_volume3(SL=0.87475, current_price=0.89475, balance=5000, max_exp=1, inst='EUR_GBP', account_cur='USD'))
+print(get_trade_volume3(SL=1.27319, current_price=1.29319, balance=5000, max_exp=1, inst='EUR_GBP', account_cur='USD'))
 
-print(get_bid_price('GBP_USD'))
