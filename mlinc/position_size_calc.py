@@ -16,20 +16,19 @@ output: units to trade
 """
 
 import oandapyV20
-import oandapyV20.endpoints.pricing as pricing
 from mlinc.oanda_examples.exampleauth import exampleAuth
 
-def get_price():
 
+def get_bid_price(instrument):
+    import oandapyV20.endpoints.pricing as pricing
     accountID, access_token = exampleAuth()
     api = oandapyV20.API(access_token=access_token)
-    params = {
-        "instruments": "USD_JPY,USD_INR,GBP_USD,EUR_USD"
-    }
+    params = {"instruments": instrument}
     r = pricing.PricingInfo(accountID=accountID, params=params)
     api.request(r)
     pricing = r.response['prices']
-    return(pricing)
+    bid_price = pricing[0]['bids'][0]['price']
+    return bid_price
 
 def get_trade_volume1(SL, current_price, balance, max_exp):
     """
@@ -111,8 +110,7 @@ def get_trade_volume3(SL, current_price, balance, max_exp, inst, account_cur='EU
     conv_pair = inst[4:]+'_'+account_cur
 
     # exhange rate GBP/USD
-
-    price_conv_pair = 1.75
+    price_conv_pair= get_price(inst)
 
     # max exposure in account currency (e.g. USD)
     max_exp_cur = balance*max_exp/100
@@ -128,5 +126,6 @@ def get_trade_volume3(SL, current_price, balance, max_exp, inst, account_cur='EU
 
 # print(get_trade_volume1(SL=12.00000, current_price=12.31031, balance=10000, max_exp=2))
 # print(get_trade_volume2(SL=1.15, current_price=1.15551, balance=10000, max_exp=2))
-print(get_trade_volume3(SL=0.87475, current_price=0.89475, balance=5000, max_exp=1, inst='EUR_GBP', account_cur='USD'))
+# print(get_trade_volume3(SL=0.87475, current_price=0.89475, balance=5000, max_exp=1, inst='EUR_GBP', account_cur='USD'))
 
+print(get_bid_price('GBP_USD'))
