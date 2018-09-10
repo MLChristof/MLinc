@@ -12,7 +12,7 @@ Four cases possible:
 
 input: trading instrument, stoploss (SL), current price, total account balance,
         maximum exposure per trade if SL is hit as percentage of total account balance
-output: units to trade
+output: volume (units) to trade
 """
 
 import oandapyV20
@@ -41,14 +41,17 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
     # difference between price and SL in pips (absolute value)
     SL_diff = 10000 * abs(SL - current_price)
 
+    # case nr.1
     if account_cur == inst[4:]:
         # for e.g. SILVER/EUR
         units = round(10000 * max_exp_cur / SL_diff)
 
+    # case nr.2
     elif account_cur == inst[:3]:
         # for e.g. EUR
         units = round(10000 * current_price * max_exp_cur / SL_diff)
 
+    # case nr.3
     elif account_cur not in inst and inst[4:] + '_' + account_cur in instrument_list():
         # conversion pair
         conv_pair = inst[4:] + '_' + account_cur
@@ -58,6 +61,7 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
         # for e.g. EUR/GBP
         units = round(10000 * (1 / price_conv_pair) * max_exp_cur / SL_diff)
 
+    # case nr.4
     elif account_cur not in inst and account_cur + '_' + inst[4:] in instrument_list():
         # conversion pair
         conv_pair = account_cur + '_' + inst[4:]
@@ -83,4 +87,8 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
 
 # case nr.4
 # print(get_trade_volume(SL=110.049, current_price=111.049, balance=5000, max_exp=1, inst='USD_JPY', account_cur='CHF'))
+
+# test Brent Crude Oil
+# print(get_trade_volume(SL=76, current_price=77.212, balance=10000, max_exp=2, inst='BCO_USD'))
+
 
