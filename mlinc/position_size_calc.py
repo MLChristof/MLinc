@@ -1,6 +1,6 @@
 """
 author: Robert Weegenaar
-description: position size calculator
+description: position size calculator for Oanda
 Also see: https://www.babypips.com/learn/forex/calculating-position-sizes
 Four cases possible:
 1) account currency equals counter currency of trading instrument
@@ -42,7 +42,7 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
     SL_diff = 10000 * abs(SL - current_price)
 
     # case nr.1
-    if account_cur == inst[4:]:
+    if account_cur == inst[-3:]:
         # for e.g. SILVER/EUR
         units = round(10000 * max_exp_cur / SL_diff)
 
@@ -53,6 +53,7 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
 
     # case nr.3
     elif account_cur not in inst and inst[4:] + '_' + account_cur in instrument_list():
+        # test case inst='EUR_GBP', account_cur='USD'
         # conversion pair
         conv_pair = inst[4:] + '_' + account_cur
         # conversion pair exchange rate GBP/USD
@@ -63,6 +64,7 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
 
     # case nr.4
     elif account_cur not in inst and account_cur + '_' + inst[-3:] in instrument_list():
+        # test case inst='USD_JPY', account_cur='CHF'
         # conversion pair
         conv_pair = account_cur + '_' + inst[-3:]
         # conversion pair exchange rate CHF/JPY
@@ -72,7 +74,10 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
         units = round(10000 * price_conv_pair * max_exp_cur / SL_diff)
 
     else:
-        return 'Oops, could not determine trade volume, check if your instrument is tradable'
+        return 'Oops, could not determine trade volume, ' \
+               'check if your instrument is tradable and conversion pair exists. \n' \
+               '(e.g. USD_CNH is not possible, since conversion pair EUR_CNH or CNH_EUR does not exist in Oanda)\n' \
+               'Please determine trading volume in web interface.'
 
     return units
 
@@ -94,5 +99,10 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
 # HK33_HKD
 # print(get_trade_volume(SL=26250, current_price=26385, balance=10000, max_exp=2, inst='HK33_HKD'))
 
+# SPX500_USD
+# print(get_trade_volume(SL=2900, current_price=2881.1, balance=10000, max_exp=2, inst='SPX500_USD'))
+
+# USD_CNH (gives error)
+# print(get_trade_volume(SL=6.68, current_price=6.87456, balance=10000, max_exp=2, inst='USD_CNH'))
 
 
