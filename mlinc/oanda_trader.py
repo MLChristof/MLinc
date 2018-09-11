@@ -3,7 +3,6 @@ import pandas as pd
 import os
 from mlinc.oanda_examples.candle_data import candles
 from mlinc.notifier import notification
-# from mlinc.oanda_examples.instruments_list import instrument_list
 from mlinc.position_size_calc import *
 import json
 from oandapyV20 import API
@@ -12,10 +11,7 @@ from oandapyV20.exceptions import V20Error
 import logging
 import oandapyV20.endpoints.accounts as accounts
 
-# TODO: Short position market order (now long?)
-# TODO: Multiple sessions are created with the API when placing an order. Should only be one.
 # TODO: make parameter list such as maximum exposure percentage
-# TODO: Fix logging errors
 # TODO: Add check for sufficient margin
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
@@ -139,6 +135,7 @@ class OandaTrader(object):
         self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
 
         self.rrr = kwargs.get('rrr') if kwargs.get('rrr') else 3
+        self.api = oandapyV20.API(access_token=self.access_token)
 
         OandaTrader.instruments.append(self.instrument)
         OandaTrader.id += 1
@@ -222,7 +219,7 @@ class OandaTrader(object):
             # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
-            self.market_order(sl, tp, close, self.instrument)
+            self.market_order(sl, tp, close, self.instrument, short_long='short')
 
         elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             sl = dataframe.tail(7)['hma'].min()
@@ -240,7 +237,7 @@ class OandaTrader(object):
             # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
-            self.market_order(sl, tp, close, self.instrument)
+            self.market_order(sl, tp, close, self.instrument, short_long='long')
 
         return dataframe
 
@@ -248,20 +245,28 @@ class OandaTrader(object):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer()
 
-    def market_order(self, sl, tp, close, inst, max_exp=2):
+    def market_order(self, sl, tp, close, inst, short_long, max_exp=2):
 
-        logging.basicConfig(
-            filename="log.out",
-            level=logging.INFO,
-            format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
-        )
+        # built in logging function:
+        # logging.basicConfig(
+        #     filename="log.out",
+        #     level=logging.INFO,
+        #     format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
+        # )
 
+        # short/long order
+        if short_long == 'short':
+            sign = -1
+        elif short_long == 'long':
+            sign = 1
+        else:
+            raise ValueError('unclear if long or short')
         balance = self.account_balance()
 
         orderConf = [
             {
                 "order": {
-                    "units": get_trade_volume(sl, close, balance, max_exp, inst),
+                    "units": sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api),
                     "instrument": inst,
                     "stopLossOnFill": {
                         "timeInForce": "GTC",
@@ -279,7 +284,6 @@ class OandaTrader(object):
         ]
 
         # client
-        api = API(access_token=self.access_token)
 
         # create and process order requests
         for O in orderConf:
@@ -288,7 +292,7 @@ class OandaTrader(object):
             print("===============================")
             print(r.data)
             try:
-                response = api.request(r)
+                response = self.api.request(r)
             except V20Error as e:
                 print("V20Error: {}".format(e))
             else:
@@ -300,22 +304,17 @@ class OandaTrader(object):
         import oandapyV20
         import oandapyV20.endpoints.accounts as accounts
 
-        api = oandapyV20.API(access_token=self.access_token)
-
-        ############# Account Details ##############
-
         r = accounts.AccountDetails(accountID=self.accountID)
-        rv = api.request(r)
+        rv = self.api.request(r)
         details = rv.get('account')
         balance = float(details.get('NAV'))
         # AccDet = r.response
         return balance
 
+
 if __name__ == '__main__':
     # trader = OandaTrader('EUR_USD', granularity='D')
     # print(trader.account_balance())
-
-
 
     message_fritsie = 'This is your daily update from Fritsie'
     # notify(message_fritsie, 'j', 'r', 'c', 'v')
@@ -329,10 +328,5 @@ if __name__ == '__main__':
 
     trader = OandaTrader('GBP_CHF')
     trader.analyse()
-
-
-
-
-
 
 
