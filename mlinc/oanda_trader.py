@@ -3,7 +3,14 @@ import pandas as pd
 import os
 from mlinc.oanda_examples.candle_data import candles
 from mlinc.notifier import notification
-from mlinc.oanda_examples.instruments_list import instrument_list
+# from mlinc.oanda_examples.instruments_list import instrument_list
+from mlinc.position_size_calc import *
+import json
+from oandapyV20 import API
+import oandapyV20.endpoints.orders as orders
+from oandapyV20.exceptions import V20Error
+import logging
+import oandapyV20.endpoints.accounts as accounts
 
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
@@ -90,11 +97,11 @@ def notify(message, *args):
             notification(file_vincent, message)
         except:
             print('vincent could not be reached')
-    if 'b' in args or 'bastijn' in args:
-        try:
-            notification(file_bastijn, message)
-        except:
-            print('bastijn could not be reached')
+    # if 'b' in args or 'bastijn' in args:
+    #     try:
+    #         notification(file_bastijn, message)
+    #     except:
+    #         print('bastijn could not be reached')
     if 'c' in args or 'christof' in args:
         try:
             notification(file_christof, message)
@@ -117,6 +124,7 @@ class OandaTrader(object):
     instruments = []
 
     def __init__(self, instrument, granularity='D', count=50, **kwargs):
+        self.accountID, self.access_token = exampleAuth()
         self.instrument = instrument
         self.granularity = granularity
         self.count = count
@@ -153,7 +161,8 @@ class OandaTrader(object):
             data = candles(inst=[self.instrument],
                            granularity=[self.granularity],
                            count=[self.count],
-                           From=None, to=None, price=None, nice=True)
+                           From=None, to=None, price=None, nice=True,
+                           access_token=self.access_token)
             return data
         except:
             raise ValueError('Failed to load data from Oanda using instrument {}'.format(self.instrument))
@@ -206,9 +215,10 @@ class OandaTrader(object):
                        sl,
                        tp)
 
-            notify(message, 'j', 'r', 'c', 'v')
+            # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
+            self.market_order(sl, close, self.instrument)
 
         elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             sl = dataframe.tail(7)['hma'].min()
@@ -223,9 +233,10 @@ class OandaTrader(object):
                        sl,
                        tp)
 
-            notify(message, 'j', 'r', 'c', 'v')
+            # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
+            self.market_order(sl, tp, close, self.instrument)
 
         return dataframe
 
@@ -233,20 +244,93 @@ class OandaTrader(object):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer()
 
+    def market_order(self, sl, tp, close, inst, max_exp=2):
+        # import json
+        # from oandapyV20 import API
+        # import oandapyV20.endpoints.orders as orders
+        # from oandapyV20.exceptions import V20Error
+        # import logging
+
+        logging.basicConfig(
+            filename="log.out",
+            level=logging.INFO,
+            format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
+        )
+
+        balance = self.account_balance()
+
+        orderConf = [
+            # ok
+            {
+                "order": {
+                    "units": get_trade_volume(sl, close, balance, max_exp, inst),
+                    "instrument": inst,
+                    "stopLossOnFill": {
+                        "timeInForce": "GTC",
+                        "price": '{0:.5g}'.format(sl)
+                    },
+                    "takeProfitOnFill": {
+                        "timeInForce": "GTC",
+                        "price": '{0:.5g}'.format(tp)
+                    },
+                    "timeInForce": "FOK",
+                    "type": "MARKET",
+                    "positionFill": "DEFAULT"
+                }
+            }
+        ]
+
+        # client
+        api = API(access_token=self.access_token)
+
+        # create and process order requests
+        for O in orderConf:
+            r = orders.OrderCreate(accountID=self.accountID, data=O)
+            print("processing : {}".format(r))
+            print("===============================")
+            print(r.data)
+            try:
+                response = api.request(r)
+            except V20Error as e:
+                print("V20Error: {}".format(e))
+            else:
+                print("Response: {}\n{}".format(r.status_code,
+                                                json.dumps(response, indent=2)))
+
+
+    def account_balance(self):
+        import oandapyV20
+        import oandapyV20.endpoints.accounts as accounts
+
+        api = oandapyV20.API(access_token=self.access_token)
+
+        ############# Account Details ##############
+
+        r = accounts.AccountDetails(accountID=self.accountID)
+        rv = api.request(r)
+        details = rv.get('account')
+        balance = float(details.get('NAV'))
+        # AccDet = r.response
+        return balance
 
 if __name__ == '__main__':
+    # trader = OandaTrader('EUR_USD', granularity='D')
+    # print(trader.account_balance())
+
+
+
     message_fritsie = 'This is your daily update from Fritsie'
-    notify(message_fritsie, 'j', 'r', 'c', 'v')
+    # notify(message_fritsie, 'j', 'r', 'c', 'v')
 
     class_list = []
-    for inst in instrument_list():
-        trader = OandaTrader(inst, granularity='D')
-        class_list.append(trader)
-        trader.analyse()
-        print(trader.instrument)
+    # for inst in instrument_list():
+    #     trader = OandaTrader(inst, granularity='D')
+    #     class_list.append(trader)
+    #     trader.analyse()
+    #     print(trader.instrument)
 
-    # trader = OandaTrader('CHF_JPY')
-    # trader.analyse()
+    trader = OandaTrader('GBP_CHF')
+    trader.analyse()
 
 
 
