@@ -19,7 +19,7 @@ import oandapyV20
 from mlinc.oanda_examples.exampleauth import exampleAuth
 from mlinc.oanda_examples.instruments_list import instrument_list
 
-# TODO: After this, write this new function into the oanda trader class.
+# TODO: Write get_trade_volume function into the oanda trader class(?).
 
 
 def get_mid_price(instrument):
@@ -62,9 +62,9 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
         units = round(10000 * (1 / price_conv_pair) * max_exp_cur / SL_diff)
 
     # case nr.4
-    elif account_cur not in inst and account_cur + '_' + inst[4:] in instrument_list():
+    elif account_cur not in inst and account_cur + '_' + inst[-3:] in instrument_list():
         # conversion pair
-        conv_pair = account_cur + '_' + inst[4:]
+        conv_pair = account_cur + '_' + inst[-3:]
         # conversion pair exchange rate CHF/JPY
         # price_conv_pair = 85.00 # baby pips example
         price_conv_pair = get_mid_price(conv_pair)
@@ -90,5 +90,9 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
 
 # test Brent Crude Oil
 # print(get_trade_volume(SL=76, current_price=77.212, balance=10000, max_exp=2, inst='BCO_USD'))
+
+# HK33_HKD
+# print(get_trade_volume(SL=26250, current_price=26385, balance=10000, max_exp=2, inst='HK33_HKD'))
+
 
 
