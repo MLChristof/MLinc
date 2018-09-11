@@ -5,14 +5,19 @@ from mlinc.oanda_examples.candle_data import candles
 from mlinc.notifier import notification
 from mlinc.position_size_calc import *
 import json
-from oandapyV20 import API
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
-import logging
-import oandapyV20.endpoints.accounts as accounts
+
+# redundant packages:
+# from oandapyV20 import API
+# import logging
+# import oandapyV20.endpoints.accounts as accounts
 
 # TODO: make parameter list such as maximum exposure percentage
 # TODO: Add check for sufficient margin
+# TODO: Market order and position size calculator use 'mid' price (avg of bid and ask).
+# TODO: Should either be bid or ask depending on short or long position. On Daily chart no issue
+# TODO: Precision of TP and SL in market order should depend on instrument (some require lower)
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
@@ -245,7 +250,7 @@ class OandaTrader(object):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer()
 
-    def market_order(self, sl, tp, close, inst, short_long, max_exp=2):
+    def market_order(self, sl, tp, close, inst, short_long, max_exp=0.1):
 
         # built in logging function:
         # logging.basicConfig(
@@ -320,13 +325,13 @@ if __name__ == '__main__':
     # notify(message_fritsie, 'j', 'r', 'c', 'v')
 
     class_list = []
-    # for inst in instrument_list():
-    #     trader = OandaTrader(inst, granularity='D')
-    #     class_list.append(trader)
-    #     trader.analyse()
-    #     print(trader.instrument)
+    for inst in instrument_list():
+        trader = OandaTrader(inst, granularity='D')
+        class_list.append(trader)
+        trader.analyse()
+        print(trader.instrument)
 
-    trader = OandaTrader('GBP_CHF')
-    trader.analyse()
+    # trader = OandaTrader('GBP_CHF')
+    # trader.analyse()
 
 
