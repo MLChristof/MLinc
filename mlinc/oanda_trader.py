@@ -12,12 +12,16 @@ from oandapyV20.exceptions import V20Error
 import logging
 import oandapyV20.endpoints.accounts as accounts
 
+# TODO: Short position market order (now long?)
+# TODO: Multiple sessions are created with the API when placing an order. Should only be one.
+# TODO: make parameter list such as maximum exposure percentage
+# TODO: Fix logging errors
+# TODO: Add check for sufficient margin
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
 file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
-
 
 class IterRegistry(type):
     def __iter__(cls):
@@ -218,7 +222,7 @@ class OandaTrader(object):
             # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
-            self.market_order(sl, close, self.instrument)
+            self.market_order(sl, tp, close, self.instrument)
 
         elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             sl = dataframe.tail(7)['hma'].min()
@@ -245,11 +249,6 @@ class OandaTrader(object):
             return self.baconbuyer()
 
     def market_order(self, sl, tp, close, inst, max_exp=2):
-        # import json
-        # from oandapyV20 import API
-        # import oandapyV20.endpoints.orders as orders
-        # from oandapyV20.exceptions import V20Error
-        # import logging
 
         logging.basicConfig(
             filename="log.out",
@@ -260,7 +259,6 @@ class OandaTrader(object):
         balance = self.account_balance()
 
         orderConf = [
-            # ok
             {
                 "order": {
                     "units": get_trade_volume(sl, close, balance, max_exp, inst),
