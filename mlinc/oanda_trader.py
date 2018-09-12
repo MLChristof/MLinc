@@ -16,8 +16,7 @@ from oandapyV20.exceptions import V20Error
 # TODO: make parameter list such as maximum exposure percentage, max margin percentage
 # TODO: Market order and position size calculator use 'mid' price (avg of bid and ask).
 # TODO: Should either be bid or ask depending on short or long position. On Daily chart no issue
-# TODO: Precision of TP and SL in market order should depend on instrument (some require lower)
-# TODO:  Precision can be requested per instrument. See developer's pdf:
+# TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
@@ -213,14 +212,15 @@ class OandaTrader(object):
             sl = dataframe.tail(7)['hma'].max()
             close = float(dataframe.tail(1)['close'])
             tp = close - (sl - close) / self.rrr
+            nr_decimals_close = str(close)[::-1].find('.')
 
             message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
                       'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
                 format(self.instrument,
                        int(rsi_max_days),
                        self.granularity,
-                       '{0:.6g}'.format(sl),
-                       '{0:.6g}'.format(tp))
+                       round(sl, nr_decimals_close),
+                       round(tp, nr_decimals_close))
 
             # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
@@ -234,14 +234,15 @@ class OandaTrader(object):
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
             tp = (close - sl) / self.rrr + close
+            nr_decimals_close = str(close)[::-1].find('.')
 
             message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
                       'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
                 format(self.instrument,
                        int(rsi_min_days),
                        self.granularity,
-                       '{0:.6g}'.format(sl),
-                       '{0:.6g}'.format(tp))
+                       round(sl, nr_decimals_close),
+                       round(tp, nr_decimals_close))
 
             # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
@@ -274,8 +275,14 @@ class OandaTrader(object):
         else:
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
-
         volume = sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api)
+
+        # set correct nr of decimals (dirty trick, but it works)
+        nr_decimals_close = str(close)[::-1].find('.')
+        sl = round(sl, nr_decimals_close)
+        tp = round(tp, nr_decimals_close)
+        sl = sl - sl % (10 ** -nr_decimals_close)
+        tp = tp - tp % (10 ** -nr_decimals_close)
 
         orderConf = [
             {
@@ -284,11 +291,11 @@ class OandaTrader(object):
                     "instrument": inst,
                     "stopLossOnFill": {
                         "timeInForce": "GTC",
-                        "price": '{0:.5g}'.format(sl)
+                        "price": sl
                     },
                     "takeProfitOnFill": {
                         "timeInForce": "GTC",
-                        "price": '{0:.5g}'.format(tp)
+                        "price": tp
                     },
                     "timeInForce": "FOK",
                     "type": "MARKET",
