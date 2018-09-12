@@ -23,3 +23,4 @@ params = {
 r = pricing.PricingInfo(accountID=account_id, params=params)
 api.request(r)
 pricing = r.response['prices']
+print(pricing)

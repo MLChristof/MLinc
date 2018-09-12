@@ -36,8 +36,7 @@ parser.add_argument('--instruments', type=str, nargs='?',
                     action='append', help='instruments')
 
 
-def candles(inst, granularity, count, From, to, price, nice):
-    accountID, access_token = exampleAuth()
+def candles(inst, granularity, count, From, to, price, nice, access_token):
     api = API(access_token=access_token)
 
     def check_date(s):
