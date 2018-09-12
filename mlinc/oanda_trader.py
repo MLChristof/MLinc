@@ -13,11 +13,12 @@ from oandapyV20.exceptions import V20Error
 # import logging
 # import oandapyV20.endpoints.accounts as accounts
 
-# TODO: make parameter list such as maximum exposure percentage
-# TODO: Add check for sufficient margin
+# TODO: make parameter list such as maximum exposure percentage, max margin percentage
 # TODO: Market order and position size calculator use 'mid' price (avg of bid and ask).
 # TODO: Should either be bid or ask depending on short or long position. On Daily chart no issue
 # TODO: Precision of TP and SL in market order should depend on instrument (some require lower)
+# TODO:  Precision can be requested per instrument. See developer's pdf:
+# TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
@@ -218,13 +219,16 @@ class OandaTrader(object):
                 format(self.instrument,
                        int(rsi_max_days),
                        self.granularity,
-                       sl,
-                       tp)
+                       '{0:.6g}'.format(sl),
+                       '{0:.6g}'.format(tp))
 
             # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
-            self.market_order(sl, tp, close, self.instrument, short_long='short')
+            if self.margin_closeout_percent() < 50:
+                self.market_order(sl, tp, close, self.instrument, short_long='short')
+            else:
+                notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
 
         elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             sl = dataframe.tail(7)['hma'].min()
@@ -236,13 +240,16 @@ class OandaTrader(object):
                 format(self.instrument,
                        int(rsi_min_days),
                        self.granularity,
-                       sl,
-                       tp)
+                       '{0:.6g}'.format(sl),
+                       '{0:.6g}'.format(tp))
 
             # notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
-            self.market_order(sl, tp, close, self.instrument, short_long='long')
+            if self.margin_closeout_percent() < 50:
+                self.market_order(sl, tp, close, self.instrument, short_long='long')
+            else:
+                notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
 
         return dataframe
 
@@ -312,13 +319,19 @@ class OandaTrader(object):
 
     def account_balance(self):
         import oandapyV20.endpoints.accounts as accounts
-
         r = accounts.AccountDetails(accountID=self.accountID)
         rv = self.api.request(r)
         details = rv.get('account')
         balance = float(details.get('NAV'))
-        # AccDet = r.response
         return balance
+
+    def margin_closeout_percent(self):
+        import oandapyV20.endpoints.accounts as accounts
+        r = accounts.AccountDetails(accountID=self.accountID)
+        rv = self.api.request(r)
+        details = rv.get('account')
+        margin_percent = 100*float(details.get('marginCloseoutPercent'))
+        return margin_percent
 
 
 if __name__ == '__main__':
