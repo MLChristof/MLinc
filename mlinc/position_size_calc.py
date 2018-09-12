@@ -22,10 +22,10 @@ from mlinc.oanda_examples.instruments_list import instrument_list
 # TODO: Write get_trade_volume function into the oanda trader class(?).
 
 
-def get_mid_price(instrument):
+def get_mid_price(instrument, api):
     import oandapyV20.endpoints.pricing as pricing
     accountID, access_token = exampleAuth()
-    api = oandapyV20.API(access_token=access_token)
+    # api = oandapyV20.API(access_token=access_token)
     params = {"instruments": instrument}
     r = pricing.PricingInfo(accountID=accountID, params=params)
     api.request(r)
@@ -35,7 +35,7 @@ def get_mid_price(instrument):
     return (bid_price+ask_price)/2
 
 
-def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR'):
+def get_trade_volume(SL, current_price, balance, max_exp, inst, api, account_cur='EUR'):
     # max exposure in balance currency (e.g. EUR)
     max_exp_cur = balance * max_exp / 100
     # difference between price and SL in pips (absolute value)
@@ -58,7 +58,7 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
         conv_pair = inst[4:] + '_' + account_cur
         # conversion pair exchange rate GBP/USD
         # price_conv_pair = 1.75 # baby pips example
-        price_conv_pair = get_mid_price(conv_pair)
+        price_conv_pair = get_mid_price(conv_pair, api)
         # for e.g. EUR/GBP
         units = round(10000 * (1 / price_conv_pair) * max_exp_cur / SL_diff)
 
@@ -69,7 +69,7 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
         conv_pair = account_cur + '_' + inst[-3:]
         # conversion pair exchange rate CHF/JPY
         # price_conv_pair = 85.00 # baby pips example
-        price_conv_pair = get_mid_price(conv_pair)
+        price_conv_pair = get_mid_price(conv_pair, api)
         # for e.g. USD/JPY
         units = round(10000 * price_conv_pair * max_exp_cur / SL_diff)
 
@@ -97,7 +97,7 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, account_cur='EUR
 # print(get_trade_volume(SL=76, current_price=77.212, balance=10000, max_exp=2, inst='BCO_USD'))
 
 # HK33_HKD
-# print(get_trade_volume(SL=26250, current_price=26385, balance=10000, max_exp=2, inst='HK33_HKD'))
+# print(get_trade_volume(SL=26250, current_price=26139.5, balance=10000, max_exp=2, inst='HK33_HKD'))
 
 # SPX500_USD
 # print(get_trade_volume(SL=2900, current_price=2881.1, balance=10000, max_exp=2, inst='SPX500_USD'))
