@@ -268,10 +268,15 @@ class OandaTrader(object):
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
 
+        try:
+            volume = sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api)
+        except V20Error as e:
+            print("V20Error: {}".format(e))
+
         orderConf = [
             {
                 "order": {
-                    "units": sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api),
+                    "units": volume,
                     "instrument": inst,
                     "stopLossOnFill": {
                         "timeInForce": "GTC",
@@ -292,6 +297,7 @@ class OandaTrader(object):
 
         # create and process order requests
         for O in orderConf:
+
             r = orders.OrderCreate(accountID=self.accountID, data=O)
             print("processing : {}".format(r))
             print("===============================")
@@ -304,9 +310,7 @@ class OandaTrader(object):
                 print("Response: {}\n{}".format(r.status_code,
                                                 json.dumps(response, indent=2)))
 
-
     def account_balance(self):
-        import oandapyV20
         import oandapyV20.endpoints.accounts as accounts
 
         r = accounts.AccountDetails(accountID=self.accountID)
