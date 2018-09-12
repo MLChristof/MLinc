@@ -275,10 +275,7 @@ class OandaTrader(object):
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
 
-        try:
-            volume = sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api)
-        except V20Error as e:
-            print("V20Error: {}".format(e))
+        volume = sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api)
 
         orderConf = [
             {
