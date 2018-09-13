@@ -13,7 +13,7 @@ from oandapyV20.exceptions import V20Error
 # import logging
 # import oandapyV20.endpoints.accounts as accounts
 
-# TODO: make parameter list such as maximum exposure percentage, max margin percentage
+# TODO: make settings file (e.g. .ini bestand) such as maximum exposure percentage, max margin percentage
 # TODO: Market order and position size calculator use 'mid' price (avg of bid and ask).
 # TODO: Should either be bid or ask depending on short or long position. On Daily chart no issue
 # TODO: Also see developer's pdf:
@@ -222,13 +222,9 @@ class OandaTrader(object):
                        round(sl, nr_decimals_close),
                        round(tp, nr_decimals_close))
 
-            # notify(message, 'j', 'r', 'c', 'v')
+            notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
-            if self.margin_closeout_percent() < 50:
-                self.market_order(sl, tp, close, self.instrument, short_long='short')
-            else:
-                notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
 
         elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             sl = dataframe.tail(7)['hma'].min()
@@ -244,7 +240,65 @@ class OandaTrader(object):
                        round(sl, nr_decimals_close),
                        round(tp, nr_decimals_close))
 
-            # notify(message, 'j', 'r', 'c', 'v')
+            notify(message, 'j', 'r', 'c', 'v')
+            print(dataframe.tail(10))
+            print(message)
+
+        return dataframe
+
+    def baconbuyer_auto(self):
+        dataframe = self.data_as_dataframe
+
+        df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
+        dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
+
+        df_rsi = rsi(n.array(dataframe['close'].tolist()), self.rsi_window)
+        dataframe['rsi'] = pd.Series(df_rsi, index=dataframe.index)
+
+        rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
+        hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
+
+        if rsi_max_days > 70 and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
+            sl = dataframe.tail(7)['hma'].max()
+            close = float(dataframe.tail(1)['close'])
+            tp = close - (sl - close) / self.rrr
+            nr_decimals_close = str(close)[::-1].find('.')
+
+            message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+                      'because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
+                      'BaconBuyer used a RRR={}'. \
+                format(self.instrument,
+                       round(sl, nr_decimals_close),
+                       round(tp, nr_decimals_close),
+                       int(rsi_min_days),
+                       self.granularity,
+                       self.rrr)
+
+            notify(message, 'j', 'r', 'c', 'v')
+            print(dataframe.tail(10))
+            print(message)
+            if self.margin_closeout_percent() < 50:
+                self.market_order(sl, tp, close, self.instrument, short_long='short')
+            else:
+                notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
+
+        elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+            sl = dataframe.tail(7)['hma'].min()
+            close = float(dataframe.tail(1)['close'])
+            tp = (close - sl) / self.rrr + close
+            nr_decimals_close = str(close)[::-1].find('.')
+
+            message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+                      'because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
+                      'BaconBuyer used a RRR={}'. \
+                format(self.instrument,
+                       round(sl, nr_decimals_close),
+                       round(tp, nr_decimals_close),
+                       int(rsi_min_days),
+                       self.granularity,
+                       self.rrr)
+
+            notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
             print(message)
             if self.margin_closeout_percent() < 50:
@@ -257,6 +311,10 @@ class OandaTrader(object):
     def analyse(self):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer()
+
+    def auto_trade(self):
+        if self.strategy == 'Baconbuyer':
+            return self.baconbuyer_auto()
 
     def market_order(self, sl, tp, close, inst, short_long, max_exp=0.1):
 
