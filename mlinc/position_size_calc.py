@@ -19,8 +19,6 @@ import oandapyV20
 from mlinc.oanda_examples.exampleauth import exampleAuth
 from mlinc.oanda_examples.instruments_list import instrument_list
 
-# TODO: Write get_trade_volume function into the oanda trader class(?).
-
 
 def get_mid_price(instrument, api):
     import oandapyV20.endpoints.pricing as pricing
