@@ -8,6 +8,7 @@ import json
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
 
+
 # redundant packages:
 # from oandapyV20 import API
 # import logging
@@ -16,6 +17,7 @@ from oandapyV20.exceptions import V20Error
 # TODO: make settings file (e.g. .ini bestand) such as maximum exposure percentage, max margin percentage
 # TODO: Market order and position size calculator use 'mid' price (avg of bid and ask).
 # TODO: Should either be bid or ask depending on short or long position. On Daily chart no issue
+# TODO: Only send ifttt message that position is opened if v20 api sends confirmaion (or return error)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
@@ -275,8 +277,8 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                # notify(message, 'j', 'r', 'c', 'v')
-                notify(message, 'j')
+                notify(message, 'j', 'r', 'c', 'v')
+                # notify(message, 'r')
                 print(dataframe.tail(10))
                 print(message)
             else:
@@ -299,8 +301,8 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                # notify(message, 'j', 'r', 'c', 'v')
-                notify(message, 'j')
+                notify(message, 'j', 'r', 'c', 'v')
+                # notify(message, 'r')
                 print(dataframe.tail(10))
                 print(message)
             else:
@@ -316,7 +318,7 @@ class OandaTrader(object):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer_auto()
 
-    def market_order(self, sl, tp, close, inst, short_long, max_exp=0.1):
+    def market_order(self, sl, tp, close, inst, short_long, max_exp=0.01):
 
         # built in logging function:
         # logging.basicConfig(
@@ -337,10 +339,6 @@ class OandaTrader(object):
 
         # set correct nr of decimals (dirty trick, but it works)
         nr_decimals_close = str(close)[::-1].find('.')
-        sl = round(sl, nr_decimals_close)
-        tp = round(tp, nr_decimals_close)
-        sl = sl - sl % (10 ** -nr_decimals_close)
-        tp = tp - tp % (10 ** -nr_decimals_close)
 
         orderConf = [
             {
@@ -349,11 +347,11 @@ class OandaTrader(object):
                     "instrument": inst,
                     "stopLossOnFill": {
                         "timeInForce": "GTC",
-                        "price": sl
+                        "price": format(sl, '.' + str(nr_decimals_close) + 'f')
                     },
                     "takeProfitOnFill": {
                         "timeInForce": "GTC",
-                        "price": tp
+                        "price": format(tp, '.' + str(nr_decimals_close) + 'f')
                     },
                     "timeInForce": "FOK",
                     "type": "MARKET",
@@ -412,8 +410,8 @@ if __name__ == '__main__':
 
     # Start auto-trader
     message_fritsie = 'Fritsie is looking if he can open some positions'
-    # notify(message_fritsie, 'j', 'r', 'c', 'v')
-    notify(message_fritsie, 'j')
+    notify(message_fritsie, 'j', 'r', 'c', 'v')
+    # notify(message_fritsie, 'r')
     class_list = []
     for inst in instrument_list():
         trader = OandaTrader(inst, granularity='D')
