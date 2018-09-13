@@ -275,7 +275,8 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, 'j', 'r', 'c', 'v')
+                # notify(message, 'j', 'r', 'c', 'v')
+                notify(message, 'j')
                 print(dataframe.tail(10))
                 print(message)
             else:
@@ -298,7 +299,8 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, 'j', 'r', 'c', 'v')
+                # notify(message, 'j', 'r', 'c', 'v')
+                notify(message, 'j')
                 print(dataframe.tail(10))
                 print(message)
             else:
@@ -396,21 +398,22 @@ class OandaTrader(object):
 
 if __name__ == '__main__':
 
-    # Run notifier
-    message_fritsie = 'This is your daily update from Fritsie'
-    notify(message_fritsie, 'j', 'r', 'c', 'v')
-    class_list = []
-    for inst in instrument_list():
-        trader = OandaTrader(inst, granularity='D')
-        class_list.append(trader)
-        trader.analyse()
-        print(trader.instrument)
-    # trader = OandaTrader('GBP_CHF')
-    # trader.analyse()
+    # # Run notifier
+    # message_fritsie = 'This is your daily update from Fritsie'
+    # notify(message_fritsie, 'j', 'r', 'c', 'v')
+    # class_list = []
+    # for inst in instrument_list():
+    #     trader = OandaTrader(inst, granularity='D')
+    #     class_list.append(trader)
+    #     trader.analyse()
+    #     print(trader.instrument)
+    # # trader = OandaTrader('GBP_CHF')
+    # # trader.analyse()
 
     # Start auto-trader
     message_fritsie = 'Fritsie is looking if he can open some positions'
-    notify(message_fritsie, 'j', 'r', 'c', 'v')
+    # notify(message_fritsie, 'j', 'r', 'c', 'v')
+    notify(message_fritsie, 'j')
     class_list = []
     for inst in instrument_list():
         trader = OandaTrader(inst, granularity='D')
