@@ -264,21 +264,20 @@ class OandaTrader(object):
             tp = close - (sl - close) / self.rrr
             nr_decimals_close = str(close)[::-1].find('.')
 
-            message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
-                      'because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
-                      'BaconBuyer used a RRR={}'. \
-                format(self.instrument,
-                       round(sl, nr_decimals_close),
-                       round(tp, nr_decimals_close),
-                       int(rsi_min_days),
-                       self.granularity,
-                       self.rrr)
-
-            notify(message, 'j', 'r', 'c', 'v')
-            print(dataframe.tail(10))
-            print(message)
             if self.margin_closeout_percent() < 50:
                 self.market_order(sl, tp, close, self.instrument, short_long='short')
+                message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+                          'because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
+                          'BaconBuyer used a RRR={}'. \
+                    format(self.instrument,
+                           round(sl, nr_decimals_close),
+                           round(tp, nr_decimals_close),
+                           int(rsi_min_days),
+                           self.granularity,
+                           self.rrr)
+                notify(message, 'j', 'r', 'c', 'v')
+                print(dataframe.tail(10))
+                print(message)
             else:
                 notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
 
@@ -288,21 +287,20 @@ class OandaTrader(object):
             tp = (close - sl) / self.rrr + close
             nr_decimals_close = str(close)[::-1].find('.')
 
-            message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
-                      'because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
-                      'BaconBuyer used a RRR={}'. \
-                format(self.instrument,
-                       round(sl, nr_decimals_close),
-                       round(tp, nr_decimals_close),
-                       int(rsi_min_days),
-                       self.granularity,
-                       self.rrr)
-
-            notify(message, 'j', 'r', 'c', 'v')
-            print(dataframe.tail(10))
-            print(message)
             if self.margin_closeout_percent() < 50:
                 self.market_order(sl, tp, close, self.instrument, short_long='long')
+                message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+                          'because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
+                          'BaconBuyer used a RRR={}'. \
+                    format(self.instrument,
+                           round(sl, nr_decimals_close),
+                           round(tp, nr_decimals_close),
+                           int(rsi_min_days),
+                           self.granularity,
+                           self.rrr)
+                notify(message, 'j', 'r', 'c', 'v')
+                print(dataframe.tail(10))
+                print(message)
             else:
                 notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
 
@@ -397,20 +395,26 @@ class OandaTrader(object):
 
 
 if __name__ == '__main__':
-    # trader = OandaTrader('EUR_USD', granularity='D')
-    # print(trader.account_balance())
 
+    # Run notifier
     message_fritsie = 'This is your daily update from Fritsie'
-    # notify(message_fritsie, 'j', 'r', 'c', 'v')
-
+    notify(message_fritsie, 'j', 'r', 'c', 'v')
     class_list = []
     for inst in instrument_list():
         trader = OandaTrader(inst, granularity='D')
         class_list.append(trader)
         trader.analyse()
         print(trader.instrument)
-
     # trader = OandaTrader('GBP_CHF')
     # trader.analyse()
 
+    # Start auto-trader
+    message_fritsie = 'Fritsie is looking if he can open some positions'
+    notify(message_fritsie, 'j', 'r', 'c', 'v')
+    class_list = []
+    for inst in instrument_list():
+        trader = OandaTrader(inst, granularity='D')
+        class_list.append(trader)
+        trader.auto_trade()
+        print(trader.instrument)
 
