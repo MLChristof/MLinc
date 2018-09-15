@@ -9,8 +9,10 @@ import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.forexlabs as labs
 
-# TODO: Before opening position check whether instrument is open to trade
-# TODO: Only send IFTTT message that position is opened if v20 api sends confirmation (or return error)
+# TODO: Link conf.ini to variables in script (https://martin-thoma.com/configuration-files-in-python/)
+# TODO: Before trying to open a position, check whether instrument is open to trade
+# TODO: Check if get_spread() works when market is open (now returns empy lists)
+# TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
@@ -282,7 +284,6 @@ class OandaTrader(object):
                            self.granularity,
                            self.rrr)
                 notify(message, 'j', 'r', 'c', 'v')
-                # notify(message, 'r')
                 print(dataframe.tail(10))
                 print(message)
             else:
@@ -316,7 +317,6 @@ class OandaTrader(object):
                            self.granularity,
                            self.rrr)
                 notify(message, 'j', 'r', 'c', 'v')
-                # notify(message, 'r')
                 print(dataframe.tail(10))
                 print(message)
             else:
@@ -435,7 +435,6 @@ if __name__ == '__main__':
     # Start auto-trader
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, 'j', 'r', 'c', 'v')
-    # notify(message_fritsie, 'r')
     class_list = []
     for inst in instrument_list():
         trader = OandaTrader(inst, granularity='D')
