@@ -1,6 +1,6 @@
 # Add your requirements here like:
-# numpy
+numpy
 # scipy>=0.9
-# pandas
+pandas
 backtrader
 oandapyV20

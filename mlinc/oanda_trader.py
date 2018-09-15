@@ -22,6 +22,7 @@ file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
 file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 file_bastijn = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_bastijn.txt'
 
+
 class IterRegistry(type):
     def __iter__(cls):
         return iter(cls._registry)
@@ -268,7 +269,7 @@ class OandaTrader(object):
             # set stoploss
             sl = dataframe.tail(7)['hma'].max() + half_spread
             close = float(dataframe.tail(1)['close'])
-            #set take profit
+            # set take profit
             tp = close - (sl - close) / self.rrr
             nr_decimals_close = str(close)[::-1].find('.')
 
