@@ -72,10 +72,11 @@ def get_trade_volume(SL, current_price, balance, max_exp, inst, api, account_cur
         units = round(10000 * price_conv_pair * max_exp_cur / SL_diff)
 
     else:
-        raise ValueError('Oops, could not determine trade volume, '
+        print('Oops, could not determine trade volume, '
                          'check if your instrument is tradable and conversion pair exists. \n'
                          '(e.g. USD_CNH is not possible, since conversion pair EUR_CNH or CNH_EUR does not exist in Oanda)\n'
                          'Please determine trading volume in web interface.')
+        units = 0
 
     return units
 
