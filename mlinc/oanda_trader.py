@@ -7,6 +7,7 @@ from mlinc.position_size_calc import *
 import json
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
+import oandapyV20.endpoints.forexlabs as labs
 
 
 # redundant packages:
@@ -17,7 +18,9 @@ from oandapyV20.exceptions import V20Error
 # TODO: make settings file (e.g. .ini bestand) such as maximum exposure percentage, max margin percentage
 # TODO: Market order and position size calculator use 'mid' price (avg of bid and ask).
 # TODO: Should either be bid or ask depending on short or long position. On Daily chart no issue
-# TODO: Only send ifttt message that position is opened if v20 api sends confirmaion (or return error)
+# TODO: incorporate minimum SL (in some cases HMA peak will lie on wrong side of price)
+# TODO: Before opening position check whether instrument is open to trade
+# TODO: Only send IFTTT message that position is opened if v20 api sends confirmation (or return error)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
@@ -221,8 +224,8 @@ class OandaTrader(object):
                 format(self.instrument,
                        int(rsi_max_days),
                        self.granularity,
-                       round(sl, nr_decimals_close),
-                       round(tp, nr_decimals_close))
+                       format(sl, '.' + str(nr_decimals_close) + 'f'),
+                       format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
@@ -239,8 +242,8 @@ class OandaTrader(object):
                 format(self.instrument,
                        int(rsi_min_days),
                        self.granularity,
-                       round(sl, nr_decimals_close),
-                       round(tp, nr_decimals_close))
+                       format(sl, '.' + str(nr_decimals_close) + 'f'),
+                       format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             notify(message, 'j', 'r', 'c', 'v')
             print(dataframe.tail(10))
@@ -260,9 +263,18 @@ class OandaTrader(object):
         rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
+        # conditions to go short
         if rsi_max_days > 70 and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
-            sl = dataframe.tail(7)['hma'].max()
+            # set half spread (prices are all 'mid', avg of bid and ask)
+            if not self.get_spread()['avg']:
+                half_spread = 0
+                print('Oh oh. Spread = 0')
+            else:
+                half_spread = 0.5*self.get_spread()['avg']
+            # set stoploss
+            sl = dataframe.tail(7)['hma'].max() + half_spread
             close = float(dataframe.tail(1)['close'])
+            #set take profit
             tp = close - (sl - close) / self.rrr
             nr_decimals_close = str(close)[::-1].find('.')
 
@@ -272,8 +284,8 @@ class OandaTrader(object):
                           'because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
                     format(self.instrument,
-                           round(sl, nr_decimals_close),
-                           round(tp, nr_decimals_close),
+                           format(sl, '.' + str(nr_decimals_close) + 'f'),
+                           format(tp, '.' + str(nr_decimals_close) + 'f'),
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
@@ -284,10 +296,19 @@ class OandaTrader(object):
             else:
                 notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
 
+        # conditions to go long
         elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+            # set half spread (prices are all 'mid', avg of bid and ask)
+            if not self.get_spread()['avg']:
+                half_spread = 0
+                print('Oh oh. Spread = 0')
+            else:
+                half_spread = 0.5*self.get_spread()['avg']
+            # set stoploss
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
-            tp = (close - sl) / self.rrr + close
+            # set take profit
+            tp = (close - sl + half_spread) / self.rrr + close + half_spread
             nr_decimals_close = str(close)[::-1].find('.')
 
             if self.margin_closeout_percent() < 50:
@@ -296,8 +317,8 @@ class OandaTrader(object):
                           'because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
                     format(self.instrument,
-                           round(sl, nr_decimals_close),
-                           round(tp, nr_decimals_close),
+                           format(sl, '.' + str(nr_decimals_close) + 'f'),
+                           format(tp, '.' + str(nr_decimals_close) + 'f'),
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
@@ -337,7 +358,7 @@ class OandaTrader(object):
         balance = self.account_balance()
         volume = sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api)
 
-        # set correct nr of decimals (dirty trick, but it works)
+        # set correct nr of decimals
         nr_decimals_close = str(close)[::-1].find('.')
 
         orderConf = [
@@ -392,6 +413,15 @@ class OandaTrader(object):
         details = rv.get('account')
         margin_percent = 100*float(details.get('marginCloseoutPercent'))
         return margin_percent
+
+    def get_spread(self):
+        params = {
+            "instrument": self.instrument,
+            "period": 1
+        }
+        r = labs.Spreads(params=params)
+        self.api.request(r)
+        return r.response
 
 
 if __name__ == '__main__':
