@@ -271,6 +271,7 @@ class OandaTrader(object):
                 print('Oh oh. Spread = 0')
             else:
                 half_spread = 0.5*self.get_spread()['avg']
+                print('Spread = ' + 2 * half_spread)
             # set stoploss
             sl = dataframe.tail(7)['hma'].max() + half_spread
             close = float(dataframe.tail(1)['close'])
@@ -304,6 +305,7 @@ class OandaTrader(object):
                 print('Oh oh. Spread = 0')
             else:
                 half_spread = 0.5*self.get_spread()['avg']
+                print('Spread = '+2*half_spread)
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
@@ -415,9 +417,10 @@ class OandaTrader(object):
         return margin_percent
 
     def get_spread(self):
+        # see http://developer.oanda.com/rest-live/forex-labs/#spreads
         params = {
             "instrument": self.instrument,
-            "period": 1
+            "period": 3600
         }
         r = labs.Spreads(params=params)
         self.api.request(r)
