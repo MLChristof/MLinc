@@ -9,16 +9,6 @@ import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.forexlabs as labs
 
-
-# redundant packages:
-# from oandapyV20 import API
-# import logging
-# import oandapyV20.endpoints.accounts as accounts
-
-# TODO: make settings file (e.g. .ini bestand) such as maximum exposure percentage, max margin percentage
-# TODO: Market order and position size calculator use 'mid' price (avg of bid and ask).
-# TODO: Should either be bid or ask depending on short or long position. On Daily chart no issue
-# TODO: incorporate minimum SL (in some cases HMA peak will lie on wrong side of price)
 # TODO: Before opening position check whether instrument is open to trade
 # TODO: Only send IFTTT message that position is opened if v20 api sends confirmation (or return error)
 # TODO: Also see developer's pdf:
@@ -28,6 +18,7 @@ file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
 file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
+file_bastijn = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_bastijn.txt'
 
 class IterRegistry(type):
     def __iter__(cls):
@@ -107,11 +98,11 @@ def notify(message, *args):
             notification(file_vincent, message)
         except:
             print('vincent could not be reached')
-    # if 'b' in args or 'bastijn' in args:
-    #     try:
-    #         notification(file_bastijn, message)
-    #     except:
-    #         print('bastijn could not be reached')
+    if 'b' in args or 'bastijn' in args:
+        try:
+            notification(file_bastijn, message)
+        except:
+            print('bastijn could not be reached')
     if 'c' in args or 'christof' in args:
         try:
             notification(file_christof, message)
@@ -280,7 +271,7 @@ class OandaTrader(object):
             nr_decimals_close = str(close)[::-1].find('.')
 
             if self.margin_closeout_percent() < 50:
-                self.market_order(sl, tp, close, self.instrument, short_long='short')
+                self.market_order(sl, tp, (close-half_spread), self.instrument, short_long='short')
                 message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
                           'because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
@@ -314,7 +305,7 @@ class OandaTrader(object):
             nr_decimals_close = str(close)[::-1].find('.')
 
             if self.margin_closeout_percent() < 50:
-                self.market_order(sl, tp, close, self.instrument, short_long='long')
+                self.market_order(sl, tp, (close+half_spread), self.instrument, short_long='long')
                 message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
                           'because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
@@ -341,7 +332,7 @@ class OandaTrader(object):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer_auto()
 
-    def market_order(self, sl, tp, close, inst, short_long, max_exp=0.01):
+    def market_order(self, sl, tp, close, inst, short_long, max_exp=0.6):
 
         # built in logging function:
         # logging.basicConfig(
