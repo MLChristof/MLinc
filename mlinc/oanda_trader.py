@@ -438,31 +438,32 @@ if __name__ == '__main__':
     for item in config['BaconBuyer']:
         input[item] = config['BaconBuyer'][item]
 
-    # Run notifier
-    message_fritsie = 'This is your daily update from Fritsie'
-    notify(message_fritsie, *input['notify_who'])
-    class_list = []
-    for inst in instrument_list():
-        trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']), hma_window=int(input['hma_window']),
-                             rrr=float(input['rrr']), rsi_max=float(input['rsi_max']), rsi_min=float(input['rsi_min']), spread_period=float(input['spread_period']))
-        class_list.append(trader)
-        trader.analyse()
-        print(trader.instrument)
-    # trader = OandaTrader('GBP_CHF')
-    # trader.analyse()
+    # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
+    if input['auto_trade'] == 'On':
 
-    # Start auto-trader
-    # message_fritsie = 'Fritsie is looking if he can open some positions'
-    # notify(message_fritsie, 'j', 'r', 'c', 'v')
-    # class_list = []
-    # for inst in instrument_list():
-    #     trader = OandaTrader(inst, granularity='D')
-    #     class_list.append(trader)
-    #     trader.auto_trade()
-    #     print(trader.instrument)
-
-
-
-
-
+        # Start auto-trader
+        message_fritsie = 'Fritsie is looking if he can open some positions'
+        notify(message_fritsie, *input['notify_who'])
+        class_list = []
+        for inst in instrument_list():
+            trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+                                 hma_window=int(input['hma_window']),
+                                 rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
+                                 rsi_min=float(input['rsi_min']),
+                                 spread_period=float(input['spread_period']))
+            class_list.append(trader)
+            trader.auto_trade()
+            print(trader.instrument)
+    else:
+        # Run notifier
+        message_fritsie = 'This is your daily update from Fritsie'
+        notify(message_fritsie, *input['notify_who'])
+        class_list = []
+        for inst in instrument_list():
+            trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']), hma_window=int(input['hma_window']),
+                                 rrr=float(input['rrr']), rsi_max=float(input['rsi_max']), rsi_min=float(input['rsi_min']),
+                                 spread_period=float(input['spread_period']))
+            class_list.append(trader)
+            trader.analyse()
+            print(trader.instrument)
 
