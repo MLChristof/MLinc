@@ -49,18 +49,18 @@ class Trader(object):
         # self.cerebro.broker.setcommission(commission=0.02)
 
     def import_quandl_data(self, name, stock, open=None, high=None, low=None, close=None, volume=None ):
-        stock = QuandlGet(quandl_key=stock,
-                          api_key=self.api_key,
-                          start_date=self.start_date,
-                          end_date=self.end_date)
-        stock.save_to_csv(os.getcwd() + '\data\{}.csv'.format(name))
+        # stock = QuandlGet(quandl_key=stock,
+        #                   api_key=self.api_key,
+        #                   start_date=self.start_date,
+        #                   end_date=self.end_date)
+        # stock.save_to_csv(os.getcwd() + '\data\{}.csv'.format(name))
         feed = bt.feeds.GenericCSVData(dataname=os.getcwd() + '\data\{}.csv'.format(name),
                                        open=open,
                                        close=close,
                                        high=high,
                                        low=low,
                                        volume=volume,
-                                       dtformat='%Y-%m-%d',
+                                       dtformat='%d-%m-%Y',
                                        start_date=self.start_date,
                                        end_date=self.end_date)
         self.cerebro.adddata(feed, name=name)
@@ -88,16 +88,16 @@ if __name__ == '__main__':
     # RSI.plot()
 
     HMA = Trader(strategy=BaconBuyerStrategy,
-                 start_date=datetime.datetime(2002, 1, 1),
+                 start_date=datetime.datetime(2015, 1, 1),
                  end_date=None,
                  stock=None,
                  api_key=api_key,
                  start_cash=10000)
     # HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=100)
-    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=1)
+    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=10)
 
-    HMA.cerebro.broker.setcommission(commission=0.01, mult=300)
-    HMA.import_quandl_data(name='BRENT', stock='CHRIS/ICE_B4', open=1, high=2, low=3, close=4, volume=7)
+    HMA.cerebro.broker.setcommission(commission=0.01, mult=50)
+    HMA.import_quandl_data(name='EURUSD14402', stock='CHRIS/ICE_B4', open=1, high=2, low=3, close=4, volume=5)
     HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,

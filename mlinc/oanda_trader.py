@@ -8,6 +8,7 @@ import json
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.forexlabs as labs
+import configparser
 
 # TODO: Link conf.ini to variables in script (https://martin-thoma.com/configuration-files-in-python/)
 # TODO: Before trying to open a position, check whether instrument is open to trade
@@ -138,6 +139,11 @@ class OandaTrader(object):
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
         self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
 
+        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['c', 'j', 'r', 'v', 'b']
+        self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
+        self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
+        self.spread_period = kwargs.get('spread_period') if kwargs.get('spread_period') else 3600
+
         self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
 
         self.rrr = kwargs.get('rrr') if kwargs.get('rrr') else 3
@@ -209,39 +215,41 @@ class OandaTrader(object):
         rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
-        if rsi_max_days > 70 and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
+        if rsi_max_days > self.rsi_max and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             sl = dataframe.tail(7)['hma'].max()
             close = float(dataframe.tail(1)['close'])
             tp = close - (sl - close) / self.rrr
             nr_decimals_close = str(close)[::-1].find('.')
 
-            message = 'Possibility to go Short on {} because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
+            message = 'Possibility to go Short on {} because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                       'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
                 format(self.instrument,
+                       self.rsi_max,
                        int(rsi_max_days),
                        self.granularity,
                        format(sl, '.' + str(nr_decimals_close) + 'f'),
                        format(tp, '.' + str(nr_decimals_close) + 'f'))
 
-            notify(message, 'j', 'r', 'c', 'v')
+            notify(message, *self.notify_who)
             print(dataframe.tail(10))
             print(message)
 
-        elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+        elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
             tp = (close - sl) / self.rrr + close
             nr_decimals_close = str(close)[::-1].find('.')
 
-            message = 'Possibility to go Long on {} because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
+            message = 'Possibility to go Long on {} because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                       'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
                 format(self.instrument,
+                       self.rsi_min,
                        int(rsi_min_days),
                        self.granularity,
                        format(sl, '.' + str(nr_decimals_close) + 'f'),
                        format(tp, '.' + str(nr_decimals_close) + 'f'))
 
-            notify(message, 'j', 'r', 'c', 'v')
+            notify(message, *self.notify_who)
             print(dataframe.tail(10))
             print(message)
 
@@ -260,7 +268,7 @@ class OandaTrader(object):
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
         # conditions to go short
-        if rsi_max_days > 70 and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
+        if rsi_max_days > self.rsi_max and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             if not self.get_spread()['avg']:
                 half_spread = 0
@@ -278,22 +286,23 @@ class OandaTrader(object):
             if self.margin_closeout_percent() < 50:
                 self.market_order(sl, tp, (close-half_spread), self.instrument, short_long='short')
                 message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
-                          'because: RSI was > 70 ({}) and HMA just peaked on {} chart. \n' \
+                          'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
                     format(self.instrument,
                            format(sl, '.' + str(nr_decimals_close) + 'f'),
                            format(tp, '.' + str(nr_decimals_close) + 'f'),
+                           self.rsi_max,
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, 'j', 'r', 'c', 'v')
+                notify(message, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
+                notify('Position not opened due to insufficient margin', *self.notify_who)
 
         # conditions to go long
-        elif rsi_min_days < 30 and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+        elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             if not self.get_spread()['avg']:
                 half_spread = 0
@@ -311,19 +320,20 @@ class OandaTrader(object):
             if self.margin_closeout_percent() < 50:
                 self.market_order(sl, tp, (close+half_spread), self.instrument, short_long='long')
                 message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
-                          'because: RSI was < 30 ({}) and HMA just dipped on {} chart. \n' \
+                          'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
                     format(self.instrument,
                            format(sl, '.' + str(nr_decimals_close) + 'f'),
                            format(tp, '.' + str(nr_decimals_close) + 'f'),
+                           self.rsi_min,
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, 'j', 'r', 'c', 'v')
+                notify(message, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', 'j', 'r', 'c', 'v')
+                notify('Position not opened due to insufficient margin', *self.notify_who)
 
         return dataframe
 
@@ -414,7 +424,7 @@ class OandaTrader(object):
         # see http://developer.oanda.com/rest-live/forex-labs/#spreads
         params = {
             "instrument": self.instrument,
-            "period": 3600
+            "period": self.spread_period
         }
         r = labs.Spreads(params=params)
         self.api.request(r)
@@ -422,28 +432,37 @@ class OandaTrader(object):
 
 
 if __name__ == '__main__':
+    config = configparser.RawConfigParser(allow_no_value=True)
+    config.read('conf.ini')
+    input = {}
+    for item in config['BaconBuyer']:
+        input[item] = config['BaconBuyer'][item]
 
-    # # Run notifier
-    # message_fritsie = 'This is your daily update from Fritsie'
+    # Run notifier
+    message_fritsie = 'This is your daily update from Fritsie'
+    notify(message_fritsie, *input['notify_who'])
+    class_list = []
+    for inst in instrument_list():
+        trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']), hma_window=int(input['hma_window']),
+                             rrr=float(input['rrr']), rsi_max=float(input['rsi_max']), rsi_min=float(input['rsi_min']), spread_period=float(input['spread_period']))
+        class_list.append(trader)
+        trader.analyse()
+        print(trader.instrument)
+    # trader = OandaTrader('GBP_CHF')
+    # trader.analyse()
+
+    # Start auto-trader
+    # message_fritsie = 'Fritsie is looking if he can open some positions'
     # notify(message_fritsie, 'j', 'r', 'c', 'v')
     # class_list = []
     # for inst in instrument_list():
     #     trader = OandaTrader(inst, granularity='D')
     #     class_list.append(trader)
-    #     trader.analyse()
+    #     trader.auto_trade()
     #     print(trader.instrument)
-    # # trader = OandaTrader('GBP_CHF')
-    # # trader.analyse()
 
-    # Start auto-trader
-    message_fritsie = 'Fritsie is looking if he can open some positions'
-    notify(message_fritsie, 'j', 'r', 'c', 'v')
-    class_list = []
-    for inst in instrument_list():
-        trader = OandaTrader(inst, granularity='D')
-        class_list.append(trader)
-        trader.auto_trade()
-        print(trader.instrument)
+
+
 
 
 
