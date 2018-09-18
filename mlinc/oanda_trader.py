@@ -10,7 +10,6 @@ from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
-# TODO: Link conf.ini to variables in script (https://martin-thoma.com/configuration-files-in-python/)
 # TODO: Before trying to open a position, check whether instrument is open to trade
 # TODO: Check if previous 4 or 5 timeframes closed price > (or <) hma max
 # TODO: Group instruments to make exceptions for opening trades (for instance is UK100 is long, don't open NED25.
@@ -135,17 +134,16 @@ class OandaTrader(object):
         self.instrument = instrument
         self.granularity = granularity
         self.count = count
-
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
         self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
-
-        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['c', 'j', 'r', 'v', 'b']
+        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['j', 'r', 'c', 'v', 'b']
         self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
         self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
         self.spread_period = kwargs.get('spread_period') if kwargs.get('spread_period') else 3600
-
+        self.max_margin_closeout_percent = kwargs.get('max_margin_closeout_percent') \
+            if kwargs.get('max_margin_closeout_percent') else 50
+        self.max_exposure_percent = kwargs.get('max_exposure_percent') if kwargs.get('max_exposure_percent') else 0.6
         self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
-
         self.rrr = kwargs.get('rrr') if kwargs.get('rrr') else 3
         self.api = oandapyV20.API(access_token=self.access_token)
 
@@ -274,8 +272,8 @@ class OandaTrader(object):
                 half_spread = 0
                 print('Oh oh. Spread = 0')
             else:
-                half_spread = 0.5*self.get_spread()['avg']
-                print('Spread = ' + 2 * half_spread)
+                half_spread = 0.5*self.get_spread()['avg'][0][1]/10000
+                print('Spread = ' + str(2 * half_spread))
             # set stoploss
             sl = dataframe.tail(7)['hma'].max() + half_spread
             close = float(dataframe.tail(1)['close'])
@@ -283,8 +281,8 @@ class OandaTrader(object):
             tp = close - (sl - close) / self.rrr
             nr_decimals_close = str(close)[::-1].find('.')
 
-            if self.margin_closeout_percent() < 50:
-                self.market_order(sl, tp, (close-half_spread), self.instrument, short_long='short')
+            if self.margin_closeout_percent() < self.max_margin_closeout_percent:
+                self.market_order(sl, tp, (close-half_spread), self.instrument, 'short', self.max_exposure_percent)
                 message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
                           'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
@@ -308,8 +306,8 @@ class OandaTrader(object):
                 half_spread = 0
                 print('Oh oh. Spread = 0')
             else:
-                half_spread = 0.5*self.get_spread()['avg']
-                print('Spread = '+2*half_spread)
+                half_spread = 0.5*self.get_spread()['avg'][0][1]/10000
+                print('Spread = ' + str(2 * half_spread))
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
@@ -317,8 +315,8 @@ class OandaTrader(object):
             tp = (close - sl + half_spread) / self.rrr + close + half_spread
             nr_decimals_close = str(close)[::-1].find('.')
 
-            if self.margin_closeout_percent() < 50:
-                self.market_order(sl, tp, (close+half_spread), self.instrument, short_long='long')
+            if self.margin_closeout_percent() < self.max_margin_closeout_percent:
+                self.market_order(sl, tp, (close+half_spread), self.instrument, 'long', self.max_exposure_percent)
                 message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
                           'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
@@ -345,14 +343,7 @@ class OandaTrader(object):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer_auto()
 
-    def market_order(self, sl, tp, close, inst, short_long, max_exp=0.6):
-
-        # built in logging function:
-        # logging.basicConfig(
-        #     filename="log.out",
-        #     level=logging.INFO,
-        #     format='%(asctime)s [%(levelname)s] %(instrument)s : %(message)s',
-        # )
+    def market_order(self, sl, tp, close, inst, short_long, max_exp):
 
         # short/long order
         if short_long == 'short':
@@ -440,7 +431,6 @@ if __name__ == '__main__':
 
     # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
     if input['auto_trade'] == 'On':
-
         # Start auto-trader
         message_fritsie = 'Fritsie is looking if he can open some positions'
         notify(message_fritsie, *input['notify_who'])
@@ -450,7 +440,11 @@ if __name__ == '__main__':
                                  hma_window=int(input['hma_window']),
                                  rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
                                  rsi_min=float(input['rsi_min']),
-                                 spread_period=float(input['spread_period']))
+                                 spread_period=float(input['spread_period']),
+                                 max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
+                                 max_exposure_percent=float(input['max_exposure_percent']),
+                                 notify_who=input['notify_who']
+                                 )
             class_list.append(trader)
             trader.auto_trade()
             print(trader.instrument)
@@ -460,9 +454,15 @@ if __name__ == '__main__':
         notify(message_fritsie, *input['notify_who'])
         class_list = []
         for inst in instrument_list():
-            trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']), hma_window=int(input['hma_window']),
-                                 rrr=float(input['rrr']), rsi_max=float(input['rsi_max']), rsi_min=float(input['rsi_min']),
-                                 spread_period=float(input['spread_period']))
+            trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+                                 hma_window=int(input['hma_window']),
+                                 rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
+                                 rsi_min=float(input['rsi_min']),
+                                 spread_period=float(input['spread_period']),
+                                 max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
+                                 max_exposure_percent=float(input['max_exposure_percent']),
+                                 notify_who=input['notify_who']
+                                 )
             class_list.append(trader)
             trader.analyse()
             print(trader.instrument)
