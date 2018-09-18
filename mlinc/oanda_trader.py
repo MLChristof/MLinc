@@ -11,7 +11,9 @@ import oandapyV20.endpoints.forexlabs as labs
 
 # TODO: Link conf.ini to variables in script (https://martin-thoma.com/configuration-files-in-python/)
 # TODO: Before trying to open a position, check whether instrument is open to trade
-# TODO: Check if get_spread() works when market is open (now returns empy lists)
+# TODO: Check if previous 4 or 5 timeframes closed price > (or <) hma max
+# TODO: Group instruments to make exceptions for opening trades (for instance is UK100 is long, don't open NED25.
+# TODO: Coupled instruments)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
@@ -442,4 +444,6 @@ if __name__ == '__main__':
         class_list.append(trader)
         trader.auto_trade()
         print(trader.instrument)
+
+
 
