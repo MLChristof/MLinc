@@ -12,6 +12,7 @@ import configparser
 
 # TODO: Before trying to open a position, check whether instrument is open to trade
 # TODO: Check if previous 4 or 5 timeframes closed price > (or <) hma max
+# TODO: Try except for market order.
 # TODO: Group instruments to make exceptions for opening trades (for instance is UK100 is long, don't open NED25.
 # TODO: Coupled instruments)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error)
