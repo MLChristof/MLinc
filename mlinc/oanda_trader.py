@@ -269,12 +269,7 @@ class OandaTrader(object):
         # conditions to go short
         if rsi_max_days > self.rsi_max and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            if not self.get_spread()['avg'][0][1]:
-                half_spread = 0
-                print('Oh oh. Spread = 0')
-            else:
-                half_spread = 0.5*self.get_spread()['avg'][0][1]
-                print('Spread = ' + str(2 * half_spread))
+            half_spread = 0.5*self.get_spread()
             # set stoploss
             sl = dataframe.tail(7)['hma'].max() + half_spread
             close = float(dataframe.tail(1)['close'])
@@ -303,12 +298,7 @@ class OandaTrader(object):
         # conditions to go long
         elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            if not self.get_spread()['avg'][0][1]:
-                half_spread = 0
-                print('Oh oh. Spread = 0')
-            else:
-                half_spread = 0.5*self.get_spread()['avg'][0][1]
-                print('Spread = ' + str(2 * half_spread))
+            half_spread = 0.5 * self.get_spread()
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
@@ -413,14 +403,13 @@ class OandaTrader(object):
         return margin_percent
 
     def get_spread(self):
-        # see http://developer.oanda.com/rest-live/forex-labs/#spreads
-        params = {
-            "instrument": self.instrument,
-            "period": self.spread_period
-        }
-        r = labs.Spreads(params=params)
-        self.api.request(r)
-        return r.response
+        api = oandapyV20.API(access_token=self.access_token)
+        test = candles(self.instrument, granularity=['M1'], count=[1], From=None, to=None, price=['BA'], nice=True,
+                       access_token=self.access_token)
+        bid = float(test['candles'][0]['bid']['c'])
+        ask = float(test['candles'][0]['ask']['c'])
+        spread = float(format(ask-bid, '.5f'))
+        return spread
 
 
 if __name__ == '__main__':

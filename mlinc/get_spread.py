@@ -15,7 +15,7 @@ def get_spread(inst):
     ask = float(test['candles'][0]['ask']['c'])
     print(bid)
     print(ask)
-    spread = format(ask-bid, '.5f')
+    spread = float(format(ask-bid, '.5f'))
     return spread
 
 
