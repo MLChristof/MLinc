@@ -140,7 +140,6 @@ class OandaTrader(object):
         self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['j', 'r', 'c', 'v', 'b']
         self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
         self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
-        self.spread_period = kwargs.get('spread_period') if kwargs.get('spread_period') else 3600
         self.max_margin_closeout_percent = kwargs.get('max_margin_closeout_percent') \
             if kwargs.get('max_margin_closeout_percent') else 50
         self.max_exposure_percent = kwargs.get('max_exposure_percent') if kwargs.get('max_exposure_percent') else 0.6
