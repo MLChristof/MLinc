@@ -10,6 +10,7 @@ from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
+# TODO: investigate attempt to open short position on BCO_USD on 24-sept with SL below price
 # TODO: Before trying to open a position, check whether instrument is open to trade
 # TODO: Check if previous 4 or 5 timeframes closed price > (or <) hma max
 # TODO: Try except for market order.
@@ -137,7 +138,7 @@ class OandaTrader(object):
         self.count = count
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
         self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
-        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['j', 'r', 'c', 'v', 'b']
+        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['r']
         self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
         self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
         self.max_margin_closeout_percent = kwargs.get('max_margin_closeout_percent') \
@@ -403,7 +404,7 @@ class OandaTrader(object):
 
     def get_spread(self):
         api = oandapyV20.API(access_token=self.access_token)
-        test = candles(self.instrument, granularity=['M1'], count=[1], From=None, to=None, price=['BA'], nice=True,
+        test = candles(inst=[self.instrument], granularity=['M1'], count=[1], From=None, to=None, price=['BA'], nice=True,
                        access_token=self.access_token)
         bid = float(test['candles'][0]['bid']['c'])
         ask = float(test['candles'][0]['ask']['c'])
@@ -429,7 +430,6 @@ if __name__ == '__main__':
                                  hma_window=int(input['hma_window']),
                                  rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
                                  rsi_min=float(input['rsi_min']),
-                                 spread_period=float(input['spread_period']),
                                  max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
                                  max_exposure_percent=float(input['max_exposure_percent']),
                                  notify_who=input['notify_who']
@@ -447,7 +447,6 @@ if __name__ == '__main__':
                                  hma_window=int(input['hma_window']),
                                  rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
                                  rsi_min=float(input['rsi_min']),
-                                 spread_period=float(input['spread_period']),
                                  max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
                                  max_exposure_percent=float(input['max_exposure_percent']),
                                  notify_who=input['notify_who']
