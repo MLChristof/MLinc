@@ -276,6 +276,8 @@ class OandaTrader(object):
             # set take profit
             tp = close - (sl - close) / self.rrr
             nr_decimals_close = str(close)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
                 self.market_order(sl, tp, (close-half_spread), self.instrument, 'short', self.max_exposure_percent)
@@ -283,8 +285,8 @@ class OandaTrader(object):
                           'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
                     format(self.instrument,
-                           format(sl, '.' + str(nr_decimals_close) + 'f'),
-                           format(tp, '.' + str(nr_decimals_close) + 'f'),
+                           sl,
+                           tp,
                            self.rsi_max,
                            int(rsi_min_days),
                            self.granularity,
@@ -305,6 +307,8 @@ class OandaTrader(object):
             # set take profit
             tp = (close - sl + half_spread) / self.rrr + close + half_spread
             nr_decimals_close = str(close)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
                 self.market_order(sl, tp, (close+half_spread), self.instrument, 'long', self.max_exposure_percent)
@@ -312,8 +316,8 @@ class OandaTrader(object):
                           'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
                     format(self.instrument,
-                           format(sl, '.' + str(nr_decimals_close) + 'f'),
-                           format(tp, '.' + str(nr_decimals_close) + 'f'),
+                           sl,
+                           tp,
                            self.rsi_min,
                            int(rsi_min_days),
                            self.granularity,
