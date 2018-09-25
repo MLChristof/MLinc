@@ -11,14 +11,15 @@ import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
 # TODO: investigate attempt to open short position on BCO_USD on 24-sept with SL below price
-# TODO: Before trying to open a position, check whether instrument is open to trade
-# TODO: Check if previous 4 or 5 timeframes closed price > (or <) hma max
-# TODO: Try except for market order.
+# TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
+# TODO: Minimum SL: Check if previous 4 or 5 timeframes closed price > (or <) hma max (CWe)
+# TODO: Class OandaTrader should initialize open position (ask from API) (BvD)
 # TODO: Group instruments to make exceptions for opening trades (for instance is UK100 is long, don't open NED25.
-# TODO: Coupled instruments)
-# TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error)
+# TODO: Coupled instruments) (BvD)
+# TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
+# TODO: Ideas: don't open positions right before overnight fees to minimize cost.
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
