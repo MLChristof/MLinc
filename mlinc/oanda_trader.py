@@ -101,31 +101,32 @@ def rsi(prices, window):
 
 
 def notify(message, *args):
-    if 'v' in args or 'vincent' in args:
-        try:
-            notification(file_vincent, message)
-        except:
-            print('vincent could not be reached')
-    if 'b' in args or 'bastijn' in args:
-        try:
-            notification(file_bastijn, message)
-        except:
-            print('bastijn could not be reached')
-    if 'c' in args or 'christof' in args:
-        try:
-            notification(file_christof, message)
-        except:
-            print('christof could not be reached')
-    if 'r' in args or 'robert' in args:
-        try:
-            notification(file_robert, message)
-        except:
-            print('robert could not be reached')
-    if 'j' in args or 'jelle' in args:
-        try:
-            notification(file_jelle, message)
-        except:
-            print('jelle could not be reached')
+    if input['send_notification'] == 'True':
+        if 'v' in args or 'vincent' in args:
+            try:
+                notification(file_vincent, message)
+            except:
+                print('vincent could not be reached')
+        if 'b' in args or 'bastijn' in args:
+            try:
+                notification(file_bastijn, message)
+            except:
+                print('bastijn could not be reached')
+        if 'c' in args or 'christof' in args:
+            try:
+                notification(file_christof, message)
+            except:
+                print('christof could not be reached')
+        if 'r' in args or 'robert' in args:
+            try:
+                notification(file_robert, message)
+            except:
+                print('robert could not be reached')
+        if 'j' in args or 'jelle' in args:
+            try:
+                notification(file_jelle, message)
+            except:
+                print('jelle could not be reached')
 
 
 class OandaTrader(object):
