@@ -271,7 +271,8 @@ class OandaTrader(object):
         # conditions to go short
         if rsi_max_days > self.rsi_max and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            half_spread = 0.5*self.get_spread()
+            spread = self.get_spread()
+            half_spread = 0.5*spread
             # set stoploss
             sl = dataframe.tail(7)['hma'].max() + half_spread
             close = float(dataframe.tail(1)['close'])
@@ -302,7 +303,8 @@ class OandaTrader(object):
         # conditions to go long
         elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            half_spread = 0.5 * self.get_spread()
+            spread = self.get_spread()
+            half_spread = 0.5*spread
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
