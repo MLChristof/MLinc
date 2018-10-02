@@ -11,6 +11,7 @@ import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
 # TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
+# TODO: Create additional condition before opening position with spread/price ratio
 # TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
 # TODO: Minimum SL: Check if previous 4 or 5 timeframes closed price > (or <) hma max (CWe)
 # TODO: Class OandaTrader should initialize open position (ask from API) (BvD)
