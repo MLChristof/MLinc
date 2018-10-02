@@ -274,10 +274,12 @@ class OandaTrader(object):
             spread = self.get_spread()
             half_spread = 0.5*spread
             # set stoploss
-            sl = dataframe.tail(7)['hma'].max() + half_spread
+            sl = dataframe.tail(7)['hma'].max()
             close = float(dataframe.tail(1)['close'])
             # set take profit
             tp = close - (sl - close) / self.rrr
+            sl += spread
+            tp -= spread
             nr_decimals_close = str(close)[::-1].find('.')
             sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
@@ -309,7 +311,9 @@ class OandaTrader(object):
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
             # set take profit
-            tp = (close - sl + half_spread) / self.rrr + close + half_spread
+            tp = (close - sl) / self.rrr + close
+            sl -= spread
+            tp += spread
             nr_decimals_close = str(close)[::-1].find('.')
             sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
