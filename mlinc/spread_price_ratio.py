@@ -3,6 +3,7 @@ from mlinc.oanda_examples.exampleauth import exampleAuth
 
 accountID, access_token = exampleAuth()
 
+
 def get_spread_ratio(inst):
     test = candles(inst=[inst], granularity=['M1'], count=[1], From=None, to=None, price=['BA'], nice=True,
                    access_token=access_token)
@@ -12,6 +13,7 @@ def get_spread_ratio(inst):
     return format(100*(spread/bid), '.3f')
 
 
+# custom list contains instruments with low(er) risk coupling
 custom_inst = ['EUR_USD',
                'GBP_USD',
                'USD_CAD',
@@ -77,7 +79,6 @@ custom_inst = ['EUR_USD',
                'TRY_JPY',
                'TWIX_USD',
                'UK100_GBP',
-               'US2000_USD',
                'USB10Y_USD',
                'USD_CNH',
                'USD_CZK',
@@ -112,7 +113,7 @@ tradable_instruments = []
 for inst in custom_inst:
     spread_ratio = get_spread_ratio(inst)
     inst_spread_ratio_dict[inst] = spread_ratio
-    if float(spread_ratio) > 0.03:
+    if float(spread_ratio) > 0.1:
         # print(inst, spread_ratio)
         expensive_motherfuckers.append(inst)
     else:
