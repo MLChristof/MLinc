@@ -11,7 +11,6 @@ import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
 # TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
-# TODO: Create additional condition before opening position with spread/price ratio
 # TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
 # TODO: Minimum SL: Check if previous 4 or 5 timeframes closed price > (or <) hma max (CWe)
 # TODO: Class OandaTrader should initialize open position (ask from API) (BvD)
@@ -141,7 +140,7 @@ class OandaTrader(object):
         self.count = count
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
         self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
-        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['r']
+        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['r', 'j', 'c', 'b', 'v']
         self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
         self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
         self.max_margin_closeout_percent = kwargs.get('max_margin_closeout_percent') \
@@ -431,6 +430,13 @@ if __name__ == '__main__':
     input = {}
     for item in config['BaconBuyer']:
         input[item] = config['BaconBuyer'][item]
+
+    if input['filtered_instruments'] == 'False':
+        instrument_list = instrument_list()
+    elif input['filtered_instruments'] == 'True':
+        instrument_list = custom_list()
+    else:
+        raise ValueError('filtered_intruments in conf.ini should be True or False')
 
     # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
     if input['auto_trade'] == 'On':
