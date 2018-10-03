@@ -1,7 +1,7 @@
-# import json
 import oandapyV20
 import oandapyV20.endpoints.accounts as accounts
 from mlinc.oanda_examples.exampleauth import exampleAuth
+
 
 def instrument_list():
     """
@@ -24,7 +24,12 @@ def instrument_list():
 
     return instr_list
 
+
 def custom_list():
+    """"
+    This function contains a list based on low spreads and low(er) risk coupling
+    e.g. XAU_EUR and XAU_USD -> XAU_EUR removed
+    """
     custom_inst = ['EUR_USD',
                    'GBP_USD',
                    'USD_CAD',
@@ -104,6 +109,7 @@ def custom_list():
                    ]
 
     return custom_inst
+
 
 print(instrument_list())
 print(custom_list())
