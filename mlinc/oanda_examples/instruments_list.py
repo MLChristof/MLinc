@@ -27,7 +27,7 @@ def instrument_list():
 
 def custom_list():
     """"
-    This function contains a list based on low spreads and low(er) risk coupling
+    This function contains an instrument list based on low spreads and low(er) risk coupling
     e.g. XAU_EUR and XAU_USD -> XAU_EUR removed
     """
     custom_inst = ['EUR_USD',
@@ -94,7 +94,6 @@ def custom_list():
                    'SPX500_USD',
                    'UK100_GBP',
                    'UK10YB_GBP',
-                   'US2000_USD',
                    'USB10Y_USD',
                    'USD_HUF',
                    'USD_MXN',
@@ -111,6 +110,6 @@ def custom_list():
     return custom_inst
 
 
-print(instrument_list())
-print(custom_list())
+# print(instrument_list())
+# print(custom_list())
 

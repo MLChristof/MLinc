@@ -444,7 +444,7 @@ if __name__ == '__main__':
         message_fritsie = 'Fritsie is looking if he can open some positions'
         notify(message_fritsie, *input['notify_who'])
         class_list = []
-        for inst in instrument_list():
+        for inst in instrument_list:
             trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
                                  hma_window=int(input['hma_window']),
                                  rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
@@ -461,7 +461,7 @@ if __name__ == '__main__':
         message_fritsie = 'This is your daily update from Fritsie'
         notify(message_fritsie, *input['notify_who'])
         class_list = []
-        for inst in instrument_list():
+        for inst in instrument_list:
             trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
                                  hma_window=int(input['hma_window']),
                                  rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
