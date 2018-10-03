@@ -25,15 +25,24 @@ def instrument_list():
     return instr_list
 
 def custom_list():
-    custom_inst = ['AU200_AUD',
-                   'AUD_CHF',
+    custom_inst = ['EUR_USD',
+                   'GBP_USD',
+                   'USD_CAD',
+                   'USD_CHF',
+                   'USD_JPY',
                    'AUD_NZD',
-                   'AUD_SGD',
                    'AUD_USD',
-                   'BCO_USD',
                    'CAD_CHF',
-                   'CAD_SGD',
                    'CHF_HKD',
+                   'USD_CNH',
+                   'USD_CZK',
+                   'USD_DKK',
+                   'USD_HKD',
+                   'AU200_AUD',
+                   'AUD_CHF',
+                   'AUD_SGD',
+                   'BCO_USD',
+                   'CAD_SGD',
                    'CHF_JPY',
                    'CHF_ZAR',
                    'DE10YB_EUR',
@@ -51,7 +60,6 @@ def custom_list():
                    'EUR_PLN',
                    'EUR_SEK',
                    'EUR_SGD',
-                   'EUR_USD',
                    'EUR_ZAR',
                    'FR40_EUR',
                    'GBP_AUD',
@@ -62,7 +70,6 @@ def custom_list():
                    'GBP_NZD',
                    'GBP_PLN',
                    'GBP_SGD',
-                   'GBP_USD',
                    'HK33_HKD',
                    'HKD_JPY',
                    'IN50_USD',
@@ -84,14 +91,7 @@ def custom_list():
                    'UK10YB_GBP',
                    'US2000_USD',
                    'USB10Y_USD',
-                   'USD_CAD',
-                   'USD_CHF',
-                   'USD_CNH',
-                   'USD_CZK',
-                   'USD_DKK',
-                   'USD_HKD',
                    'USD_HUF',
-                   'USD_JPY',
                    'USD_MXN',
                    'USD_NOK',
                    'USD_PLN',
@@ -105,6 +105,6 @@ def custom_list():
 
     return custom_inst
 
-# print(instrument_list())
-# print(custom_list())
+print(instrument_list())
+print(custom_list())
 
