@@ -18,6 +18,7 @@ output: volume (units) to trade
 import oandapyV20
 from mlinc.oanda_examples.exampleauth import exampleAuth
 from mlinc.oanda_examples.instruments_list import instrument_list
+from mlinc.oanda_examples.instruments_list import custom_list
 
 
 def get_mid_price(instrument, api):
