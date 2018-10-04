@@ -338,13 +338,97 @@ class OandaTrader(object):
 
         return dataframe
 
+    def inverse_baconbuyer_auto(self):
+        dataframe = self.data_as_dataframe
+
+        df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
+        dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
+
+        df_rsi = rsi(n.array(dataframe['close'].tolist()), self.rsi_window)
+        dataframe['rsi'] = pd.Series(df_rsi, index=dataframe.index)
+
+        rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
+        hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
+
+        # conditions to go long (high rsi and local minimum)
+        if rsi_max_days > self.rsi_max and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+            # set half spread (prices are all 'mid', avg of bid and ask)
+            spread = self.get_spread()
+            half_spread = 0.5*spread
+            # set stoploss
+            sl = dataframe.tail(7)['hma'].min()
+            close = float(dataframe.tail(1)['close'])
+            # set take profit
+            tp = (close - sl) / self.rrr + close
+            sl -= spread
+            tp += spread
+            nr_decimals_close = str(close)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+
+            if self.margin_closeout_percent() < self.max_margin_closeout_percent:
+                self.market_order(sl, tp, (close-half_spread), self.instrument, 'long', self.max_exposure_percent)
+                message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+                          'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
+                          'BaconBuyer used a RRR={}'. \
+                    format(self.instrument,
+                           sl,
+                           tp,
+                           self.rsi_max,
+                           int(rsi_min_days),
+                           self.granularity,
+                           self.rrr)
+                notify(message, *self.notify_who)
+                print(dataframe.tail(10))
+                print(message)
+            else:
+                notify('Position not opened due to insufficient margin', *self.notify_who)
+
+        # conditions to go short
+        elif rsi_min_days < self.rsi_min and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
+            # set half spread (prices are all 'mid', avg of bid and ask)
+            spread = self.get_spread()
+            half_spread = 0.5*spread
+            # set stoploss
+            sl = dataframe.tail(7)['hma'].max()
+            close = float(dataframe.tail(1)['close'])
+            # set take profit
+            tp = close - (sl - close) / self.rrr
+            sl += spread
+            tp -= spread
+            nr_decimals_close = str(close)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+
+            if self.margin_closeout_percent() < self.max_margin_closeout_percent:
+                self.market_order(sl, tp, (close+half_spread), self.instrument, 'short', self.max_exposure_percent)
+                message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+                          'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
+                          'BaconBuyer used a RRR={}'. \
+                    format(self.instrument,
+                           sl,
+                           tp,
+                           self.rsi_min,
+                           int(rsi_min_days),
+                           self.granularity,
+                           self.rrr)
+                notify(message, *self.notify_who)
+                print(dataframe.tail(10))
+                print(message)
+            else:
+                notify('Position not opened due to insufficient margin', *self.notify_who)
+
+        return dataframe
+
     def analyse(self):
         if self.strategy == 'Baconbuyer':
             return self.baconbuyer()
 
     def auto_trade(self):
-        if self.strategy == 'Baconbuyer':
-            return self.baconbuyer_auto()
+        if self.strategy == 'Inverse_Baconbuyer':
+            return self.inverse_baconbuyer_auto()
+        elif self.strategy == 'Baconbuyer':
+                return self.baconbuyer_auto()
 
     def market_order(self, sl, tp, close, inst, short_long, max_exp):
 
@@ -438,6 +522,13 @@ if __name__ == '__main__':
     else:
         raise ValueError('filtered_intruments in conf.ini should be True or False')
 
+    if input['inverse_strategy'] == 'True':
+        strategy = 'Baconbuyer'
+    elif input['inverse_strategy'] == 'False':
+        strategy = 'Inverse_Baconbuyer'
+    else:
+        strategy = ''
+
     # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
     if input['auto_trade'] == 'On':
         # Start auto-trader
@@ -451,7 +542,8 @@ if __name__ == '__main__':
                                  rsi_min=float(input['rsi_min']),
                                  max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
                                  max_exposure_percent=float(input['max_exposure_percent']),
-                                 notify_who=input['notify_who']
+                                 notify_who=input['notify_who'],
+                                 strategy=strategy
                                  )
             class_list.append(trader)
             trader.auto_trade()
