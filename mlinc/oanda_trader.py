@@ -350,7 +350,7 @@ class OandaTrader(object):
         rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
-        # conditions to go long (high rsi and local minimum)
+        # conditions to go long (high rsi and hma local minimum)
         if rsi_max_days > self.rsi_max and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread()
@@ -367,10 +367,10 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close-half_spread), self.instrument, 'long', self.max_exposure_percent)
-                message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+                self.market_order(sl, tp, (close+half_spread), self.instrument, 'long', self.max_exposure_percent)
+                message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
                           'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
-                          'BaconBuyer used a RRR={}'. \
+                          'Inverse BaconBuyer used a RRR={}'. \
                     format(self.instrument,
                            sl,
                            tp,
@@ -384,7 +384,7 @@ class OandaTrader(object):
             else:
                 notify('Position not opened due to insufficient margin', *self.notify_who)
 
-        # conditions to go short
+        # conditions to go short (low rsi and hma local maximum)
         elif rsi_min_days < self.rsi_min and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread()
@@ -401,8 +401,8 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close+half_spread), self.instrument, 'short', self.max_exposure_percent)
-                message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+                self.market_order(sl, tp, (close-half_spread), self.instrument, 'short', self.max_exposure_percent)
+                message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
                           'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
                     format(self.instrument,
@@ -522,9 +522,9 @@ if __name__ == '__main__':
     else:
         raise ValueError('filtered_intruments in conf.ini should be True or False')
 
-    if input['inverse_strategy'] == 'True':
+    if input['inverse_strategy'] == 'False':
         strategy = 'Baconbuyer'
-    elif input['inverse_strategy'] == 'False':
+    elif input['inverse_strategy'] == 'True':
         strategy = 'Inverse_Baconbuyer'
     else:
         strategy = ''
