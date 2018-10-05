@@ -148,6 +148,7 @@ class OandaTrader(object):
         self.max_exposure_percent = kwargs.get('max_exposure_percent') if kwargs.get('max_exposure_percent') else 0.6
         self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
         self.rrr = kwargs.get('rrr') if kwargs.get('rrr') else 3
+        self.sl_multiplier = kwargs.get('sl_multiplier') if kwargs.get('sl_multiplier') else 1
         self.api = oandapyV20.API(access_token=self.access_token)
 
         OandaTrader.instruments.append(self.instrument)
@@ -276,10 +277,16 @@ class OandaTrader(object):
             # set stoploss
             sl = dataframe.tail(7)['hma'].max()
             close = float(dataframe.tail(1)['close'])
+            # sl_mult sets SL further away from price
+            # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
+            sl_dist = (sl - close) * (self.sl_multiplier - 1)
+            sl += sl_dist
             # set take profit
             tp = close - (sl - close) / self.rrr
+            # account for spreads
             sl += spread
             tp -= spread
+            # format sl and tp
             nr_decimals_close = str(close)[::-1].find('.')
             sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
@@ -310,10 +317,16 @@ class OandaTrader(object):
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
+            # sl_mult sets SL further away from price
+            # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
+            sl_dist = (close - sl) * (self.sl_multiplier - 1)
+            sl -= sl_dist
             # set take profit
             tp = (close - sl) / self.rrr + close
+            # account for spreads
             sl -= spread
             tp += spread
+            # format sl and tp
             nr_decimals_close = str(close)[::-1].find('.')
             sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
@@ -543,7 +556,8 @@ if __name__ == '__main__':
                                  max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
                                  max_exposure_percent=float(input['max_exposure_percent']),
                                  notify_who=input['notify_who'],
-                                 strategy=strategy
+                                 strategy=strategy,
+                                 sl_multiplier=input['sl_multiplier']
                                  )
             class_list.append(trader)
             trader.auto_trade()
