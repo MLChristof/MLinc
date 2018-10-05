@@ -11,11 +11,9 @@ import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
 # TODO: add SL multiplier to inverse baconbuyer strategy
-# TODO: Add multiplication factor to sl distance in conf.ini (eg sl_multiplier=2 -> sl gets set 2x further)
 # TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
 # TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
-# TODO: Minimum SL: Check if previous 4 or 5 timeframes closed price > (or <) hma max (CWe)
-# TODO: Class OandaTrader should initialize open position (ask from API) (BvD)
+# TODO: Class OandaTrader should initialize open positions (ask from API) (BvD)
 # TODO: Group instruments to make exceptions for opening trades (for instance is UK100 is long, don't open NED25.
 # TODO: Coupled instruments) (BvD)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
