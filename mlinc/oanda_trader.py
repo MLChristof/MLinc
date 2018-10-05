@@ -10,6 +10,7 @@ from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
+# TODO: Add multiplication factor to sl distance in conf.ini (eg sl_multiplier=2 -> sl gets set 2x further)
 # TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
 # TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
 # TODO: Minimum SL: Check if previous 4 or 5 timeframes closed price > (or <) hma max (CWe)

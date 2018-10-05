@@ -114,12 +114,15 @@ for inst in custom_inst:
     spread_ratio = get_spread_ratio(inst)
     inst_spread_ratio_dict[inst] = spread_ratio
     if float(spread_ratio) > 0.1:
-        # print(inst, spread_ratio)
+        print('expensive', inst, spread_ratio)
         expensive_motherfuckers.append(inst)
     else:
-        print(inst, spread_ratio)
+        print('tradable', inst, spread_ratio)
         tradable_instruments.append(inst)
 
-print(expensive_motherfuckers)
-print(tradable_instruments)
+print('expensive_motherfuckers = ' + str(expensive_motherfuckers))
+print('tradable_instruments = ' + str(tradable_instruments))
+
+
+
 
