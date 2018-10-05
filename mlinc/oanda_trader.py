@@ -10,6 +10,7 @@ from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
+# TODO: add SL multiplier to inverse baconbuyer strategy
 # TODO: Add multiplication factor to sl distance in conf.ini (eg sl_multiplier=2 -> sl gets set 2x further)
 # TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
 # TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
@@ -558,7 +559,7 @@ if __name__ == '__main__':
                                  max_exposure_percent=float(input['max_exposure_percent']),
                                  notify_who=input['notify_who'],
                                  strategy=strategy,
-                                 sl_multiplier=input['sl_multiplier']
+                                 sl_multiplier=float(input['sl_multiplier'])
                                  )
             class_list.append(trader)
             trader.auto_trade()
