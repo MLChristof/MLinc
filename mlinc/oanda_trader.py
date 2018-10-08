@@ -14,8 +14,9 @@ import configparser
 # TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
 # TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
 # TODO: Class OandaTrader should initialize open positions (ask from API) (BvD)
+# TODO:     and don't open position on same instrumenttwice
 # TODO: Group instruments to make exceptions for opening trades (for instance is UK100 is long, don't open NED25.
-# TODO: Coupled instruments) (BvD)
+# TODO:     Coupled instruments) (BvD)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
