@@ -140,7 +140,6 @@ class OandaTrader(object):
 
     def __init__(self, instruments, granularity='D', count=50, **kwargs):
         self.accountID, self.access_token = exampleAuth()
-        self.instruments = instruments
         self.granularity = granularity
         self.count = count
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
@@ -155,6 +154,9 @@ class OandaTrader(object):
         self.rrr = kwargs.get('rrr') if kwargs.get('rrr') else 3
         self.sl_multiplier = kwargs.get('sl_multiplier') if kwargs.get('sl_multiplier') else 1
         self.api = oandapyV20.API(access_token=self.access_token)
+
+        open_trades = self.get_open_trades()
+        self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=instruments)
 
     def data(self, instrument):
         try:
@@ -511,8 +513,19 @@ class OandaTrader(object):
     def get_open_trades(self):
         r = trades.OpenTrades(accountID=self.accountID)
         self.api.request(r)
-        print(r.response)
         return r.response
+
+    def neglect_open_trades(self, open_trades_list, instrument_list):
+        open_trade_instruments = open_trades_list['trades'][0]['instrument']
+
+        for instrument in open_trade_instruments:
+            try:
+                idx = instrument_list.index(instrument)
+            except:
+                pass
+            else:
+                del instrument_list[idx]
+        return instrument_list
 
     def get_closed_trades(self, date):
         r = trades.TradesList(accountID=self.accountID, params={'state': 'CLOSED',
@@ -563,7 +576,7 @@ if __name__ == '__main__':
         # Start auto-trader
         message_fritsie = 'Fritsie is looking if he can open some positions'
         notify(message_fritsie, *input['notify_who'])
-        trader = OandaTrader(instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+        trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
                              hma_window=int(input['hma_window']),
                              rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
                              rsi_min=float(input['rsi_min']),
@@ -578,7 +591,7 @@ if __name__ == '__main__':
         # Run notifier
         message_fritsie = 'This is your daily update from Fritsie'
         notify(message_fritsie, *input['notify_who'])
-        trader = OandaTrader(instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+        trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
                              hma_window=int(input['hma_window']),
                              rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
                              rsi_min=float(input['rsi_min']),
@@ -586,6 +599,7 @@ if __name__ == '__main__':
                              max_exposure_percent=float(input['max_exposure_percent']),
                              notify_who=input['notify_who']
                              )
+        trader.analyse()
         # trader.analyse()
         # trader.get_open_trades()
         # data = trader.get_closed_trades(datetime.now())
