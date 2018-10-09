@@ -515,10 +515,12 @@ class OandaTrader(object):
         self.api.request(r)
         return r.response
 
-    def neglect_open_trades(self, open_trades_list, instrument_list):
-        open_trade_instruments = open_trades_list['trades'][0]['instrument']
+    @staticmethod
+    def neglect_open_trades(open_trades_list, instrument_list):
+        open_trades = open_trades_list['trades']
 
-        for instrument in open_trade_instruments:
+        for open_trade in open_trades:
+            instrument = open_trade['instrument']
             try:
                 idx = instrument_list.index(instrument)
             except:
@@ -546,8 +548,6 @@ class OandaTrader(object):
                   'Total Account Balance = {:.2f}'.format(balance, total_balance)
 
         notify(message, *self.notify_who)
-
-
 
 
 if __name__ == '__main__':
@@ -599,7 +599,7 @@ if __name__ == '__main__':
                              max_exposure_percent=float(input['max_exposure_percent']),
                              notify_who=input['notify_who']
                              )
-        trader.analyse()
+        # trader.analyse()
         # trader.analyse()
         # trader.get_open_trades()
         # data = trader.get_closed_trades(datetime.now())
