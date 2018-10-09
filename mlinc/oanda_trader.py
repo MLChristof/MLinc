@@ -9,8 +9,11 @@ import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.positions as positions
 import oandapyV20.endpoints.trades as trades
+import oandapyV20.endpoints.transactions as transactions
 import oandapyV20.endpoints.forexlabs as labs
 import configparser
+from datetime import datetime
+import pandas as pd
 
 # TODO: add SL multiplier to inverse baconbuyer strategy
 # TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
@@ -511,6 +514,28 @@ class OandaTrader(object):
         print(r.response)
         return r.response
 
+    def get_closed_trades(self, date):
+        r = trades.TradesList(accountID=self.accountID, params={'state': 'CLOSED',
+                                                                'count': 100})
+        self.api.request(r)
+        df = pd.DataFrame(list(r.response['trades']))
+        df['closeTime'] = pd.to_datetime(df['closeTime'], errors='coerce')
+        df['realizedPL'] = pd.to_numeric(df['realizedPL'], errors='coerce')
+        return df.loc[df['closeTime'].dt.day == date.day]
+
+    def result_summary(self, date):
+        data = self.get_closed_trades(date)
+
+        balance = data['realizedPL'].sum()
+        total_balance = self.account_balance()
+
+        message = 'Today\'s P/L = {:.2f} euro \n' \
+                  'Total Account Balance = {:.2f}'.format(balance, total_balance)
+
+        notify(message, *self.notify_who)
+
+
+
 
 if __name__ == '__main__':
     config = configparser.RawConfigParser(allow_no_value=True)
@@ -562,5 +587,8 @@ if __name__ == '__main__':
                              notify_who=input['notify_who']
                              )
         # trader.analyse()
-        trader.get_open_trades()
+        # trader.get_open_trades()
+        # data = trader.get_closed_trades(datetime.now())
+        # print(data)
+        trader.result_summary(datetime.now())
 
