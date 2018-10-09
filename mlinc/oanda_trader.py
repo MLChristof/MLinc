@@ -7,6 +7,8 @@ from mlinc.position_size_calc import *
 import json
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
+import oandapyV20.endpoints.positions as positions
+import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.forexlabs as labs
 import configparser
 
@@ -503,6 +505,12 @@ class OandaTrader(object):
         spread = float(format(ask-bid, '.5f'))
         return spread
 
+    def get_open_trades(self):
+        r = trades.OpenTrades(accountID=self.accountID)
+        self.api.request(r)
+        print(r.response)
+        return r.response
+
 
 if __name__ == '__main__':
     config = configparser.RawConfigParser(allow_no_value=True)
@@ -553,5 +561,6 @@ if __name__ == '__main__':
                              max_exposure_percent=float(input['max_exposure_percent']),
                              notify_who=input['notify_who']
                              )
-        trader.analyse()
+        # trader.analyse()
+        trader.get_open_trades()
 
