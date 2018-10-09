@@ -133,9 +133,9 @@ class OandaTrader(object):
     id = 0
     instruments = []
 
-    def __init__(self, instrument, granularity='D', count=50, **kwargs):
+    def __init__(self, instruments, granularity='D', count=50, **kwargs):
         self.accountID, self.access_token = exampleAuth()
-        self.instrument = instrument
+        self.instruments = instruments
         self.granularity = granularity
         self.count = count
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
@@ -151,41 +151,20 @@ class OandaTrader(object):
         self.sl_multiplier = kwargs.get('sl_multiplier') if kwargs.get('sl_multiplier') else 1
         self.api = oandapyV20.API(access_token=self.access_token)
 
-        OandaTrader.instruments.append(self.instrument)
-        OandaTrader.id += 1
-
-    @property
-    def instrument(self):
-        return self.__instrument
-
-    @instrument.setter
-    def instrument(self, instrument):
-        count_instrument = "Instrument_%i" % self.id
-
-        if instrument is None:
-            self.__instrument = count_instrument
-        elif instrument in OandaTrader.instruments:
-            raise UserWarning("Instrument '{}' already in use, instrument given is {}.".format(
-                instrument, count_instrument))
-        else:
-            self.__instrument = instrument
-
-    @property
-    def data(self):
+    def data(self, instrument):
         try:
-            data = candles(inst=[self.instrument],
+            data = candles(inst=[instrument],
                            granularity=[self.granularity],
                            count=[self.count],
                            From=None, to=None, price=None, nice=True,
                            access_token=self.access_token)
             return data
         except:
-            raise ValueError('Failed to load data from Oanda using instrument {}'.format(self.instrument))
+            raise ValueError('Failed to load data from Oanda using instrument {}'.format(instrument))
 
-    @property
-    def data_as_dataframe(self):
+    def data_as_dataframe(self, instrument):
         oanda_list = list()
-        for i, item in enumerate(self.data['candles']):
+        for i, item in enumerate(self.data(instrument)['candles']):
             d = {'complete': item['complete'],
                  'volume': item['volume'],
                  'time': item['time'],
@@ -198,15 +177,15 @@ class OandaTrader(object):
         dataframe = pd.DataFrame(oanda_list)
         return dataframe
 
-    def save_data_to_csv(self):
-        dataframe = self.data_as_dataframe
-        dataframe.to_csv(os.getcwd() + '\\oanda_data\\' + self.data['instrument'],
+    def save_data_to_csv(self, instrument):
+        dataframe = self.data_as_dataframe(instrument)
+        dataframe.to_csv(os.getcwd() + '\\oanda_data\\' + self.data(instrument)['instrument'],
                          sep=',',
                          columns=['time', 'open', 'high', 'low', 'close', 'volume'],
                          index=False)
 
-    def baconbuyer(self):
-        dataframe = self.data_as_dataframe
+    def baconbuyer(self, instrument):
+        dataframe = self.data_as_dataframe(instrument)
 
         df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
         dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
@@ -225,7 +204,7 @@ class OandaTrader(object):
 
             message = 'Possibility to go Short on {} because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                       'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
-                format(self.instrument,
+                format(instrument,
                        self.rsi_max,
                        int(rsi_max_days),
                        self.granularity,
@@ -244,7 +223,7 @@ class OandaTrader(object):
 
             message = 'Possibility to go Long on {} because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                       'BaconBuyer recommends a stop loss of {} and a take profit of {}, good luck!'. \
-                format(self.instrument,
+                format(instrument,
                        self.rsi_min,
                        int(rsi_min_days),
                        self.granularity,
@@ -257,8 +236,8 @@ class OandaTrader(object):
 
         return dataframe
 
-    def baconbuyer_auto(self):
-        dataframe = self.data_as_dataframe
+    def baconbuyer_auto(self, instrument):
+        dataframe = self.data_as_dataframe(instrument)
 
         df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
         dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
@@ -272,7 +251,7 @@ class OandaTrader(object):
         # conditions to go short
         if rsi_max_days > self.rsi_max and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            spread = self.get_spread()
+            spread = self.get_spread(instrument)
             half_spread = 0.5*spread
             # set stoploss
             sl = dataframe.tail(7)['hma'].max()
@@ -292,11 +271,11 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close-half_spread), self.instrument, 'short', self.max_exposure_percent)
+                self.market_order(sl, tp, (close-half_spread), instrument, 'short', self.max_exposure_percent)
                 message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
                           'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
-                    format(self.instrument,
+                    format(instrument,
                            sl,
                            tp,
                            self.rsi_max,
@@ -312,7 +291,7 @@ class OandaTrader(object):
         # conditions to go long
         elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            spread = self.get_spread()
+            spread = self.get_spread(instrument)
             half_spread = 0.5*spread
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
@@ -332,11 +311,11 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close+half_spread), self.instrument, 'long', self.max_exposure_percent)
+                self.market_order(sl, tp, (close+half_spread), instrument, 'long', self.max_exposure_percent)
                 message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
                           'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
-                    format(self.instrument,
+                    format(instrument,
                            sl,
                            tp,
                            self.rsi_min,
@@ -351,8 +330,8 @@ class OandaTrader(object):
 
         return dataframe
 
-    def inverse_baconbuyer_auto(self):
-        dataframe = self.data_as_dataframe
+    def inverse_baconbuyer_auto(self, instrument):
+        dataframe = self.data_as_dataframe(instrument)
 
         df_hma = hma(n.array(dataframe['close'].tolist()), self.hma_window)
         dataframe['hma'] = pd.Series(df_hma, index=dataframe.index)
@@ -366,7 +345,7 @@ class OandaTrader(object):
         # conditions to go long (high rsi and hma local minimum)
         if rsi_max_days > self.rsi_max and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            spread = self.get_spread()
+            spread = self.get_spread(instrument)
             half_spread = 0.5*spread
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
@@ -380,11 +359,11 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close+half_spread), self.instrument, 'long', self.max_exposure_percent)
+                self.market_order(sl, tp, (close+half_spread), instrument, 'long', self.max_exposure_percent)
                 message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
                           'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                           'Inverse BaconBuyer used a RRR={}'. \
-                    format(self.instrument,
+                    format(instrument,
                            sl,
                            tp,
                            self.rsi_max,
@@ -400,7 +379,7 @@ class OandaTrader(object):
         # conditions to go short (low rsi and hma local maximum)
         elif rsi_min_days < self.rsi_min and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
-            spread = self.get_spread()
+            spread = self.get_spread(instrument)
             half_spread = 0.5*spread
             # set stoploss
             sl = dataframe.tail(7)['hma'].max()
@@ -414,11 +393,11 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close-half_spread), self.instrument, 'short', self.max_exposure_percent)
+                self.market_order(sl, tp, (close-half_spread), instrument, 'short', self.max_exposure_percent)
                 message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
                           'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
-                    format(self.instrument,
+                    format(instrument,
                            sl,
                            tp,
                            self.rsi_min,
@@ -435,13 +414,17 @@ class OandaTrader(object):
 
     def analyse(self):
         if self.strategy == 'Baconbuyer':
-            return self.baconbuyer()
+            for instrument in self.instruments:
+                print(instrument)
+                self.baconbuyer(instrument=instrument)
 
     def auto_trade(self):
-        if self.strategy == 'Inverse_Baconbuyer':
-            return self.inverse_baconbuyer_auto()
-        elif self.strategy == 'Baconbuyer':
-                return self.baconbuyer_auto()
+        for instrument in self.instruments:
+            print(instrument)
+            if self.strategy == 'Inverse_Baconbuyer':
+                return self.inverse_baconbuyer_auto(instrument)
+            elif self.strategy == 'Baconbuyer':
+                return self.baconbuyer_auto(instrument)
 
     def market_order(self, sl, tp, close, inst, short_long, max_exp):
 
@@ -511,9 +494,9 @@ class OandaTrader(object):
         margin_percent = 100*float(details.get('marginCloseoutPercent'))
         return margin_percent
 
-    def get_spread(self):
+    def get_spread(self, instrument):
         api = oandapyV20.API(access_token=self.access_token)
-        test = candles(inst=[self.instrument], granularity=['M1'], count=[1], From=None, to=None, price=['BA'], nice=True,
+        test = candles(inst=[instrument], granularity=['M1'], count=[1], From=None, to=None, price=['BA'], nice=True,
                        access_token=self.access_token)
         bid = float(test['candles'][0]['bid']['c'])
         ask = float(test['candles'][0]['ask']['c'])
@@ -547,36 +530,28 @@ if __name__ == '__main__':
         # Start auto-trader
         message_fritsie = 'Fritsie is looking if he can open some positions'
         notify(message_fritsie, *input['notify_who'])
-        class_list = []
-        for inst in instrument_list:
-            trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
-                                 hma_window=int(input['hma_window']),
-                                 rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
-                                 rsi_min=float(input['rsi_min']),
-                                 max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
-                                 max_exposure_percent=float(input['max_exposure_percent']),
-                                 notify_who=input['notify_who'],
-                                 strategy=strategy,
-                                 sl_multiplier=float(input['sl_multiplier'])
-                                 )
-            class_list.append(trader)
-            trader.auto_trade()
-            print(trader.instrument)
+        trader = OandaTrader(instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+                             hma_window=int(input['hma_window']),
+                             rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
+                             rsi_min=float(input['rsi_min']),
+                             max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
+                             max_exposure_percent=float(input['max_exposure_percent']),
+                             notify_who=input['notify_who'],
+                             strategy=strategy,
+                             sl_multiplier=float(input['sl_multiplier'])
+                             )
+        trader.auto_trade()
     else:
         # Run notifier
         message_fritsie = 'This is your daily update from Fritsie'
         notify(message_fritsie, *input['notify_who'])
-        class_list = []
-        for inst in instrument_list:
-            trader = OandaTrader(inst, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
-                                 hma_window=int(input['hma_window']),
-                                 rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
-                                 rsi_min=float(input['rsi_min']),
-                                 max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
-                                 max_exposure_percent=float(input['max_exposure_percent']),
-                                 notify_who=input['notify_who']
-                                 )
-            class_list.append(trader)
-            trader.analyse()
-            print(trader.instrument)
+        trader = OandaTrader(instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+                             hma_window=int(input['hma_window']),
+                             rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
+                             rsi_min=float(input['rsi_min']),
+                             max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
+                             max_exposure_percent=float(input['max_exposure_percent']),
+                             notify_who=input['notify_who']
+                             )
+        trader.analyse()
 
