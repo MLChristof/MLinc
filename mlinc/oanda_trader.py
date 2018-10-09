@@ -105,8 +105,8 @@ def rsi(prices, window):
     return rsi
 
 
-def notify(message, *args):
-    if input['send_notification'] == 'True':
+def notify(message, send_notification, *args):
+    if send_notification == 'True':
         if 'v' in args or 'vincent' in args:
             try:
                 notification(file_vincent, message)
@@ -145,6 +145,7 @@ class OandaTrader(object):
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
         self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
         self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['r', 'j', 'c', 'b', 'v']
+        self.send_notification = kwargs.get('send_notification') if kwargs.get('send_notification') else 'False'
         self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
         self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
         self.max_margin_closeout_percent = kwargs.get('max_margin_closeout_percent') \
@@ -218,7 +219,7 @@ class OandaTrader(object):
                        format(sl, '.' + str(nr_decimals_close) + 'f'),
                        format(tp, '.' + str(nr_decimals_close) + 'f'))
 
-            notify(message, *self.notify_who)
+            notify(message, self.send_notification, *self.notify_who)
             print(dataframe.tail(10))
             print(message)
 
@@ -237,7 +238,7 @@ class OandaTrader(object):
                        format(sl, '.' + str(nr_decimals_close) + 'f'),
                        format(tp, '.' + str(nr_decimals_close) + 'f'))
 
-            notify(message, *self.notify_who)
+            notify(message, self.send_notification, *self.notify_who)
             print(dataframe.tail(10))
             print(message)
 
@@ -289,11 +290,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         # conditions to go long
         elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
@@ -329,11 +330,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         return dataframe
 
@@ -377,11 +378,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         # conditions to go short (low rsi and hma local maximum)
         elif rsi_min_days < self.rsi_min and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
@@ -411,11 +412,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         return dataframe
 
@@ -547,7 +548,7 @@ class OandaTrader(object):
         message = 'Today\'s P/L = {:.2f} euro \n' \
                   'Total Account Balance = {:.2f}'.format(balance, total_balance)
 
-        notify(message, *self.notify_who)
+        notify(message, 'True', *self.notify_who)
 
 
 if __name__ == '__main__':
