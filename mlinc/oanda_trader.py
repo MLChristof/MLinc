@@ -15,13 +15,8 @@ import configparser
 from datetime import datetime
 import pandas as pd
 
-# TODO: add SL multiplier to inverse baconbuyer strategy
-# TODO: Make logger plotter (RWee+JtB) (daily stats overview via IFTTT)
+# TODO: add SL multiplier to inverse baconbuyer strategy (RWee)
 # TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
-# TODO: Class OandaTrader should initialize open positions (ask from API) (BvD)
-# TODO:     and don't open position on same instrumenttwice
-# TODO: Group instruments to make exceptions for opening trades (for instance is UK100 is long, don't open NED25.
-# TODO:     Coupled instruments) (BvD)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
@@ -106,8 +101,8 @@ def rsi(prices, window):
     return rsi
 
 
-def notify(message, *args):
-    if input['send_notification'] == 'True':
+def notify(message, send_notification, *args):
+    if send_notification == 'True':
         if 'v' in args or 'vincent' in args:
             try:
                 notification(file_vincent, message)
@@ -146,6 +141,7 @@ class OandaTrader(object):
         self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
         self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
         self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['r', 'j', 'c', 'b', 'v']
+        self.send_notification = kwargs.get('send_notification') if kwargs.get('send_notification') else 'False'
         self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
         self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
         self.max_margin_closeout_percent = kwargs.get('max_margin_closeout_percent') \
@@ -219,7 +215,7 @@ class OandaTrader(object):
                        format(sl, '.' + str(nr_decimals_close) + 'f'),
                        format(tp, '.' + str(nr_decimals_close) + 'f'))
 
-            notify(message, *self.notify_who)
+            notify(message, self.send_notification, *self.notify_who)
             print(dataframe.tail(10))
             print(message)
 
@@ -238,7 +234,7 @@ class OandaTrader(object):
                        format(sl, '.' + str(nr_decimals_close) + 'f'),
                        format(tp, '.' + str(nr_decimals_close) + 'f'))
 
-            notify(message, *self.notify_who)
+            notify(message, self.send_notification, *self.notify_who)
             print(dataframe.tail(10))
             print(message)
 
@@ -290,11 +286,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         # conditions to go long
         elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
@@ -330,11 +326,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         return dataframe
 
@@ -378,11 +374,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         # conditions to go short (low rsi and hma local maximum)
         elif rsi_min_days < self.rsi_min and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
@@ -412,11 +408,11 @@ class OandaTrader(object):
                            int(rsi_min_days),
                            self.granularity,
                            self.rrr)
-                notify(message, *self.notify_who)
+                notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
             else:
-                notify('Position not opened due to insufficient margin', *self.notify_who)
+                notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         return dataframe
 
@@ -516,10 +512,12 @@ class OandaTrader(object):
         self.api.request(r)
         return r.response
 
-    def neglect_open_trades(self, open_trades_list, instrument_list):
-        open_trade_instruments = open_trades_list['trades'][0]['instrument']
+    @staticmethod
+    def neglect_open_trades(open_trades_list, instrument_list):
+        open_trades = open_trades_list['trades']
 
-        for instrument in open_trade_instruments:
+        for open_trade in open_trades:
+            instrument = open_trade['instrument']
             try:
                 idx = instrument_list.index(instrument)
             except:
@@ -546,9 +544,7 @@ class OandaTrader(object):
         message = 'Today\'s P/L = {:.2f} euro \n' \
                   'Total Account Balance = {:.2f}'.format(balance, total_balance)
 
-        notify(message, *self.notify_who)
-
-
+        notify(message, 'True', *self.notify_who)
 
 
 if __name__ == '__main__':
@@ -605,5 +601,5 @@ if __name__ == '__main__':
         # trader.get_open_trades()
         # data = trader.get_closed_trades(datetime.now())
         # print(data)
-        trader.result_summary(datetime.now())
+        # trader.result_summary(datetime.now())
 
