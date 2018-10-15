@@ -426,9 +426,9 @@ class OandaTrader(object):
         for instrument in self.instruments:
             print(instrument)
             if self.strategy == 'Inverse_Baconbuyer':
-                return self.inverse_baconbuyer_auto(instrument)
+                self.inverse_baconbuyer_auto(instrument)
             elif self.strategy == 'Baconbuyer':
-                return self.baconbuyer_auto(instrument)
+                self.baconbuyer_auto(instrument)
 
     def market_order(self, sl, tp, close, inst, short_long, max_exp):
 
