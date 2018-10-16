@@ -15,8 +15,7 @@ import configparser
 from datetime import datetime
 import pandas as pd
 
-# TODO: add SL multiplier to inverse baconbuyer strategy (RWee)
-# TODO: Sometimes still precision error is given on TP/SL, investigate why. (RWee)
+# TODO: check SL and TP: messed up since sl_multiplier was added. In volume calc? (RWee)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
@@ -275,7 +274,7 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close-half_spread), instrument, 'short', self.max_exposure_percent)
+                self.market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
                 message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
                           'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
@@ -315,7 +314,7 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close+half_spread), instrument, 'long', self.max_exposure_percent)
+                self.market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
                 message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
                           'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
@@ -354,6 +353,10 @@ class OandaTrader(object):
             # set stoploss
             sl = dataframe.tail(7)['hma'].min()
             close = float(dataframe.tail(1)['close'])
+            # sl_mult sets SL further away from price
+            # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
+            sl_dist = (close - sl) * (self.sl_multiplier - 1)
+            sl -= sl_dist
             # set take profit
             tp = (close - sl) / self.rrr + close
             sl -= spread
@@ -363,7 +366,7 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close+half_spread), instrument, 'long', self.max_exposure_percent)
+                self.market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
                 message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
                           'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                           'Inverse BaconBuyer used a RRR={}'. \
@@ -388,6 +391,10 @@ class OandaTrader(object):
             # set stoploss
             sl = dataframe.tail(7)['hma'].max()
             close = float(dataframe.tail(1)['close'])
+            # sl_mult sets SL further away from price
+            # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
+            sl_dist = (sl - close) * (self.sl_multiplier - 1)
+            sl += sl_dist
             # set take profit
             tp = close - (sl - close) / self.rrr
             sl += spread
@@ -397,7 +404,7 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, (close-half_spread), instrument, 'short', self.max_exposure_percent)
+                self.market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
                 message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
                           'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                           'BaconBuyer used a RRR={}'. \
