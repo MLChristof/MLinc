@@ -550,6 +550,7 @@ class OandaTrader(object):
 
         message = 'Today\'s P/L = {:.2f} euro \n' \
                   'Total Account Balance = {:.2f}'.format(balance, total_balance)
+        print(message)
 
         notify(message, 'True', *self.notify_who)
 
