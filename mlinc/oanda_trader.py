@@ -15,6 +15,7 @@ import configparser
 from datetime import datetime
 import pandas as pd
 
+# TODO: Sometime still precision error is give on SL/TP (RWee)
 # TODO: check SL and TP: messed up since sl_multiplier was added. In volume calc? (RWee)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
