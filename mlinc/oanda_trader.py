@@ -15,8 +15,9 @@ import configparser
 from datetime import datetime
 import pandas as pd
 
-# TODO: Enable trailing SL orders. (VDo)
+# TODO: Enable trailing SL orders. (???)
 # TODO: Sometime still precision error is give on SL/TP (RWee)
+# TODO: Add constraint on slope of HMA. Only trade if above certain threshold (???)
 # TODO: check SL and TP: messed up since sl_multiplier was added. In volume calc? (RWee)
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
@@ -348,19 +349,15 @@ class OandaTrader(object):
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
         # conditions to go long (high rsi and hma local minimum)
-        if rsi_max_days > self.rsi_max and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+        if rsi_max_days > self.rsi_max and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread(instrument)
             half_spread = 0.5*spread
-            # set stoploss
-            sl = dataframe.tail(7)['hma'].min()
-            close = float(dataframe.tail(1)['close'])
-            # sl_mult sets SL further away from price
-            # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
-            sl_dist = (close - sl) * (self.sl_multiplier - 1)
-            sl -= sl_dist
             # set take profit
-            tp = (close - sl) / self.rrr + close
+            tp = dataframe.tail(7)['hma'].max()
+            close = float(dataframe.tail(1)['close'])
+            # set stop loss
+            sl = (close - tp) / self.rrr + close
             sl -= spread
             tp += spread
             nr_decimals_close = str(close)[::-1].find('.')
@@ -386,19 +383,15 @@ class OandaTrader(object):
                 notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         # conditions to go short (low rsi and hma local maximum)
-        elif rsi_min_days < self.rsi_min and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
+        elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread(instrument)
             half_spread = 0.5*spread
-            # set stoploss
-            sl = dataframe.tail(7)['hma'].max()
-            close = float(dataframe.tail(1)['close'])
-            # sl_mult sets SL further away from price
-            # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
-            sl_dist = (sl - close) * (self.sl_multiplier - 1)
-            sl += sl_dist
             # set take profit
-            tp = close - (sl - close) / self.rrr
+            tp = dataframe.tail(7)['hma'].min()
+            close = float(dataframe.tail(1)['close'])
+            # set take stop loss
+            sl = close - (tp - close) / self.rrr
             sl += spread
             tp -= spread
             nr_decimals_close = str(close)[::-1].find('.')
