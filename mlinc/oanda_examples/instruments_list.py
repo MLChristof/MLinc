@@ -35,7 +35,6 @@ def custom_list():
                    'USD_CAD',
                    'USD_CHF',
                    'USD_JPY',
-                   'AUD_NZD',
                    'AUD_USD',
                    'CAD_CHF',
                    'USD_DKK',
@@ -55,7 +54,6 @@ def custom_list():
                    'EUR_SEK',
                    'EUR_SGD',
                    'GBP_AUD',
-                   'GBP_CHF',
                    'GBP_HKD',
                    'GBP_JPY',
                    'GBP_NZD',
@@ -82,6 +80,8 @@ def custom_list():
                    'SPX500_USD',
                    'UK10YB_GBP',
                    'USB10Y_USD',
+                   'GBP_CHF',
+                   'AUD_NZD',
                    ]
 
     return custom_inst
