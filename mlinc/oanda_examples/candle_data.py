@@ -16,7 +16,7 @@ from oandapyV20 import API
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.instruments as instruments
 from oandapyV20.definitions.instruments import CandlestickGranularity
-from mlinc.oanda_examples.exampleauth import exampleAuth
+# from mlinc.oanda_examples.exampleauth import exampleAuth
 import re
 
 price = ['M', 'B', 'A', 'BA', 'MBA']
