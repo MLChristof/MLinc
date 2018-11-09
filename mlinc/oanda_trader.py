@@ -132,14 +132,6 @@ def notify(message, send_notification, *args):
                 print('jelle could not be reached')
 
 
-def exampleAuth(accountID, token):
-    with open(accountID) as I:
-        accountID = I.read().strip()
-    with open(token) as I:
-        token = I.read().strip()
-    return accountID, token
-
-
 def custom_list():
     """"
     This function contains an instrument list based on low spreads and low(er) risk coupling
@@ -194,8 +186,10 @@ def custom_list():
 
 
 class OandaTrader(object):
-    def __init__(self, instruments, account, token, **kwargs):
-        self.accountID, self.access_token = exampleAuth(accountID=account, token=token)
+    def __init__(self, instruments, **kwargs):
+        account = kwargs.get('accountid') if kwargs.get('accountid') else None
+        token = kwargs.get('token') if kwargs.get('token') else None
+        self.accountID, self.access_token = (account, token)
         self.client = oandapyV20.API(access_token=self.access_token)
         if instruments == 'all':
             self.instruments = self.instrument_list
@@ -222,7 +216,7 @@ class OandaTrader(object):
         self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=self.instruments)
 
     @classmethod
-    def from_conf_file(cls, instruments, conf, account, token):
+    def from_conf_file(cls, instruments, conf):
         config = configparser.RawConfigParser(allow_no_value=True)
         config.read(conf)
         input = {}
@@ -239,7 +233,7 @@ class OandaTrader(object):
         except AssertionError:
             raise ValueError(f'Please provide a strategy in: {conf}')
 
-        return cls(instruments, account, token, **input)
+        return cls(instruments, **input)
 
     @property
     def instrument_list(self):
@@ -732,9 +726,7 @@ class OandaTrader(object):
 
 if __name__ == '__main__':
     x = OandaTrader.from_conf_file(instruments='all',
-                                   conf=r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini',
-                                   account=r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\account.txt',
-                                   token=r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\token.txt')
+                                   conf=r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
 
     x.auto_trade()
 
