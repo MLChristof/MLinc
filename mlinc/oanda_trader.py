@@ -684,6 +684,11 @@ class OandaTrader(object):
             else:
                 print("Response: {}\n{}".format(r.status_code,
                                                 json.dumps(response, indent=2)))
+            try:
+                tradeID = response["orderFillTransaction"]["id"]
+                print('tradeID = '+str(tradeID))
+            except:
+                print('No trade ID available. Trade not opened')
 
     def tsl_order(self, sl, close):
         """"
