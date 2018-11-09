@@ -1,19 +1,24 @@
 import numpy as n
 import pandas as pd
+import re
 import os
-from mlinc.oanda_examples.candle_data import candles
-from mlinc.notifier import notification
-from mlinc.position_size_calc import *
 import json
+from datetime import datetime
+import configparser
+
+from mlinc.notifier import notification
+
+import oandapyV20
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.positions as positions
 import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.transactions as transactions
 import oandapyV20.endpoints.forexlabs as labs
-import configparser
-from datetime import datetime
-import pandas as pd
+import oandapyV20.endpoints.accounts as accounts
+import oandapyV20.endpoints.instruments as instruments
+import oandapyV20.endpoints.pricing as pricing
+
 
 # TODO: Enable trailing SL orders. (???)
 # TODO: Sometime still precision error is give on SL/TP (RWee)
@@ -29,11 +34,6 @@ file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
 file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
 file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
 file_bastijn = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_bastijn.txt'
-
-
-class IterRegistry(type):
-    def __iter__(cls):
-        return iter(cls._registry)
 
 
 def hma(values, window):
@@ -132,38 +132,215 @@ def notify(message, send_notification, *args):
                 print('jelle could not be reached')
 
 
-class OandaTrader(object):
-    id = 0
-    instruments = []
+def custom_list():
+    """"
+    This function contains an instrument list based on low spreads and low(er) risk coupling
+    e.g. XAU_EUR and XAU_USD -> XAU_EUR removed
+    """
+    custom_inst = ['EUR_USD',
+                   'GBP_USD',
+                   'USD_CAD',
+                   'USD_CHF',
+                   'USD_JPY',
+                   'AUD_USD',
+                   'CAD_CHF',
+                   'USD_HKD',
+                   'BCO_USD',
+                   'CAD_SGD',
+                   'DE10YB_EUR',
+                   'EU50_EUR',
+                   'EUR_AUD',
+                   'EUR_CAD',
+                   'EUR_CHF',
+                   'EUR_DKK',
+                   'EUR_GBP',
+                   'EUR_JPY',
+                   'GBP_AUD',
+                   'GBP_HKD',
+                   'GBP_JPY',
+                   'GBP_SGD',
+                   'HKD_JPY',
+                   'NZD_CAD',
+                   'NZD_HKD',
+                   'NZD_JPY',
+                   'NZD_SGD',
+                   'NZD_USD',
+                   'SGD_CHF',
+                   'SGD_HKD',
+                   'SGD_JPY',
+                   'USD_MXN',
+                   'USD_SGD',
+                   'XAU_USD',
+                   'XCU_USD',
+                   'SG30_SGD',
+                   'HK33_HKD',
+                   'AU200_AUD',
+                   'IN50_USD',
+                   'JP225_USD',
+                   'SPX500_USD',
+                   'UK10YB_GBP',
+                   'USB10Y_USD',
+                   ]
 
-    def __init__(self, instruments, granularity='D', count=50, **kwargs):
-        self.accountID, self.access_token = exampleAuth()
-        self.granularity = granularity
-        self.count = count
-        self.hma_window = kwargs.get('hma_window') if kwargs.get('hma_window') else 14
-        self.rsi_window = kwargs.get('rsi_window') if kwargs.get('rsi_window') else 14
-        self.notify_who = kwargs.get('notify_who') if kwargs.get('notify_who') else ['r', 'j', 'c', 'b', 'v']
-        self.send_notification = kwargs.get('send_notification') if kwargs.get('send_notification') else 'False'
-        self.rsi_max = kwargs.get('rsi_max') if kwargs.get('rsi_max') else 70
-        self.rsi_min = kwargs.get('rsi_min') if kwargs.get('rsi_min') else 30
-        self.max_margin_closeout_percent = kwargs.get('max_margin_closeout_percent') \
-            if kwargs.get('max_margin_closeout_percent') else 50
-        self.max_exposure_percent = kwargs.get('max_exposure_percent') if kwargs.get('max_exposure_percent') else 0.6
+    return custom_inst
+
+
+class OandaTrader(object):
+    def __init__(self, instruments, **kwargs):
+        account = kwargs.get('accountid') if kwargs.get('accountid') else None
+        token = kwargs.get('token') if kwargs.get('token') else None
+        self.accountID, self.access_token = (account, token)
+        self.client = oandapyV20.API(access_token=self.access_token)
+        if instruments == 'all':
+            self.instruments = self.instrument_list
+        else:
+            self.instruments = instruments
+
         self.strategy = kwargs.get('strategy') if kwargs.get('strategy') else 'Baconbuyer'
-        self.rrr = kwargs.get('rrr') if kwargs.get('rrr') else 3
-        self.sl_multiplier = kwargs.get('sl_multiplier') if kwargs.get('sl_multiplier') else 1
-        self.api = oandapyV20.API(access_token=self.access_token)
+        self.granularity = kwargs.get('granularity') if kwargs.get('granularity') else 'D'
+        self.count = int(kwargs.get('count')) if kwargs.get('count') else 50
+        self.hma_window = int(kwargs.get('hma_window')) if kwargs.get('hma_window') else 14
+        self.rsi_window = int(kwargs.get('rsi_window')) if kwargs.get('rsi_window') else 14
+        self.notify_who = list(kwargs.get('notify_who')) if kwargs.get('notify_who') else ['r', 'j', 'c', 'b', 'v']
+        self.send_notification = kwargs.get('send_notification') if kwargs.get('send_notification') else 'False'
+        self.rsi_max = float(kwargs.get('rsi_max')) if kwargs.get('rsi_max') else 70
+        self.rsi_min = float(kwargs.get('rsi_min')) if kwargs.get('rsi_min') else 30
+        self.max_margin_closeout_percent = float(kwargs.get('max_margin_closeout_percent')) \
+            if kwargs.get('max_margin_closeout_percent') else 50
+        self.max_exposure_percent = float(kwargs.get('max_exposure_percent')) if \
+            kwargs.get('max_exposure_percent') else 0.6
+        self.rrr = float(kwargs.get('rrr')) if kwargs.get('rrr') else 3
+        self.sl_multiplier = float(kwargs.get('sl_multiplier')) if kwargs.get('sl_multiplier') else 1
 
         open_trades = self.get_open_trades()
-        self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=instruments)
+        self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=self.instruments)
+
+    @classmethod
+    def from_conf_file(cls, instruments, conf):
+        config = configparser.RawConfigParser(allow_no_value=True)
+        config.read(conf)
+        input = {}
+        for item in config['OandaTraderInput']:
+            input[item] = config['OandaTraderInput'][item]
+
+        try:
+            assert input['strategy']
+            strategy = input['strategy']
+            if strategy in ['Baconbuyer', 'Inverse_Baconbuyer']:
+                pass
+            else:
+                raise ValueError(f'Strategy not possible...')
+        except AssertionError:
+            raise ValueError(f'Please provide a strategy in: {conf}')
+
+        return cls(instruments, **input)
+
+    @property
+    def instrument_list(self):
+        """
+        Function to retrieve all tradable instruments from Oanda.
+
+        Returns List with instrument codes
+        -------
+        """
+
+        instr_list = []
+        r = accounts.AccountInstruments(accountID=self.accountID)
+        rv = self.client.request(r)
+
+        for i in range(len(rv['instruments'])):
+            instr_list.append(rv['instruments'][i]['name'])
+
+        return instr_list
+
+    def get_mid_price(self, instrument, api):
+        params = {"instruments": instrument}
+        r = oandapyV20.endpoints.pricing.PricingInfo(accountID=self.accountID, params=params)
+        api.request(r)
+        pricing = r.response['prices']
+        bid_price = float(pricing[0]['bids'][0]['price'])
+        ask_price = float(pricing[0]['asks'][0]['price'])
+        return (bid_price + ask_price) / 2
+
+    def get_trade_volume(self, SL, current_price, balance, max_exp, inst, api, account_cur='EUR'):
+        # max exposure in balance currency (e.g. EUR)
+        max_exp_cur = balance * max_exp / 100
+        # difference between price and SL in pips (absolute value)
+        SL_diff = 10000 * abs(SL - current_price)
+
+        # case nr.1
+        if account_cur == inst[-3:]:
+            # for e.g. SILVER/EUR
+            units = round(10000 * max_exp_cur / SL_diff)
+
+        # case nr.2
+        elif account_cur == inst[:3]:
+            # for e.g. EUR
+            units = round(10000 * current_price * max_exp_cur / SL_diff)
+
+        # case nr.3
+        elif account_cur not in inst and inst[4:] + '_' + account_cur in self.instrument_list:
+            # test case inst='EUR_GBP', account_cur='USD'
+            # conversion pair
+            conv_pair = inst[4:] + '_' + account_cur
+            # conversion pair exchange rate GBP/USD
+            # price_conv_pair = 1.75 # baby pips example
+            price_conv_pair = self.get_mid_price(conv_pair, api)
+            # for e.g. EUR/GBP
+            units = round(10000 * (1 / price_conv_pair) * max_exp_cur / SL_diff)
+
+        # case nr.4
+        elif account_cur not in inst and account_cur + '_' + inst[-3:] in self.instrument_list:
+            # test case inst='USD_JPY', account_cur='CHF'
+            # conversion pair
+            conv_pair = account_cur + '_' + inst[-3:]
+            # conversion pair exchange rate CHF/JPY
+            # price_conv_pair = 85.00 # baby pips example
+            price_conv_pair = self.get_mid_price(conv_pair, api)
+            # for e.g. USD/JPY
+            units = round(10000 * price_conv_pair * max_exp_cur / SL_diff)
+
+        else:
+            print('Oops, could not determine trade volume, '
+                  'check if your instrument is tradable and conversion pair exists. \n'
+                  '(e.g. USD_CNH is not possible, since conversion pair EUR_CNH or CNH_EUR does not exist in Oanda)\n'
+                  'Please determine trading volume in web interface.')
+            units = 0
+
+        return units
+
+    def candles(self, inst, From, to, price, nice):
+        def check_date(s):
+            dateFmt = "[\d]{4}-[\d]{2}-[\d]{2}T[\d]{2}:[\d]{2}:[\d]{2}Z"
+            if not re.match(dateFmt, s):
+                raise ValueError("Incorrect date format: ", s)
+            return True
+
+        if inst:
+            params = {}
+            if self.granularity:
+                params.update({"granularity": self.granularity})
+            if self.count:
+                params.update({"count": self.count})
+            if From and check_date(From):
+                params.update({"from": From})
+            if to and check_date(to):
+                params.update({"to": to})
+            if price:
+                params.update({"price": price})
+            for i in inst:
+                r = instruments.InstrumentsCandles(instrument=i, params=params)
+                rv = self.client.request(r)
+                kw = {}
+                if nice:
+                    kw = {"indent": nice}
+                # print("{}".format(json.dumps(rv, **kw)))
+                return rv
 
     def data(self, instrument):
         try:
-            data = candles(inst=[instrument],
-                           granularity=[self.granularity],
-                           count=[self.count],
-                           From=None, to=None, price=None, nice=True,
-                           access_token=self.access_token)
+            data = self.candles(inst=[instrument],
+                                From=None, to=None, price=None, nice=True)
             return data
         except:
             raise ValueError('Failed to load data from Oanda using instrument {}'.format(instrument))
@@ -442,7 +619,7 @@ class OandaTrader(object):
         else:
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
-        volume = sign*get_trade_volume(sl, close, balance, max_exp, inst, self.api)
+        volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
 
         # set correct nr of decimals
         nr_decimals_close = str(close)[::-1].find('.')
@@ -477,7 +654,7 @@ class OandaTrader(object):
             print("===============================")
             print(r.data)
             try:
-                response = self.api.request(r)
+                response = self.client.request(r)
             except V20Error as e:
                 print("V20Error: {}".format(e))
             else:
@@ -485,25 +662,22 @@ class OandaTrader(object):
                                                 json.dumps(response, indent=2)))
 
     def account_balance(self):
-        import oandapyV20.endpoints.accounts as accounts
         r = accounts.AccountDetails(accountID=self.accountID)
-        rv = self.api.request(r)
+        rv = self.client.request(r)
         details = rv.get('account')
         balance = float(details.get('NAV'))
         return balance
 
     def margin_closeout_percent(self):
-        import oandapyV20.endpoints.accounts as accounts
         r = accounts.AccountDetails(accountID=self.accountID)
-        rv = self.api.request(r)
+        rv = self.client.request(r)
         details = rv.get('account')
         margin_percent = 100*float(details.get('marginCloseoutPercent'))
         return margin_percent
 
     def get_spread(self, instrument):
         api = oandapyV20.API(access_token=self.access_token)
-        test = candles(inst=[instrument], granularity=['M1'], count=[1], From=None, to=None, price=['BA'], nice=True,
-                       access_token=self.access_token)
+        test = self.candles(inst=[instrument], From=None, to=None, price=['BA'], nice=True)
         bid = float(test['candles'][0]['bid']['c'])
         ask = float(test['candles'][0]['ask']['c'])
         spread = float(format(ask-bid, '.5f'))
@@ -511,7 +685,7 @@ class OandaTrader(object):
 
     def get_open_trades(self):
         r = trades.OpenTrades(accountID=self.accountID)
-        self.api.request(r)
+        self.client.request(r)
         return r.response
 
     @staticmethod
@@ -551,55 +725,63 @@ class OandaTrader(object):
 
 
 if __name__ == '__main__':
-    config = configparser.RawConfigParser(allow_no_value=True)
-    config.read('conf.ini')
-    input = {}
-    for item in config['BaconBuyer']:
-        input[item] = config['BaconBuyer'][item]
+    x = OandaTrader.from_conf_file(instruments='all',
+                                   conf=r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
 
-    if input['filtered_instruments'] == 'False':
-        instrument_list = instrument_list()
-    elif input['filtered_instruments'] == 'True':
-        instrument_list = custom_list()
-    else:
-        raise ValueError('filtered_intruments in conf.ini should be True or False')
+    x.auto_trade()
 
-    if input['inverse_strategy'] == 'False':
-        strategy = 'Baconbuyer'
-    elif input['inverse_strategy'] == 'True':
-        strategy = 'Inverse_Baconbuyer'
-    else:
-        strategy = ''
+
+
+    # config = configparser.RawConfigParser(allow_no_value=True)
+    # config.read('conf.ini')
+    # input = {}
+    # for item in config['BaconBuyer']:
+    #     input[item] = config['BaconBuyer'][item]
+    #
+    # if input['filtered_instruments'] == 'False':
+    #     instrument_list = instrument_list()
+    # elif input['filtered_instruments'] == 'True':
+    #     instrument_list = custom_list()
+    # else:
+    #     raise ValueError('filtered_intruments in conf.ini should be True or False')
+    #
+    # if input['inverse_strategy'] == 'False':
+    #     strategy = 'Baconbuyer'
+    # elif input['inverse_strategy'] == 'True':
+    #     strategy = 'Inverse_Baconbuyer'
+    # else:
+    #     strategy = ''
+
 
     # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
-    if input['auto_trade'] == 'On':
-        # Start auto-trader
-        message_fritsie = 'Fritsie is looking if he can open some positions'
-        notify(message_fritsie, *input['notify_who'])
-        trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
-                             hma_window=int(input['hma_window']),
-                             rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
-                             rsi_min=float(input['rsi_min']),
-                             max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
-                             max_exposure_percent=float(input['max_exposure_percent']),
-                             notify_who=input['notify_who'],
-                             strategy=strategy,
-                             sl_multiplier=float(input['sl_multiplier'])
-                             )
-        trader.auto_trade()
-    else:
-        # Run notifier
-        message_fritsie = 'This is your daily update from Fritsie'
-        notify(message_fritsie, *input['notify_who'])
-        trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
-                             hma_window=int(input['hma_window']),
-                             rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
-                             rsi_min=float(input['rsi_min']),
-                             max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
-                             max_exposure_percent=float(input['max_exposure_percent']),
-                             notify_who=input['notify_who']
-                             )
-        trader.analyse()
+    # if input['auto_trade'] == 'On':
+    #     # Start auto-trader
+    #     message_fritsie = 'Fritsie is looking if he can open some positions'
+    #     notify(message_fritsie, *input['notify_who'])
+    #     trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+    #                          hma_window=int(input['hma_window']),
+    #                          rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
+    #                          rsi_min=float(input['rsi_min']),
+    #                          max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
+    #                          max_exposure_percent=float(input['max_exposure_percent']),
+    #                          notify_who=input['notify_who'],
+    #                          strategy=strategy,
+    #                          sl_multiplier=float(input['sl_multiplier'])
+    #                          )
+    #     trader.auto_trade()
+    # else:
+    #     # Run notifier
+    #     message_fritsie = 'This is your daily update from Fritsie'
+    #     notify(message_fritsie, *input['notify_who'])
+    #     trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
+    #                          hma_window=int(input['hma_window']),
+    #                          rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
+    #                          rsi_min=float(input['rsi_min']),
+    #                          max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
+    #                          max_exposure_percent=float(input['max_exposure_percent']),
+    #                          notify_who=input['notify_who']
+    #                          )
+    #     trader.analyse()
         # trader.analyse()
         # trader.get_open_trades()
         # data = trader.get_closed_trades(datetime.now())
