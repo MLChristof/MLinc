@@ -211,7 +211,7 @@ class OandaTrader(object):
             kwargs.get('max_exposure_percent') else 0.6
         self.rrr = float(kwargs.get('rrr')) if kwargs.get('rrr') else 3
         self.sl_multiplier = float(kwargs.get('sl_multiplier')) if kwargs.get('sl_multiplier') else 1
-
+        self.tsl = kwargs.get('tsl') if kwargs.get('tsl') else 'Off'
         open_trades = self.get_open_trades()
         self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=self.instruments)
 
@@ -432,7 +432,7 @@ class OandaTrader(object):
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
         # conditions to go short
-        if rsi_max_days > self.rsi_max and all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
+        if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread(instrument)
             half_spread = 0.5*spread
@@ -454,17 +454,30 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
-                message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
-                          'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
-                          'BaconBuyer used a RRR={}'. \
-                    format(instrument,
-                           sl,
-                           tp,
-                           self.rsi_max,
-                           int(rsi_min_days),
-                           self.granularity,
-                           self.rrr)
+                if self.tsl == 'On':
+                    self.tsl_market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
+                    message = 'Fritsie just opened a Short position on {} with TSL={} and TP={} ' \
+                              'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
+                              'BaconBuyer used a RRR={}'. \
+                        format(instrument,
+                               sl,
+                               tp,
+                               self.rsi_max,
+                               int(rsi_min_days),
+                               self.granularity,
+                               self.rrr)
+                else:
+                    self.market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
+                    message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+                              'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
+                              'BaconBuyer used a RRR={}'. \
+                        format(instrument,
+                               sl,
+                               tp,
+                               self.rsi_max,
+                               int(rsi_min_days),
+                               self.granularity,
+                               self.rrr)
                 notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
@@ -472,7 +485,7 @@ class OandaTrader(object):
                 notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         # conditions to go long
-        elif rsi_min_days < self.rsi_min and all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+        elif all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread(instrument)
             half_spread = 0.5*spread
@@ -494,17 +507,30 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-                self.market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
-                message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
-                          'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
-                          'BaconBuyer used a RRR={}'. \
-                    format(instrument,
-                           sl,
-                           tp,
-                           self.rsi_min,
-                           int(rsi_min_days),
-                           self.granularity,
-                           self.rrr)
+                if self.tsl == 'On':
+                    self.tsl_market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
+                    message = 'Fritsie just opened a Long position on {} with TSL={} and TP={} ' \
+                              'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
+                              'BaconBuyer used a RRR={}'. \
+                        format(instrument,
+                               sl,
+                               tp,
+                               self.rsi_min,
+                               int(rsi_min_days),
+                               self.granularity,
+                               self.rrr)
+                else:
+                    self.market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
+                    message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+                              'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
+                              'BaconBuyer used a RRR={}'. \
+                        format(instrument,
+                               sl,
+                               tp,
+                               self.rsi_min,
+                               int(rsi_min_days),
+                               self.granularity,
+                               self.rrr)
                 notify(message, self.send_notification, *self.notify_who)
                 print(dataframe.tail(10))
                 print(message)
@@ -636,6 +662,54 @@ class OandaTrader(object):
                     "takeProfitOnFill": {
                         "timeInForce": "GTC",
                         "price": format(tp, '.' + str(nr_decimals_close) + 'f')
+                    },
+                    "timeInForce": "FOK",
+                    "type": "MARKET",
+                    "positionFill": "DEFAULT"
+                }
+            }
+        ]
+
+        # client
+
+        # create and process order requests
+        for O in orderConf:
+
+            r = orders.OrderCreate(accountID=self.accountID, data=O)
+            print("processing : {}".format(r))
+            print("===============================")
+            print(r.data)
+            try:
+                response = self.client.request(r)
+            except V20Error as e:
+                print("V20Error: {}".format(e))
+            else:
+                print("Response: {}\n{}".format(r.status_code,
+                                                json.dumps(response, indent=2)))
+
+    def tsl_market_order(self, sl, tp, close, inst, short_long, max_exp):
+
+        # short/long order
+        if short_long == 'short':
+            sign = -1
+        elif short_long == 'long':
+            sign = 1
+        else:
+            raise ValueError('unclear if long or short')
+        balance = self.account_balance()
+        volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
+
+        # set correct nr of decimals
+        nr_decimals_close = str(close)[::-1].find('.')
+
+        orderConf = [
+            {
+                "order": {
+                    "units": volume,
+                    "instrument": inst,
+                    "TrailingStopLossOnFill": {
+                        "timeInForce": "GTC",
+                        "price": format(sl, '.' + str(nr_decimals_close) + 'f')
                     },
                     "timeInForce": "FOK",
                     "type": "MARKET",
