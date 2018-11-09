@@ -455,7 +455,7 @@ class OandaTrader(object):
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
                 if self.tsl == 'On':
-                    self.tsl_market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
+                    self.tsl_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
                     message = 'Fritsie just opened a Short position on {} with TSL={} and TP={} ' \
                               'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
                               'BaconBuyer used a RRR={}'. \
@@ -508,7 +508,7 @@ class OandaTrader(object):
 
             if self.margin_closeout_percent() < self.max_margin_closeout_percent:
                 if self.tsl == 'On':
-                    self.tsl_market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
+                    self.tsl_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
                     message = 'Fritsie just opened a Long position on {} with TSL={} and TP={} ' \
                               'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
                               'BaconBuyer used a RRR={}'. \
@@ -670,8 +670,6 @@ class OandaTrader(object):
             }
         ]
 
-        # client
-
         # create and process order requests
         for O in orderConf:
 
@@ -687,42 +685,26 @@ class OandaTrader(object):
                 print("Response: {}\n{}".format(r.status_code,
                                                 json.dumps(response, indent=2)))
 
-    def tsl_market_order(self, sl, tp, close, inst, short_long, max_exp):
-
-        # short/long order
-        if short_long == 'short':
-            sign = -1
-        elif short_long == 'long':
-            sign = 1
-        else:
-            raise ValueError('unclear if long or short')
-        balance = self.account_balance()
-        volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
-
+    def tsl_order(self, sl, close):
+        """"
+        This function gives an order to add a trailing stop loss (tsl) to an open trade.
+        the tsl distance to current price should be set and a trade ID should be given
+        """
         # set correct nr of decimals
         nr_decimals_close = str(close)[::-1].find('.')
+        tsl_distance = abs(sl - close)
 
-        orderConf = [
-            {
-                "order": {
-                    "units": volume,
-                    "instrument": inst,
-                    "TrailingStopLossOnFill": {
-                        "timeInForce": "GTC",
-                        "price": format(sl, '.' + str(nr_decimals_close) + 'f')
-                    },
-                    "timeInForce": "FOK",
-                    "type": "MARKET",
-                    "positionFill": "DEFAULT"
-                }
-            }
-        ]
-
-        # client
+        orderConf = {
+                            "order": {
+                                "type": "TRAILING_STOP_LOSS",
+                                "tradeID": "1234",
+                                "timeInForce": "GTC",
+                                "distance": format(tsl_distance, '.' + str(nr_decimals_close) + 'f')
+                            }
+                        }
 
         # create and process order requests
         for O in orderConf:
-
             r = orders.OrderCreate(accountID=self.accountID, data=O)
             print("processing : {}".format(r))
             print("===============================")
