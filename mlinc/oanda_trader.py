@@ -748,7 +748,7 @@ class OandaTrader(object):
         except V20Error as e:
             print("V20Error: {}".format(e))
         else:
-            # add normal SL in case price distance is not met
+            # add normal SL and TP in case min price distance is not met
             print(r.response)
 
 
