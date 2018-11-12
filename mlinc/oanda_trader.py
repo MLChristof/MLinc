@@ -20,14 +20,10 @@ import oandapyV20.endpoints.instruments as instruments
 import oandapyV20.endpoints.pricing as pricing
 
 
-# TODO: Enable trailing SL orders. (???)
-# TODO: Sometime still precision error is give on SL/TP (RWee)
-# TODO: Add constraint on slope of HMA. Only trade if above certain threshold (???)
-# TODO: check SL and TP: messed up since sl_multiplier was added. In volume calc? (RWee)
+# TODO: add normal SL in case price distance is not met
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
-# TODO: Ideas: don't open positions right before overnight fees to minimize cost.
 
 file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
 file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
@@ -731,7 +727,7 @@ class OandaTrader(object):
                 print("Response: {}\n{}".format(r.status_code,
                                                 json.dumps(response, indent=2)))
             try:
-                tradeID = response["orderFillTransaction"]["id"]
+                tradeID = int(response["orderFillTransaction"]["id"])
             except:
                 print('No trade ID available. Trade not opened')
 
@@ -740,25 +736,21 @@ class OandaTrader(object):
         orderConf2 = {
                             "order": {
                                 "type": "TRAILING_STOP_LOSS",
-                                "tradeID": tradeID,
+                                "tradeID": str(tradeID),
                                 "timeInForce": "GTC",
                                 "distance": format(tsl_distance, '.' + str(nr_decimals_close) + 'f')
                             }
                         }
 
-        # add trailing stop loss
-        for O in orderConf2:
-            r = orders.OrderCreate(accountID=self.accountID, data=O)
-            print("processing : {}".format(r))
-            print("===============================")
-            print(r.data)
-            try:
-                response = self.client.request(r)
-            except V20Error as e:
-                print("V20Error: {}".format(e))
-            else:
-                print("Response: {}\n{}".format(r.status_code,
-                                                json.dumps(response, indent=2)))
+        r = orders.OrderCreate(accountID=self.accountID, data=orderConf2)
+        try:
+            response = self.client.request(r)
+        except V20Error as e:
+            print("V20Error: {}".format(e))
+        else:
+            # add normal SL in case price distance is not met
+            print(r.response)
+
 
     def account_balance(self):
         r = accounts.AccountDetails(accountID=self.accountID)
