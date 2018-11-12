@@ -457,25 +457,21 @@ class OandaTrader(object):
                 if self.tsl == 'On':
                     self.tsl_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
                     message = 'Fritsie just opened a Short position on {} with TSL={} and TP={} ' \
-                              'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
+                              'because: HMA just peaked on {} chart. \n' \
                               'BaconBuyer used a RRR={}'. \
                         format(instrument,
                                sl,
                                tp,
-                               self.rsi_max,
-                               int(rsi_min_days),
                                self.granularity,
                                self.rrr)
                 else:
                     self.market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
                     message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
-                              'because: RSI was > {} ({}) and HMA just peaked on {} chart. \n' \
+                              'because: HMA just peaked on {} chart. \n' \
                               'BaconBuyer used a RRR={}'. \
                         format(instrument,
                                sl,
                                tp,
-                               self.rsi_max,
-                               int(rsi_min_days),
                                self.granularity,
                                self.rrr)
                 notify(message, self.send_notification, *self.notify_who)
@@ -510,25 +506,21 @@ class OandaTrader(object):
                 if self.tsl == 'On':
                     self.tsl_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
                     message = 'Fritsie just opened a Long position on {} with TSL={} and TP={} ' \
-                              'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
+                              'because: HMA just dipped on {} chart. \n' \
                               'BaconBuyer used a RRR={}'. \
                         format(instrument,
                                sl,
                                tp,
-                               self.rsi_min,
-                               int(rsi_min_days),
                                self.granularity,
                                self.rrr)
                 else:
                     self.market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
                     message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
-                              'because: RSI was < {} ({}) and HMA just dipped on {} chart. \n' \
+                              'because: HMA just dipped on {} chart. \n' \
                               'BaconBuyer used a RRR={}'. \
                         format(instrument,
                                sl,
                                tp,
-                               self.rsi_min,
-                               int(rsi_min_days),
                                self.granularity,
                                self.rrr)
                 notify(message, self.send_notification, *self.notify_who)
@@ -686,30 +678,76 @@ class OandaTrader(object):
                                                 json.dumps(response, indent=2)))
             try:
                 tradeID = response["orderFillTransaction"]["id"]
-                print('tradeID = '+str(tradeID))
             except:
                 print('No trade ID available. Trade not opened')
 
-    def tsl_order(self, sl, close):
+    def tsl_order(self, sl, tp, close, inst, short_long, max_exp):
         """"
-        This function gives an order to add a trailing stop loss (tsl) to an open trade.
-        the tsl distance to current price should be set and a trade ID should be given
+        This function gives a market order, followed by an order
+        to add a trailing stop loss (tsl).
+        The tsl distance to current price should be set and a trade ID should be given.
         """
+        # short/long order
+        if short_long == 'short':
+            sign = -1
+        elif short_long == 'long':
+            sign = 1
+        else:
+            raise ValueError('unclear if long or short')
+        balance = self.account_balance()
+        volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
+
         # set correct nr of decimals
         nr_decimals_close = str(close)[::-1].find('.')
+
+        orderConf = [
+            {
+                "order": {
+                    "units": volume,
+                    "instrument": inst,
+                    # "takeProfitOnFill": {
+                    #     "timeInForce": "GTC",
+                    #     "price": format(tp, '.' + str(nr_decimals_close) + 'f')
+                    # },
+                    "timeInForce": "FOK",
+                    "type": "MARKET",
+                    "positionFill": "DEFAULT"
+                }
+            }
+        ]
+
+        # create and process order requests
+        # place market order
+        for O in orderConf:
+            r = orders.OrderCreate(accountID=self.accountID, data=O)
+            print("processing : {}".format(r))
+            print("===============================")
+            print(r.data)
+            try:
+                response = self.client.request(r)
+            except V20Error as e:
+                print("V20Error: {}".format(e))
+            else:
+                print("Response: {}\n{}".format(r.status_code,
+                                                json.dumps(response, indent=2)))
+            try:
+                tradeID = response["orderFillTransaction"]["id"]
+            except:
+                print('No trade ID available. Trade not opened')
+
         tsl_distance = abs(sl - close)
 
-        orderConf = {
+        orderConf2 = {
                             "order": {
                                 "type": "TRAILING_STOP_LOSS",
-                                "tradeID": "1234",
+                                "tradeID": tradeID,
                                 "timeInForce": "GTC",
                                 "distance": format(tsl_distance, '.' + str(nr_decimals_close) + 'f')
                             }
                         }
 
-        # create and process order requests
-        for O in orderConf:
+        # add trailing stop loss
+        for O in orderConf2:
             r = orders.OrderCreate(accountID=self.accountID, data=O)
             print("processing : {}".format(r))
             print("===============================")
@@ -790,62 +828,4 @@ if __name__ == '__main__':
                                    conf=r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
 
     x.auto_trade()
-
-
-
-    # config = configparser.RawConfigParser(allow_no_value=True)
-    # config.read('conf.ini')
-    # input = {}
-    # for item in config['BaconBuyer']:
-    #     input[item] = config['BaconBuyer'][item]
-    #
-    # if input['filtered_instruments'] == 'False':
-    #     instrument_list = instrument_list()
-    # elif input['filtered_instruments'] == 'True':
-    #     instrument_list = custom_list()
-    # else:
-    #     raise ValueError('filtered_intruments in conf.ini should be True or False')
-    #
-    # if input['inverse_strategy'] == 'False':
-    #     strategy = 'Baconbuyer'
-    # elif input['inverse_strategy'] == 'True':
-    #     strategy = 'Inverse_Baconbuyer'
-    # else:
-    #     strategy = ''
-
-
-    # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
-    # if input['auto_trade'] == 'On':
-    #     # Start auto-trader
-    #     message_fritsie = 'Fritsie is looking if he can open some positions'
-    #     notify(message_fritsie, *input['notify_who'])
-    #     trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
-    #                          hma_window=int(input['hma_window']),
-    #                          rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
-    #                          rsi_min=float(input['rsi_min']),
-    #                          max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
-    #                          max_exposure_percent=float(input['max_exposure_percent']),
-    #                          notify_who=input['notify_who'],
-    #                          strategy=strategy,
-    #                          sl_multiplier=float(input['sl_multiplier'])
-    #                          )
-    #     trader.auto_trade()
-    # else:
-    #     # Run notifier
-    #     message_fritsie = 'This is your daily update from Fritsie'
-    #     notify(message_fritsie, *input['notify_who'])
-    #     trader = OandaTrader(instruments=instrument_list, granularity=input['granularity'], rsi_window=int(input['rsi_window']),
-    #                          hma_window=int(input['hma_window']),
-    #                          rrr=float(input['rrr']), rsi_max=float(input['rsi_max']),
-    #                          rsi_min=float(input['rsi_min']),
-    #                          max_margin_closeout_percent=float(input['max_margin_closeout_percent']),
-    #                          max_exposure_percent=float(input['max_exposure_percent']),
-    #                          notify_who=input['notify_who']
-    #                          )
-    #     trader.analyse()
-        # trader.analyse()
-        # trader.get_open_trades()
-        # data = trader.get_closed_trades(datetime.now())
-        # print(data)
-        # trader.result_summary(datetime.now())
 
