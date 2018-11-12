@@ -3,9 +3,20 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from mlinc import oanda_trader
-from mlinc import oanda_examples
+from datetime import datetime
 
-trader = oanda_trader.OandaTrader(object)
+trader = oanda_trader.OandaTrader.from_conf_file('all',
+                                                 r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\conf.ini')
+
+trade_data = trader.get_all_trades()
+account_balance = trader.account_balance()
+
+trade_data['balance'] = 0
+
+balance = account_balance
+for idx in trade_data.index:
+    balance -= trade_data.iloc[idx+1]['realizedPL']
+    trade_data.at[idx, 'balance'] = balance
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -30,11 +41,32 @@ app.layout = html.Div(children=[
         id='example-graph',
         figure={
             'data': [
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'line', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
+                {'x': trade_data['closeTime'], 'y': trade_data['realizedPL'], 'type': 'line', 'name': 'PL'},
+                {'x': trade_data['closeTime'], 'y': trade_data['balance'], 'type': 'line', 'name': 'Balance','yaxis': 'y2'}
             ],
             'layout': {
-                'title': 'Dash Data Visualization'
+                'title': 'Account balance history',
+                'yaxis': dict(
+                    title='Realized PL',
+                    titlefont=dict(
+                        color='#1f77b4'
+                    ),
+                    tickfont=dict(
+                        color='#1f77b4'
+                    )
+                ),
+                'yaxis2': dict(
+                    title='Balance',
+                    titlefont=dict(
+                        color='#d62728'
+                    ),
+                    tickfont=dict(
+                        color='#d62728'
+                    ),
+                    anchor='x',
+                    overlaying='y',
+                    side='right'
+                ),
             }
         }
     )

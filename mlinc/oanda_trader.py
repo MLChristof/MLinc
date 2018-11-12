@@ -705,11 +705,20 @@ class OandaTrader(object):
     def get_closed_trades(self, date):
         r = trades.TradesList(accountID=self.accountID, params={'state': 'CLOSED',
                                                                 'count': 100})
-        self.api.request(r)
+        self.client.request(r)
         df = pd.DataFrame(list(r.response['trades']))
         df['closeTime'] = pd.to_datetime(df['closeTime'], errors='coerce')
         df['realizedPL'] = pd.to_numeric(df['realizedPL'], errors='coerce')
         return df.loc[df['closeTime'].dt.day == date.day]
+
+    def get_all_trades(self):
+        r = trades.TradesList(accountID=self.accountID, params={'count': 500,
+                                                                'state': 'CLOSED'})
+        self.client.request(r)
+        df = pd.DataFrame(list(r.response['trades']))
+        df['closeTime'] = pd.to_datetime(df['closeTime'], errors='coerce')
+        df['realizedPL'] = pd.to_numeric(df['realizedPL'], errors='coerce')
+        return df
 
     def result_summary(self, date):
         data = self.get_closed_trades(date)
