@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from mlinc import oanda_trader
 import configparser
+import base64
 
 
 def from_conf_file(instruments, conf):
@@ -30,6 +31,9 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+image_filename = 'Marloes.PNG'
+encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+
 account_id = ['101-004-7108173-001',
               '101-004-7108173-002',
               '101-004-7108173-003',
@@ -51,7 +55,11 @@ app.layout = html.Div(children=[
         value=account_id[0]
     ),
 
-    dcc.Graph(id='ML_dashboard')
+    dcc.Graph(id='ML_dashboard', style={'height': '90vh'}),
+
+    html.H2(children='Mede mogelijk gemaakt door:'),
+
+    html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()))
     ])
 
 
