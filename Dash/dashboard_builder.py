@@ -69,6 +69,9 @@ def update_figure(selected_account):
 
     trade_data['balance'] = 0
 
+    trade_data = trade_data.sort_values(by='closeTime', ascending=False)
+    trade_data.reset_index(drop=True)
+
     balance = account_balance
     for idx in trade_data.index:
         balance -= trade_data.iloc[idx]['realizedPL']
@@ -76,7 +79,14 @@ def update_figure(selected_account):
 
     return {
         'data': [
-            {'x': trade_data['closeTime'], 'y': trade_data['realizedPL'], 'type': 'line', 'name': 'PL'},
+            {'x': trade_data['closeTime'],
+             'y': trade_data['realizedPL'],
+             'mode': 'markers',
+             'marker': dict(
+                 color=(trade_data['realizedPL']),
+                 colorscale='Bluered'
+             ),
+             'name': 'PL'},
             {'x': trade_data['closeTime'], 'y': trade_data['balance'], 'type': 'line', 'name': 'Balance','yaxis': 'y2'}
         ],
         'layout': {
@@ -107,4 +117,4 @@ def update_figure(selected_account):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
