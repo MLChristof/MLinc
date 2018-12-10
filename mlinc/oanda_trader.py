@@ -725,7 +725,7 @@ class OandaTrader(object):
 
 
 if __name__ == '__main__':
-    x = OandaTrader.from_conf_file(instruments='all',
+    x = OandaTrader.from_conf_file(instruments=custom_list(),
                                    conf=r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
 
     x.auto_trade()
