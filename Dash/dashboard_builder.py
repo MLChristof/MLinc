@@ -66,8 +66,9 @@ app.layout = html.Div(children=[
 @app.callback(
     dash.dependencies.Output('ML_dashboard', 'figure'),
     [dash.dependencies.Input('dropdown', 'value')])
+
 def update_figure(selected_account):
-    conf_input = from_conf_file('all', r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\conf.ini')
+    conf_input = from_conf_file('all', r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
     conf_input['accountid'] = selected_account
 
     trader = oanda_trader.OandaTrader('all', **conf_input)
