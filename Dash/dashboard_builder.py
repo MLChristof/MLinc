@@ -40,7 +40,9 @@ account_id = ['101-004-7108173-001',
               '101-004-7108173-004',
               '101-004-7108173-005',
               '101-004-7108173-006',
-              '101-004-7108173-007']
+              '101-004-7108173-007',
+              '101-004-7108173-008',
+              '101-004-7108173-009',]
 
 app.layout = html.Div(children=[
     html.H1(children='MLinc Thunder Dashboard'),
@@ -95,7 +97,12 @@ def update_figure(selected_account):
                  colorscale='Bluered'
              ),
              'name': 'PL'},
-            {'x': trade_data['closeTime'], 'y': trade_data['balance'], 'type': 'line', 'name': 'Balance','yaxis': 'y2'}
+
+            {'x': trade_data['closeTime'],
+             'y': trade_data['balance'],
+             'type': 'line',
+             'name': 'Balance',
+             'yaxis': 'y2'}
         ],
         'layout': {
             'title': 'Account balance history',
