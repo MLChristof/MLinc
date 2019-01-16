@@ -1,5 +1,5 @@
 import sys
-sys.path.append(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc')
+sys.path.append(r'/home/pi/Documents/ML_conf/conf.ini')
 
 from mlinc.oanda.trader import OandaTrader
 from mlinc.oanda.instruments_list import instrument_list
