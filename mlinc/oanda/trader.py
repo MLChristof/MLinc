@@ -827,6 +827,10 @@ class OandaTrader(object):
 
         notify(message, 'True', *self.notify_who)
 
+    def run_with_conf_path(self, path):
+        trader = OandaTrader.from_conf_file(['EUR_USD'], path)
+        trader.auto_trade()
+
 
 if __name__ == '__main__':
     # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
