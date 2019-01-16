@@ -1,8 +1,8 @@
 import sys
 sys.path.append(r'/home/pi/Documents/ML_conf/conf.ini')
 
-from mlinc.oanda.trader import OandaTrader
-from mlinc.oanda.instruments_list import instrument_list
+from oanda.trader import OandaTrader
+from oanda.instruments_list import instrument_list
 from datetime import datetime
 import configparser
 

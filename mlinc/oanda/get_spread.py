@@ -1,6 +1,6 @@
 # from mlinc.oanda_examples.exampleauth import exampleAuth
 import oandapyV20
-from mlinc.oanda.candle_data import candles
+from oanda.candle_data import candles
 
 # Example script for retrieving spread on given instrument
 

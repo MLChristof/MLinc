@@ -5,8 +5,13 @@ import os
 import json
 import configparser
 
-from mlinc.notifier import notification
-from mlinc.oanda.instruments_list import instrument_list, custom_list
+# on pc:
+# from mlinc.notifier import notification
+# from mlinc.oanda.instruments_list import instrument_list, custom_list
+
+# for pi
+from notifier import notification
+from oanda.instruments_list import instrument_list, custom_list
 
 import oandapyV20
 import oandapyV20.endpoints.orders as orders
