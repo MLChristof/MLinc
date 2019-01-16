@@ -5,11 +5,9 @@ import os
 import json
 import configparser
 
-# on pc:
-# from mlinc.notifier import notification
-# from mlinc.oanda.instruments_list import instrument_list, custom_list
+import sys
+sys.path.append("/home/pi/MLinc/dev_fritsie/MLinc/mlinc")
 
-# for pi
 from notifier import notification
 from oanda.instruments_list import instrument_list, custom_list
 
