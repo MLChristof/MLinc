@@ -25,12 +25,11 @@ import oandapyV20.endpoints.pricing as pricing
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
-file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
-file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
-file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
-file_bastijn = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_bastijn.txt'
-
+file_jelle = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_jelle.txt'
+file_robert = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_robert.txt'
+file_christof = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_christof.txt'
+file_vincent = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_vincent.txt'
+file_bastijn = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_bastijn.txt'
 
 def hma(values, window):
     period = int(n.sqrt(window))
@@ -831,10 +830,10 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, True)
 
-    # trader = OandaTrader.from_conf_file(['EUR_USD'],
-    #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
-    trader = OandaTrader.from_conf_file(custom_list(),
-                                        r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
+    trader = OandaTrader.from_conf_file(['EUR_USD'],
+                                        r'/home/pi/Documents/ML_conf/conf.ini')
+    # trader = OandaTrader.from_conf_file(custom_list(),
+    #                                     r'/home/pi/Documents/ML_conf/conf.ini')
 
     trader.auto_trade()
 
