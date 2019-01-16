@@ -1,10 +1,10 @@
 import requests
 
-file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
-file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
-file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
-
+file_jelle = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_jelle.txt'
+file_robert = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_robert.txt'
+file_christof = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_christof.txt'
+file_vincent = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_vincent.txt'
+file_bastijn = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_bastijn.txt'
 
 # notify
 def notification(fileID, message):
@@ -20,6 +20,7 @@ def notification(fileID, message):
 if __name__ == '__main__':
     message = 'Twee Belgen lopen over een treinrails. Zegt die ene: “Wat een lange trap hè?” Zegt die andere :”Dat valt nog wel mee, maar de leuning zit zo laag”.'
     notification(fileID=file_robert, message=message)
-    # notification(fileID=file_jelle, message=message)
+    notification(fileID=file_jelle, message=message)
     notification(fileID=file_christof, message=message)
     notification(fileID=file_vincent, message=message)
+    notification(fileID=file_bastijn, message=message)
