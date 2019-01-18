@@ -2,7 +2,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from mlinc.oanda import trader
+from mlinc.oanda.trader import OandaTrader
 import configparser
 import base64
 
@@ -70,23 +70,30 @@ app.layout = html.Div(children=[
     [dash.dependencies.Input('dropdown', 'value')])
 
 def update_figure(selected_account):
+    # conf_input = from_conf_file('all', r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\conf.ini')
     conf_input = from_conf_file('all', r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
     conf_input['accountid'] = selected_account
 
-    trader1 = trader.OandaTrader('all', **conf_input)
+    trader = OandaTrader('all', **conf_input)
 
-    trade_data = trader1.get_all_trades()
-    account_balance = trader1.account_balance()
+    trade_data = trader.get_all_trades()
+    account_balance = trader.account_balance()
 
     trade_data['balance'] = 0
 
     trade_data = trade_data.sort_values(by='closeTime', ascending=False)
-    trade_data.reset_index(drop=True)
+    # trade_data.reset_index(drop=True)
 
     balance = account_balance
-    for idx in trade_data.index:
-        balance -= trade_data.iloc[idx]['realizedPL']
-        trade_data.at[idx, 'balance'] = balance
+    # for idx in trade_data.index:
+    #     balance -= trade_data.iloc[idx]['realizedPL']
+    #     trade_data.at[idx, 'balance'] = balance
+
+    trade_data.balance.iloc[0] = balance
+    for idx, val in enumerate(trade_data.index):
+        if idx+1 in trade_data.index:
+            balance -= trade_data.iloc[idx]['realizedPL']
+            trade_data.balance.iloc[idx+1] = balance
 
     return {
         'data': [
