@@ -73,10 +73,10 @@ def update_figure(selected_account):
     conf_input = from_conf_file('all', r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
     conf_input['accountid'] = selected_account
 
-    trader = oanda_trader.OandaTrader('all', **conf_input)
+    trader1 = trader.OandaTrader('all', **conf_input)
 
-    trade_data = trader.get_all_trades()
-    account_balance = trader.account_balance()
+    trade_data = trader1.get_all_trades()
+    account_balance = trader1.account_balance()
 
     trade_data['balance'] = 0
 
