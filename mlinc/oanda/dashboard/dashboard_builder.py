@@ -2,7 +2,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from mlinc.oanda import oanda_trader
+from mlinc.oanda import trader
 import configparser
 import base64
 
