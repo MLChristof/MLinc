@@ -46,19 +46,22 @@ class Trader(object):
         # self.cerebro.addsizer(bt.sizers.FixedSize, stake=0.5)
         # self.cerebro.broker.setcommission(commission=0.02)
 
-    def import_quandl_data(self, name, stock, open=None, high=None, low=None, close=None, volume=None ):
+    def import_quandl_data(self, name, stock, datetime=None, time=None, open=None, high=None, low=None, close=None, volume=None):
         # stock = QuandlGet(quandl_key=stock,
         #                   api_key=self.api_key,
         #                   start_date=self.start_date,
         #                   end_date=self.end_date)
         # stock.save_to_csv(os.getcwd() + '\data\{}.csv'.format(name))
         feed = bt.feeds.GenericCSVData(dataname=os.getcwd() + '\data\{}.csv'.format(name),
+                                       datetime=datetime,
+                                       time=time,
                                        open=open,
                                        close=close,
                                        high=high,
                                        low=low,
                                        volume=volume,
                                        dtformat='%Y-%m-%d',
+                                       tmformat='%H:%M',
                                        start_date=self.start_date,
                                        end_date=self.end_date)
         self.cerebro.adddata(feed, name=name)
@@ -92,10 +95,10 @@ if __name__ == '__main__':
                  api_key=api_key,
                  start_cash=10000)
     # HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=100)
-    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=10)
+    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=2)
 
-    HMA.cerebro.broker.setcommission(commission=0.01, mult=300)
-    HMA.import_quandl_data(name='BRENT', stock=None, open=1, high=2, low=3, close=4, volume=5)
+    HMA.cerebro.broker.setcommission(commission=0.01, mult=50)
+    HMA.import_quandl_data(name='USOILH1_mod', stock=None, datetime=0, time=1, open=2, high=3, low=4, close=5, volume=6)
     HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,
