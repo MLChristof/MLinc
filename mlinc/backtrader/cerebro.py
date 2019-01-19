@@ -61,7 +61,7 @@ class Trader(object):
                                        low=low,
                                        volume=volume,
                                        dtformat='%Y-%m-%d',
-                                       tmformat='%H:%M',
+                                       tmformat='%H:%M:%S',
                                        start_date=self.start_date,
                                        end_date=self.end_date)
         self.cerebro.adddata(feed, name=name)
@@ -93,12 +93,13 @@ if __name__ == '__main__':
                  end_date=None,
                  stock=None,
                  api_key=api_key,
-                 start_cash=10000)
+                 start_cash=100000)
     # HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=100)
-    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=2)
+    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=0.5)
 
-    HMA.cerebro.broker.setcommission(commission=0.01, mult=50)
-    HMA.import_quandl_data(name='USOILH1_mod', stock=None, datetime=0, time=1, open=2, high=3, low=4, close=5, volume=6)
+    HMA.cerebro.broker.setcommission(commission=0.001, mult=50)
+    HMA.import_quandl_data(name='EUR_USD_M15_OANDA_modslice', stock=None, datetime=0, time=1, open=2, high=3, low=4, close=5,
+                           volume=6)
     HMA.plot()
 
     # LagIndicator = Trader(MlLagIndicatorStrategy,

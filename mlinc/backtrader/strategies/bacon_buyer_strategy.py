@@ -14,16 +14,16 @@ class BaconBuyerStrategy(bt.Strategy):
     # TODO Add smart staking/sizing
     # TODO Check Commission settings
     params = (
-        ('maperiod', 10),
+        ('maperiod', 48),
         ('RRR', 5),
-        ('minSL', 2),  # in pips
-        ('stakepercent', 5)
+        ('minSL', 0),  # in pips
+        ('stakepercent', 0.5)
     )
 
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
-        # print('%s, %s' % (dt.isoformat(), txt))
+        print('%s, %s' % (dt.isoformat(), txt))
         # print('%s' % (dt.isoformat()))
 
     def __init__(self):
@@ -93,6 +93,7 @@ class BaconBuyerStrategy(bt.Strategy):
                             self.indicator.lines.hma[0]))
 
         hma_diff = n.diff(hma_data)
+        print(hma_diff)
 
         # Open Long Position on local minimum HMA
         # (if slope on last day of HMA is pos and 5 days before neg)
@@ -114,6 +115,9 @@ class BaconBuyerStrategy(bt.Strategy):
             TP_long = (1/self.params.RRR)*(EntryLong-SL_long)+EntryLong
             #Stake Size
             stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(EntryLong-SL_long)
+            print('EntryLong = '+str(EntryLong.tick_close))
+            print('SL_long = '+str(SL_long))
+            print('TP_long = '+str(TP_long))
             # place order
             self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, size=stake_size)
 
@@ -137,9 +141,12 @@ class BaconBuyerStrategy(bt.Strategy):
             TP_short = (-1/self.params.RRR)*(SL_short - EntryShort) + EntryShort
             #Stake Size
             stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(SL_short-EntryShort)
-            print(SL_short-EntryShort)
-            print(self.broker.getvalue())
-            print(stake_size)
+            # print(SL_short-EntryShort)
+            # print(self.broker.getvalue())
+            # print(stake_size)
+            print('EntryShort = '+str(EntryShort.tick_close))
+            print('SL_Short = '+str(SL_short))
+            print('TP_Short = '+str(TP_short))
             # place order
             self.order = self.sell_bracket(price=EntryShort,stopprice=SL_short,limitprice=TP_short, size=stake_size)
 
