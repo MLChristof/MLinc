@@ -832,13 +832,13 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, True)
 
-    trader = OandaTrader.from_conf_file(['EUR_USD'],
+    trader = OandaTrader.from_conf_file(['BCO_USD'],
                                         r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
     # trader = OandaTrader.from_conf_file(custom_list(),
     #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
 
     # save data to csv
-    trader.save_data_to_csv('EUR_USD')
+    trader.save_data_to_csv('BCO_USD')
 
     # auto trade
     # trader.auto_trade()
