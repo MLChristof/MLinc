@@ -362,7 +362,8 @@ class OandaTrader(object):
         dataframe.to_csv(os.getcwd() + '\\oanda_data\\' + self.data(instrument)['instrument'],
                          sep=',',
                          columns=['time', 'open', 'high', 'low', 'close', 'volume'],
-                         index=False)
+                         index=False,
+                         )
 
     def baconbuyer(self, instrument):
         dataframe = self.data_as_dataframe(instrument)
@@ -831,11 +832,15 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, True)
 
-    # trader = OandaTrader.from_conf_file(['EUR_USD'],
-    #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
-    trader = OandaTrader.from_conf_file(custom_list(),
+    trader = OandaTrader.from_conf_file(['BCO_USD'],
                                         r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
+    # trader = OandaTrader.from_conf_file(custom_list(),
+    #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
 
-    trader.auto_trade()
+    # save data to csv
+    trader.save_data_to_csv('BCO_USD')
+
+    # auto trade
+    # trader.auto_trade()
 
 
