@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as n
 import pandas as pd
 import re
@@ -364,7 +366,8 @@ class OandaTrader(object):
         dataframe.to_csv(os.getcwd() + '\\oanda_data\\' + self.data(instrument)['instrument'],
                          sep=',',
                          columns=['time', 'open', 'high', 'low', 'close', 'volume'],
-                         index=False)
+                         index=False,
+                         )
 
     def baconbuyer(self, instrument):
         dataframe = self.data_as_dataframe(instrument)
@@ -429,6 +432,9 @@ class OandaTrader(object):
 
         rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
+
+        print(datetime.datetime.now())
+        print(dataframe.tail(10))
 
         # conditions to go short
         if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
@@ -842,6 +848,10 @@ if __name__ == '__main__':
     # trader = OandaTrader.from_conf_file(custom_list(),
     #                                     r'/home/pi/Documents/ML_conf/conf.ini')
 
+    # save data to csv
+    # trader.save_data_to_csv('BCO_USD')
+
+    # auto trade
     trader.auto_trade()
 
 
