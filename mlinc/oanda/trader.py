@@ -838,9 +838,9 @@ if __name__ == '__main__':
     #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
 
     # save data to csv
-    trader.save_data_to_csv('BCO_USD')
+    # trader.save_data_to_csv('BCO_USD')
 
     # auto trade
-    # trader.auto_trade()
+    trader.auto_trade()
 
 
