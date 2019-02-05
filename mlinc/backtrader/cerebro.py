@@ -95,10 +95,10 @@ if __name__ == '__main__':
                  api_key=api_key,
                  start_cash=10000)
     # HMA.cerebro.addsizer(bt.sizers.FixedSize, stake=100)
-    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=2)
+    HMA.cerebro.addsizer(bt.sizers.PercentSizer, percents=0.5)
 
     HMA.cerebro.broker.setcommission(commission=0.001, mult=50)
-    HMA.import_quandl_data(name='BCO_USD_1H_OANDA_mod', stock=None, datetime=0, time=1, open=2, high=3, low=4, close=5,
+    HMA.import_quandl_data(name='EUR_USD_M15_OANDA_mod', stock=None, datetime=0, time=1, open=2, high=3, low=4, close=5,
                            volume=6)
     HMA.plot()
 
