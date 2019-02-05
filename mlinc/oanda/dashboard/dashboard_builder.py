@@ -70,8 +70,7 @@ app.layout = html.Div(children=[
     [dash.dependencies.Input('dropdown', 'value')])
 
 def update_figure(selected_account):
-    # conf_input = from_conf_file('all', r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\conf.ini')
-    conf_input = from_conf_file('all', r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\conf.ini')
+    conf_input = from_conf_file('all', r'C:\Data\Documents\Christof\Python\Trading\MLinc\mlinc\conf.ini')
     conf_input['accountid'] = selected_account
 
     trader = OandaTrader('all', **conf_input)
@@ -82,13 +81,8 @@ def update_figure(selected_account):
     trade_data['balance'] = 0
 
     trade_data = trade_data.sort_values(by='closeTime', ascending=False)
-    # trade_data.reset_index(drop=True)
 
     balance = account_balance
-    # for idx in trade_data.index:
-    #     balance -= trade_data.iloc[idx]['realizedPL']
-    #     trade_data.at[idx, 'balance'] = balance
-
     trade_data.balance.iloc[0] = balance
     for idx, val in enumerate(trade_data.index):
         if idx+1 in trade_data.index:
