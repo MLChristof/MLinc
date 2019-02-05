@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as n
 import pandas as pd
 import re
@@ -428,6 +430,9 @@ class OandaTrader(object):
 
         rsi_min_days, rsi_max_days = (dataframe.tail(10)['rsi'].min(), dataframe.tail(10)['rsi'].max())
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
+
+        print(datetime.datetime.now())
+        print(dataframe.tail(10))
 
         # conditions to go short
         if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
