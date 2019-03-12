@@ -843,7 +843,7 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, True)
 
-    trader = OandaTrader.from_conf_file(['EUR_USD'],
+    trader = OandaTrader.from_conf_file(['BCO_USD'],
                                         r'/home/pi/Documents/ML_conf/conf.ini')
     # trader = OandaTrader.from_conf_file(custom_list(),
     #                                     r'/home/pi/Documents/ML_conf/conf.ini')
