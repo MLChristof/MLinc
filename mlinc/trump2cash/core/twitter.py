@@ -14,15 +14,18 @@ from tweepy.streaming import StreamListener
 
 from mlinc.trump2cash.core.logs import Logs
 
+with open('twitter_keys_tokens.txt', 'r') as f:
+    keys = f.readlines()
+
 # The keys for the Twitter account we're using for API requests and tweeting
 # alerts (@Trump2Cash). Read from environment variables.
-TWITTER_ACCESS_TOKEN = "880771150804119555-arEJaJ7Iq0gs92wPvR0FFl7WECLV2Gk"
-TWITTER_ACCESS_TOKEN_SECRET = "kK8ATR0SLoUKwn9Du7QDZdhz2dP7GLrxNIDwKc9q7f27P"
+TWITTER_ACCESS_TOKEN = keys[2][:-1]
+TWITTER_ACCESS_TOKEN_SECRET = keys[3]
 
 # The keys for the Twitter app we're using for API requests
 # (https://apps.twitter.com/app/13239588). Read from environment variables.
-TWITTER_CONSUMER_KEY = "vO5ABZ5pKyVIdsZWb0kKRY7y6"
-TWITTER_CONSUMER_SECRET = "xF4sH5OeN4jFBasUtzttl4OGtp7gKjAyFe2VTLrFzDyTRM1TOC"
+TWITTER_CONSUMER_KEY = keys[0][:-1]
+TWITTER_CONSUMER_SECRET = keys[1][:-1]
 
 # The user ID of @realDonaldTrump.
 TRUMP_USER_ID = "25073877"
