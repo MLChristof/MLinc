@@ -1,4 +1,4 @@
-from twitter import Twitter
+from mlinc.trump2cash.core.twitter import Twitter
 from textblob import TextBlob
 from mlinc.notifier import notification, file_robert, file_christof, file_jelle, file_vincent
 
