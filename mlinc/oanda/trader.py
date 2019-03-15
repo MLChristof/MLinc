@@ -230,9 +230,9 @@ class OandaTrader(object):
             if strategy in ['Baconbuyer', 'Inverse_Baconbuyer']:
                 pass
             else:
-                raise ValueError(f'Strategy not possible...')
+                raise ValueError('Strategy not possible...')
         except AssertionError:
-            raise ValueError(f'Please provide a strategy in: {conf}')
+            raise ValueError('Please provide a strategy in: conf.ini')
 
         return cls(instruments, **input)
 
