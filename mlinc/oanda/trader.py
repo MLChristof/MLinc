@@ -8,7 +8,7 @@ import json
 import configparser
 
 import sys
-sys.path.append("/home/pi/MLinc/dev_fritsie/MLinc/mlinc")
+sys.path.append("/home/pi/MLinc/MLinc/mlinc")
 
 from notifier import notification
 from oanda.instruments_list import instrument_list, custom_list
