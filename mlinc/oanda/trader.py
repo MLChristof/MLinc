@@ -31,11 +31,11 @@ import warnings
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
-file_jelle = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_jelle.txt'
-file_robert = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_robert.txt'
-file_christof = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_christof.txt'
-file_vincent = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_vincent.txt'
-file_bastijn = '/home/pi/MLinc/MLinc/mlinc/ifttt_info_bastijn.txt'
+file_jelle = '/home/pi/Documents/ML_conf/ifttt_info_jelle.txt'
+file_robert = '/home/pi/Documents/ML_conf/ifttt_info_robert.txt'
+file_christof = '/home/pi/Documents/ML_conf/ifttt_info_christof.txt'
+file_vincent = '/home/pi/Documents/ML_conf/ifttt_info_vincent.txt'
+file_bastijn = '/home/pi/Documents/ML_conf/ifttt_info_bastijn.txt'
 
 def hma(values, window):
     period = int(n.sqrt(window))
