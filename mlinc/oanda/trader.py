@@ -23,6 +23,7 @@ import oandapyV20.endpoints.forexlabs as labs
 import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.instruments as instruments
 import oandapyV20.endpoints.pricing as pricing
+import warnings
 
 
 # TODO: add normal SL in case price distance is not met
@@ -209,11 +210,14 @@ class OandaTrader(object):
             if kwargs.get('max_margin_closeout_percent') else 50
         self.max_exposure_percent = float(kwargs.get('max_exposure_percent')) if \
             kwargs.get('max_exposure_percent') else 0.6
+        self.allow_simultaneous_trades = kwargs.get('allow_simultaneous_trades') \
+            if kwargs.get('allow_simultaneous_trades') else 'True'
         self.rrr = float(kwargs.get('rrr')) if kwargs.get('rrr') else 3
         self.sl_multiplier = float(kwargs.get('sl_multiplier')) if kwargs.get('sl_multiplier') else 1
         self.tsl = kwargs.get('tsl') if kwargs.get('tsl') else 'Off'
         open_trades = self.get_open_trades()
-        self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=self.instruments)
+        if self.allow_simultaneous_trades == 'False':
+            self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=self.instruments)
 
     @classmethod
     def from_conf_file(cls, instruments, conf):
@@ -435,6 +439,7 @@ class OandaTrader(object):
 
         print(datetime.datetime.now())
         print(dataframe.tail(10))
+        print(hma_diff[-7:-1])
 
         # conditions to go short
         if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
@@ -798,6 +803,7 @@ class OandaTrader(object):
             except:
                 pass
             else:
+                warnings.warn('One or more instruments deleted from instrument list due to open positions')
                 del instrument_list[idx]
         return instrument_list
 
