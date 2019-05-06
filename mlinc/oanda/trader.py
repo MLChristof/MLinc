@@ -216,6 +216,7 @@ class OandaTrader(object):
         open_trades = self.get_open_trades()
         if self.allow_simultaneous_trades == 'False':
             self.instruments = self.neglect_open_trades(open_trades_list=open_trades, instrument_list=self.instruments)
+        self.min_hma_slope = float(kwargs.get('min_hma_slope')) if kwargs.get('min_hma_slope') else 0
 
     @classmethod
     def from_conf_file(cls, instruments, conf):
@@ -440,7 +441,7 @@ class OandaTrader(object):
         print(hma_diff[-7:-1])
 
         # conditions to go short
-        if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < 0:
+        if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < -self.min_hma_slope:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread(instrument)
             half_spread = 0.5*spread
@@ -489,7 +490,7 @@ class OandaTrader(object):
                 notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
 
         # conditions to go long
-        elif all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > 0:
+        elif all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > self.min_hma_slope:
             # set half spread (prices are all 'mid', avg of bid and ask)
             spread = self.get_spread(instrument)
             half_spread = 0.5*spread
@@ -841,7 +842,7 @@ if __name__ == '__main__':
     # Start auto-trader
 
     message_fritsie = 'Fritsie is looking if he can open some positions'
-    notify(message_fritsie, True)
+    notify(message_fritsie, False)
 
     trader = OandaTrader.from_conf_file(['BCO_USD'],
                                         r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
@@ -849,9 +850,9 @@ if __name__ == '__main__':
     #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
 
     # save data to csv
-    # trader.save_data_to_csv('BCO_USD')
+    trader.save_data_to_csv('BCO_USD')
 
     # auto trade
-    trader.auto_trade()
+    # trader.auto_trade()
 
 

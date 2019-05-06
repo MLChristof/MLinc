@@ -14,9 +14,9 @@ class BaconBuyerStrategy(bt.Strategy):
     # TODO Add smart staking/sizing
     # TODO Check Commission settings
     params = (
-        ('maperiod', 48),
+        ('maperiod', 14),
         ('RRR', 5),
-        ('minSL', 0),  # in pips
+        ('minSL', 0.05),  # in pips
         ('stakepercent', 0.5)
     )
 
