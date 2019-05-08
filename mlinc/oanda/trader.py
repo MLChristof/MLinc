@@ -439,7 +439,7 @@ class OandaTrader(object):
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
         print(datetime.datetime.now())
-        print(dataframe.tail(10))
+        print(dataframe.tail(3))
         print(hma_diff[-7:-1])
 
         # conditions to go short
