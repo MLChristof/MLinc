@@ -440,6 +440,14 @@ class OandaTrader(object):
         print(dataframe.tail(10))
         print(hma_diff[-7:-1])
 
+        # log if hma_diff between 0 and threshold
+        if all(item > 0 for item in hma_diff[-7:-2]) and 0 > hma_diff[-2] > -self.min_hma_slope:
+            print(f"short position not opened because threshold value of  {self.min_hma_slope} not met")
+            print(f"hma_diff = {round(hma_diff[-2], 5)}")
+        if all(item < 0 for item in hma_diff[-7:-2]) and 0 < hma_diff[-2] < self.min_hma_slope:
+            print(f"long position not opened because threshold value of {self.min_hma_slope} not met")
+            print(f"hma_diff = {round(hma_diff[-2], 5)}")
+
         # conditions to go short
         if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < -self.min_hma_slope:
             # set half spread (prices are all 'mid', avg of bid and ask)
@@ -850,9 +858,9 @@ if __name__ == '__main__':
     #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
 
     # save data to csv
-    trader.save_data_to_csv('BCO_USD')
+    # trader.save_data_to_csv('BCO_USD')
 
     # auto trade
-    # trader.auto_trade()
+    trader.auto_trade()
 
 
