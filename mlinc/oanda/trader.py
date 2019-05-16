@@ -442,7 +442,7 @@ class OandaTrader(object):
 
         # log if hma_diff between 0 and threshold
         if all(item > 0 for item in hma_diff[-7:-2]) and 0 > hma_diff[-2] > -self.min_hma_slope:
-            print(f"short position not opened because threshold value of  {self.min_hma_slope} not met")
+            print(f"short position not opened because threshold value of  {-self.min_hma_slope} not met")
             print(f"hma_diff = {round(hma_diff[-2], 5)}")
         if all(item < 0 for item in hma_diff[-7:-2]) and 0 < hma_diff[-2] < self.min_hma_slope:
             print(f"long position not opened because threshold value of {self.min_hma_slope} not met")
