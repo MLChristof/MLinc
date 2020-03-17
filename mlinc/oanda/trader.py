@@ -8,7 +8,7 @@ import json
 import configparser
 
 from mlinc.notifier import notification
-from mlinc.oanda.instruments_list import instrument_list, custom_list
+from mlinc.oanda.instruments_list import instrument_list
 
 import oandapyV20
 import oandapyV20.endpoints.orders as orders
@@ -772,6 +772,15 @@ class OandaTrader(object):
             # add normal SL and TP in case min price distance is not met
             print(r.response)
 
+    def close_position(self, instrument):
+        """"
+        This function closes all units in a position on a given instrument.
+        """
+
+        r = positions.PositionClose(accountID=self.accountID, instrument=instrument)
+        self.client.request(r)
+        return r.response
+
     def account_balance(self):
         r = accounts.AccountDetails(accountID=self.accountID)
         rv = self.client.request(r)
@@ -798,6 +807,16 @@ class OandaTrader(object):
         r = trades.OpenTrades(accountID=self.accountID)
         self.client.request(r)
         return r.response
+
+    def close_open_positions(self):
+        """closes all open positions on account"""
+        response_dict = {}
+        open_trades = self.get_open_trades()
+        for trade in open_trades['trades']:
+            r = trades.TradeClose(accountID=self.accountID, tradeID=trade['id'])
+            self.client.request(r)
+            response_dict[trade['id']] = r.response
+        return response_dict
 
     @staticmethod
     def neglect_open_trades(open_trades_list, instrument_list):
