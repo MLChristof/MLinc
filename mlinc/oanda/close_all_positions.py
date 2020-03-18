@@ -1,4 +1,4 @@
-from mlinc.oanda.trader import OandaTrader
+from oanda.trader import OandaTrader
 import configparser
 
 def from_conf_file(instruments, conf):
@@ -12,7 +12,7 @@ def from_conf_file(instruments, conf):
 
 if __name__ == '__main__':
 
-    conf_input = from_conf_file('all', r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
+    conf_input = from_conf_file('all', r'/home/pi/Documents/ML_conf/conf.ini')
 
     trader = OandaTrader('all', **conf_input)
 
