@@ -34,15 +34,9 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 image_filename = 'Marloes.PNG'
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
-account_id = ['101-004-7108173-001',
-              '101-004-7108173-002',
-              '101-004-7108173-003',
-              '101-004-7108173-004',
-              '101-004-7108173-005',
-              '101-004-7108173-006',
-              '101-004-7108173-007',
-              '101-004-7108173-008',
-              '101-004-7108173-009',]
+account_id = ['101-004-7108173-010',
+              '101-004-7108173-011',
+              ]
 
 app.layout = html.Div(children=[
     html.H1(children='MLinc Thunder Dashboard'),
