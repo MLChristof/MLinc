@@ -437,7 +437,7 @@ class OandaTrader(object):
         hma_diff = dataframe['hma'].diff().reset_index()['hma'].tolist()
 
         print(datetime.datetime.now())
-        print(dataframe.tail(10))
+        print(dataframe.tail(3))
         print(hma_diff[-7:-1])
 
         # log if hma_diff between 0 and threshold
@@ -492,7 +492,7 @@ class OandaTrader(object):
                                self.granularity,
                                self.rrr)
                 notify(message, self.send_notification, *self.notify_who)
-                print(dataframe.tail(10))
+                print(dataframe.tail(3))
                 print(message)
             else:
                 notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
