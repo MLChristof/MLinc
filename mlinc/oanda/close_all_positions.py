@@ -1,4 +1,4 @@
-from oanda.trader import OandaTrader
+from trader import OandaTrader
 import configparser
 
 def from_conf_file(instruments, conf):
