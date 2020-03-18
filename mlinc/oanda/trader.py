@@ -816,6 +816,7 @@ class OandaTrader(object):
             r = trades.TradeClose(accountID=self.accountID, tradeID=trade['id'])
             self.client.request(r)
             response_dict[trade['id']] = r.response
+        print(response_dict)
         return response_dict
 
     @staticmethod
