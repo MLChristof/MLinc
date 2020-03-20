@@ -10,7 +10,7 @@
 #
 #     schedule.every(60).minutes.do(oanda_to_csv(df.to_csv))
 #
-# 
+#
 #  def main():
 #      para = {'inst': 'EUR_USD',
 #              'granularity': 'H1',

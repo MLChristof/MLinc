@@ -816,7 +816,11 @@ class OandaTrader(object):
             r = trades.TradeClose(accountID=self.accountID, tradeID=trade['id'])
             self.client.request(r)
             response_dict[trade['id']] = r.response
-        print(response_dict)
+        print(datetime.datetime.now())
+        if response_dict == {}:
+            print('No open positions found, no trades closed.')
+        else:
+            print(response_dict)
         return response_dict
 
     @staticmethod
@@ -836,7 +840,7 @@ class OandaTrader(object):
 
     def get_closed_trades(self, date):
         r = trades.TradesList(accountID=self.accountID, params={'state': 'CLOSED',
-                                                                'count': 100})
+                                                                'count': 500})
         self.client.request(r)
         df = pd.DataFrame(list(r.response['trades']))
         df['closeTime'] = pd.to_datetime(df['closeTime'], errors='coerce')
