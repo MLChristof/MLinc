@@ -17,7 +17,7 @@ class BaconBuyerStrategy(bt.Strategy):
         ('maperiod', 14),
         ('RRR', 5),
         ('minSL', 0),  # in pips
-        ('stakepercent', 1)
+        ('stakepercent', 10)
     )
 
     def log(self, txt, dt=None):
@@ -93,11 +93,11 @@ class BaconBuyerStrategy(bt.Strategy):
                             self.indicator.lines.hma[0]))
 
         hma_diff = n.diff(hma_data)
-        print(hma_diff)
 
         # Open Long Position on local minimum HMA
         # (if slope on last day of HMA is pos and 5 days before neg)
-        if hma_diff[5] > 0 \
+        if not self.position \
+            and hma_diff[5] > 0 \
             and hma_diff[4] < 0 \
             and hma_diff[3] < 0 \
             and hma_diff[2] < 0 \
@@ -115,15 +115,21 @@ class BaconBuyerStrategy(bt.Strategy):
             TP_long = (1/self.params.RRR)*(EntryLong-SL_long)+EntryLong
             #Stake Size
             stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(EntryLong-SL_long)
+            dt = self.datas[0].datetime.date(0)
+            tm = self.datas[0].datetime.time(0)
+            print(str('%s' % (dt.isoformat()))+str(' ')+str(tm))
+            print(hma_diff)
             print('EntryLong = '+str(EntryLong.tick_close))
             print('SL_long = '+str(SL_long))
             print('TP_long = '+str(TP_long))
             # place order
             self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, size=stake_size)
 
+
         # Open Short Position on local maximum HMA
         # (if slope on last day of HMA is neg and 5 days before pos)
-        if hma_diff[5] < 0 \
+        if not self.position \
+            and hma_diff[5] < 0 \
             and hma_diff[4] > 0 \
             and hma_diff[3] > 0 \
             and hma_diff[2] > 0 \
@@ -144,6 +150,10 @@ class BaconBuyerStrategy(bt.Strategy):
             # print(SL_short-EntryShort)
             # print(self.broker.getvalue())
             # print(stake_size)
+            dt = self.datas[0].datetime.date(0)
+            tm = self.datas[0].datetime.time(0)
+            print(str('%s' % (dt.isoformat())) + str(' ') + str(tm))
+            print(hma_diff)
             print('EntryShort = '+str(EntryShort.tick_close))
             print('SL_Short = '+str(SL_short))
             print('TP_Short = '+str(TP_short))

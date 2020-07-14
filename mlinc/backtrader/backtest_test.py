@@ -144,8 +144,8 @@ if __name__ == '__main__':
     data = oandastore.getdata(dataname='XCU_USD',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2020, 6, 15),
-                              todate=datetime.datetime(2020, 7, 1),
+                              fromdate=datetime.datetime(2020, 6, 12),
+                              todate=datetime.datetime(2020, 6, 30),
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
                               backfill_start=False,
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     # cerebro.resampledata(data, timeframe=bt.TimeFrame.Minutes, compression=15)
 
     # Set our desired cash start
-    cerebro.broker.setcash(30000.0)
+    cerebro.broker.setcash(8928)
 
     # Add sizer
     cerebro.addsizer(maxRiskSizer)
@@ -178,4 +178,4 @@ if __name__ == '__main__':
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
     # Plot the result
-    cerebro.plot()
+    cerebro.plot(style='candle')
