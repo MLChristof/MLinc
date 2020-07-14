@@ -8,6 +8,7 @@ import backtrader as bt
 from backtrader.utils import flushfile
 import btoandav20
 import json
+from mlinc.backtrader.strategies.bacon_buyer_strategy import BaconBuyerStrategy
 
 StoreCls = btoandav20.stores.OandaV20Store
 DataCls = btoandav20.feeds.OandaV20Data
@@ -131,7 +132,8 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # Add a strategy
-    cerebro.addstrategy(MA_CrossOver)
+    # cerebro.addstrategy(MA_CrossOver)
+    cerebro.addstrategy(BaconBuyerStrategy)
 
     # instantiate data
 
@@ -140,9 +142,9 @@ if __name__ == '__main__':
     oandastore = StoreCls(**storekwargs, practice=True)
 
     data = oandastore.getdata(dataname='XCU_USD',
-                              compression=15,
+                              compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2019, 7, 1),
+                              fromdate=datetime.datetime(2020, 6, 15),
                               todate=datetime.datetime(2020, 7, 1),
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
