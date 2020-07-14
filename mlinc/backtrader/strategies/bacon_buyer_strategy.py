@@ -16,8 +16,8 @@ class BaconBuyerStrategy(bt.Strategy):
     params = (
         ('maperiod', 14),
         ('RRR', 5),
-        ('minSL', 0.05),  # in pips
-        ('stakepercent', 0.5)
+        ('minSL', 0),  # in pips
+        ('stakepercent', 1)
     )
 
     def log(self, txt, dt=None):
