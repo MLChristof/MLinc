@@ -19,5 +19,5 @@ if __name__ == '__main__':
     trader = OandaTrader('all', **conf_input)
 
     trades = trader.get_all_trades()
-    trades.to_csv(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\results\xcu20032020.csv')
+    trades.to_csv(r'C:\Personal\ML\results_xcu\14jul2020\xcu14072020.csv')
 
