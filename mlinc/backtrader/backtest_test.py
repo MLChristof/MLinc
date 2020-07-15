@@ -95,7 +95,7 @@ class MA_CrossOver(bt.SignalStrategy):
 
 
 class maxRiskSizer(bt.Sizer):
-    params = (('risk', 0.99),)
+    params = (('risk', 0.1),)
 
     def __init__(self):
         if self.p.risk > 1 or self.p.risk < 0:
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     cerebro.broker.setcash(8928)
 
     # Add sizer
-    cerebro.addsizer(maxRiskSizer)
+    # cerebro.addsizer(maxRiskSizer)
 
     # Set the commission
     cerebro.broker.setcommission(commission=0.00035)
@@ -173,6 +173,7 @@ if __name__ == '__main__':
 
     # Run over everything
     ret = cerebro.run(tradehistory=True)
+    # ret = cerebro.run()
 
     # Print out the final result
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())

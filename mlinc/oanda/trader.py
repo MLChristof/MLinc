@@ -884,7 +884,10 @@ if __name__ == '__main__':
     # save data to csv
     # trader.save_data_to_csv('BCO_USD')
 
+    # retrieve tradable instruments
+    print(trader.instrument_list)
+
     # auto trade
-    trader.auto_trade()
+    # trader.auto_trade()
 
 
