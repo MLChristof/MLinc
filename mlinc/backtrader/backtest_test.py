@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # cerebro.addsizer(maxRiskSizer)
 
     # Set the commission
-    cerebro.broker.setcommission(commission=0.00035)
+    cerebro.broker.setcommission(commission=0.01, mult=50)
 
     # Add Analyzer
     # Cerebro.addanalyzer(bt.analyzers.Benchmark)

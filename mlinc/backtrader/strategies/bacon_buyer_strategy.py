@@ -17,14 +17,15 @@ class BaconBuyerStrategy(bt.Strategy):
         ('maperiod', 14),
         ('RRR', 5),
         ('minSL', 0),  # in pips
-        ('stakepercent', 0.01)
+        ('stakepercent', 1)
     )
 
     # smart sizer
     # always loose or win set amount in account balance currency (max exposure in percent may varies per trade)
     def get_trade_volume(self, SL, current_price, balance, inst, mid_price, account_cur='EUR'):
+        mult = self.broker.comminfo[None].params.mult
         # max exposure in balance currency (e.g. EUR)
-        max_exp_cur = balance * self.params.stakepercent / 100
+        max_exp_cur = (1/mult) * balance * self.params.stakepercent / 100
         # difference between price and SL in pips (absolute value)
         SL_diff = 10000 * abs(SL - current_price)
 
