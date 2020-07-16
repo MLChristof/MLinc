@@ -28,6 +28,9 @@ class BaconBuyerStrategy(bt.Strategy):
         max_exp_cur = (1/mult) * balance * self.params.stakepercent / 100
         # difference between price and SL in pips (absolute value)
         SL_diff = 10000 * abs(SL - current_price)
+        # prevent devision by zero error
+        if SL_diff == 0:
+            SL_diff = 1E-10
 
         # case nr.1
         if account_cur == inst[-3:]:
@@ -193,6 +196,7 @@ class BaconBuyerStrategy(bt.Strategy):
             print('EntryLong = '+str(EntryLong.tick_close))
             print('SL_long = '+str(SL_long))
             print('TP_long = '+str(TP_long))
+            print('size = ' + str(stake_size_long))
             # place order
             self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, size=stake_size_long)
 
@@ -231,6 +235,7 @@ class BaconBuyerStrategy(bt.Strategy):
             print('EntryShort = '+str(EntryShort.tick_close))
             print('SL_Short = '+str(SL_short))
             print('TP_Short = '+str(TP_short))
+            print('size = ' + str(stake_size_short))
             # place order
             self.order = self.sell_bracket(price=EntryShort,stopprice=SL_short,limitprice=TP_short, size=stake_size_short)
 
