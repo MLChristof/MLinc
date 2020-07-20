@@ -5,6 +5,9 @@ import argparse
 import datetime
 import math
 import backtrader as bt
+import backtrader.feeds as btfeeds
+import backtrader.analyzers as btanalyzers
+import numpy as np
 from backtrader.utils import flushfile
 import btoandav20
 import json
@@ -129,8 +132,12 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
     # Add a strategy
     # cerebro.addstrategy(MA_CrossOver)
-    # cerebro.addstrategy(BaconBuyerStrategy, maperiod=14, RRR=5, stakepercent=1, min_hma_slope=0.002)
-    cerebro.optstrategy(BaconBuyerStrategy, RRR=[0.4, 0.5, 1, 4, 5])
+    cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.002)
+    # cerebro.addstrategy(BaconBuyerStrategy, RRR=5, min_hma_slope=0.00154, printlog=True)
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     RRR=[0.4],
+    #                     min_hma_slope=[0.0020, 0.0022]
+    #                     )
 
     # instantiate data
     # cerebro.broker = oandastore.getbroker()
@@ -139,41 +146,41 @@ if __name__ == '__main__':
     data = oandastore.getdata(dataname='XCU_USD',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2019, 7, 1),
+                              fromdate=datetime.datetime(2010, 1, 1),
                               todate=datetime.datetime(2020, 7, 1),
                               tz='CET',
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
                               backfill_start=False,
-                              historical=True)
+                              historical=True,
+                              )
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
-
-    # cerebro.resampledata(data, timeframe=bt.TimeFrame.Minutes, compression=15)
 
     # Set our desired cash start
     cerebro.broker.setcash(10000)
 
     # Add sizer
-    # cerebro.addsizer(maxRiskSizer)
     # cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
 
     # Set the commission
     cerebro.broker.setcommission(commission=0.0, mult=50)
 
     # Add Analyzer
-    # Cerebro.addanalyzer(bt.analyzers.Benchmark)
-
-    # Print out the starting conditions
-    # print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    # cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
 
     # Run over everything
-    ret = cerebro.run(maxcpus=1)
+    # ret = cerebro.run(maxcpus=1)
     # ret = cerebro.run()
 
-    # Print out the final result
-    # print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+
+    thestrats = cerebro.run()
+    thestrat = thestrats[0]
+
+    print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
 
     # Plot the result
-    # cerebro.plot(style='candle', volume=False, preload=False)
+    cerebro.plot(style='candle', volume=False, preload=False)
+

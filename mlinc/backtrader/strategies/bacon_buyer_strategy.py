@@ -111,7 +111,7 @@ class BaconBuyerStrategy(bt.Strategy):
         return inst_list
 
     def log(self, txt, dt=None, doprint=False):
-        ''' Logging function for this strategy'''
+        # Logging function for this strategy
         if self.params.printlog or doprint:
             dt = dt or self.datas[0].datetime.date(0)
             tm = self.datas[0].datetime.time(0)
@@ -140,7 +140,7 @@ class BaconBuyerStrategy(bt.Strategy):
         if order.status in [order.Completed]:
             if order.isbuy():
                 self.log(
-                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                    'BUY EXECUTED, Price: %.5f, Cost: %.2f, Comm %.2f' %
                     (order.executed.price,
                      order.executed.value,
                      order.executed.comm))
@@ -148,7 +148,7 @@ class BaconBuyerStrategy(bt.Strategy):
                 self.buyprice = order.executed.price
                 self.buycomm = order.executed.comm
             else:  # Sell
-                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                self.log('SELL EXECUTED, Price: %.5f, Cost: %.2f, Comm %.2f' %
                          (order.executed.price,
                           order.executed.value,
                           order.executed.comm))
@@ -170,7 +170,7 @@ class BaconBuyerStrategy(bt.Strategy):
 
     def next(self):
         # Simply log the closing price of the series from the reference
-        self.log('Close, %.2f' % self.dataclose[0])
+        self.log('Close, %.5f' % self.dataclose[0])
         # spread = self.get_spread(str(self.getdatanames()[0]))
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
@@ -196,7 +196,7 @@ class BaconBuyerStrategy(bt.Strategy):
             and hma_diff[2] < 0 \
             and hma_diff[1] < 0 \
             and hma_diff[0] < 0:
-            self.log('BUY CREATE, %.2f' % self.dataclose[0])
+            self.log('BUY CREATE, %.5f' % self.dataclose[0])
             # determine Entry price, SL & TP
             EntryLong = self.datas[0]
             SL_long = self.indicator.lines.hma[0]
@@ -241,7 +241,7 @@ class BaconBuyerStrategy(bt.Strategy):
             and hma_diff[2] > 0 \
             and hma_diff[1] > 0 \
             and hma_diff[0] > 0:
-            self.log('SELL CREATE, %.2f' % self.dataclose[0])
+            self.log('SELL CREATE, %.5f' % self.dataclose[0])
             # determine Entry price, SL & TP
             EntryShort = self.datas[0]
             SL_short = self.indicator.lines.hma[0]
@@ -282,8 +282,9 @@ class BaconBuyerStrategy(bt.Strategy):
                                            size=stake_size_short)
 
     def stop(self):
-        self.log('RRR: {0:8.2f} Ending Value: {1:8.2f}'.format(
+        self.log('RRR: {0:3.1f} min_hma_slope: {1:7.5f} Ending Value: {2:8.2f}'.format(
             self.params.RRR,
+            self.params.min_hma_slope,
             self.broker.getvalue()),
             doprint=True)
 
