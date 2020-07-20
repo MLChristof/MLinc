@@ -15,9 +15,10 @@ class BaconBuyerStrategy(bt.Strategy):
     # TODO Check Commission settings
     params = (
         ('maperiod', 14),
-        ('RRR', 5),
-        ('minSL', 0),  # in pips
-        ('stakepercent', 1)
+        ('RRR', 1),
+        ('SL_multiplier', 1.02),
+        ('stakepercent', 1),
+        ('min_hma_slope', 0.00154)
     )
 
     # smart sizer
@@ -95,7 +96,8 @@ class BaconBuyerStrategy(bt.Strategy):
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
+        tm = self.datas[0].datetime.time(0)
+        print('%s, %s' % (dt.isoformat()+' '+tm.isoformat(), txt))
         # print('%s' % (dt.isoformat()))
 
     def __init__(self):
@@ -169,7 +171,7 @@ class BaconBuyerStrategy(bt.Strategy):
         # Open Long Position on local minimum HMA
         # (if slope on last day of HMA is pos and 5 days before neg)
         if not self.position \
-            and hma_diff[5] > 0 \
+            and hma_diff[5] > self.params.min_hma_slope \
             and hma_diff[4] < 0 \
             and hma_diff[3] < 0 \
             and hma_diff[2] < 0 \
@@ -179,16 +181,17 @@ class BaconBuyerStrategy(bt.Strategy):
             # determine Entry price, SL & TP
             EntryLong = self.datas[0]
             SL_long = self.indicator.lines.hma[0]
-            if EntryLong - SL_long > self.params.minSL:
-                SL_long = self.indicator.lines.hma[0]
-            else:
-                SL_long = EntryLong - self.params.minSL
+
+            sl_dist = (EntryLong - SL_long) * (self.params.SL_multiplier - 1)
+            SL_long -= sl_dist
 
             TP_long = (1/self.params.RRR)*(EntryLong-SL_long)+EntryLong
             #Stake Size
-            # stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(EntryLong-SL_long)
-            stake_size_long = self.get_trade_volume(SL_long, EntryLong, self.broker.getvalue(), str(self.getdatanames()[0]),
-                                               EntryLong)
+            stake_size_long = self.get_trade_volume(SL_long,
+                                                    EntryLong,
+                                                    self.broker.getvalue(),
+                                                    str(self.getdatanames()[0]),
+                                                    EntryLong)
             dt = self.datas[0].datetime.date(0)
             tm = self.datas[0].datetime.time(0)
             print(str('%s' % (dt.isoformat()))+str(' ')+str(tm))
@@ -198,13 +201,19 @@ class BaconBuyerStrategy(bt.Strategy):
             print('TP_long = '+str(TP_long))
             print('size = ' + str(stake_size_long))
             # place order
-            self.order = self.buy_bracket(limitprice=TP_long, price=EntryLong, stopprice=SL_long, size=stake_size_long)
+            self.order = self.buy_bracket(limitprice=TP_long,
+                                          limitexec=bt.Order.Limit,
+                                          price=EntryLong,
+                                          exectype=bt.Order.Market,
+                                          stopprice=SL_long,
+                                          stopexec=bt.Order.Stop,
+                                          size=stake_size_long)
 
 
         # Open Short Position on local maximum HMA
         # (if slope on last day of HMA is neg and 5 days before pos)
         if not self.position \
-            and hma_diff[5] < 0 \
+            and hma_diff[5] < -self.params.min_hma_slope \
             and hma_diff[4] > 0 \
             and hma_diff[3] > 0 \
             and hma_diff[2] > 0 \
@@ -214,17 +223,18 @@ class BaconBuyerStrategy(bt.Strategy):
             # determine Entry price, SL & TP
             EntryShort = self.datas[0]
             SL_short = self.indicator.lines.hma[0]
-            if  SL_short - EntryShort > self.params.minSL:
-                SL_short = self.indicator.lines.hma[0]
-            else:
-                SL_short = EntryShort + self.params.minSL
+
+            sl_dist = (SL_short - EntryShort) * (self.params.SL_multiplier - 1)
+            SL_short += sl_dist
 
             TP_short = (-1/self.params.RRR)*(SL_short - EntryShort) + EntryShort
             #Stake Size
             # stake_size = 2E-4*self.params.stakepercent*self.broker.getvalue()/(SL_short-EntryShort)
-            stake_size_short = self.get_trade_volume(SL_short, EntryShort, self.broker.getvalue(),
-                                                    str(self.getdatanames()[0]),
-                                                    EntryShort)
+            stake_size_short = self.get_trade_volume(SL_short,
+                                                     EntryShort,
+                                                     self.broker.getvalue(),
+                                                     str(self.getdatanames()[0]),
+                                                     EntryShort)
             # print(SL_short-EntryShort)
             # print(self.broker.getvalue())
             # print(stake_size)
@@ -237,7 +247,13 @@ class BaconBuyerStrategy(bt.Strategy):
             print('TP_Short = '+str(TP_short))
             print('size = ' + str(stake_size_short))
             # place order
-            self.order = self.sell_bracket(price=EntryShort,stopprice=SL_short,limitprice=TP_short, size=stake_size_short)
+            self.order = self.sell_bracket(price=EntryShort,
+                                           exectype=bt.Order.Market,
+                                           stopprice=SL_short,
+                                           stopexec=bt.Order.Stop,
+                                           limitprice=TP_short,
+                                           limitexec=bt.Order.Limit,
+                                           size=stake_size_short)
 
 
 

@@ -144,9 +144,9 @@ if __name__ == '__main__':
     data = oandastore.getdata(dataname='XCU_USD',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2020, 6, 12),
-                              todate=datetime.datetime(2020, 7, 17),
-                              tz = 'CET',
+                              fromdate=datetime.datetime(2015, 7, 1),
+                              todate=datetime.datetime(2020, 7, 1),
+                              tz='CET',
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
                               backfill_start=False,
@@ -158,10 +158,11 @@ if __name__ == '__main__':
     # cerebro.resampledata(data, timeframe=bt.TimeFrame.Minutes, compression=15)
 
     # Set our desired cash start
-    cerebro.broker.setcash(8928)
+    cerebro.broker.setcash(10000)
 
     # Add sizer
     # cerebro.addsizer(maxRiskSizer)
+    # cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
 
     # Set the commission
     cerebro.broker.setcommission(commission=0.01, mult=50)
@@ -180,4 +181,4 @@ if __name__ == '__main__':
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
     # Plot the result
-    cerebro.plot(style='candle')
+    cerebro.plot(style='candle', volume=False, preload=False)
