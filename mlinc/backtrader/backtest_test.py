@@ -125,26 +125,21 @@ if __name__ == '__main__':
     parser.add_argument('--account', help='Oanda API account')
     args = parser.parse_args()
 
-    print('token:', args.token)
-    print('acct:', args.account)
-
     # Create a cerebro entity
     cerebro = bt.Cerebro()
-
     # Add a strategy
     # cerebro.addstrategy(MA_CrossOver)
-    cerebro.addstrategy(BaconBuyerStrategy)
+    # cerebro.addstrategy(BaconBuyerStrategy, maperiod=14, RRR=5, stakepercent=1, min_hma_slope=0.002)
+    cerebro.optstrategy(BaconBuyerStrategy, RRR=[0.4, 0.5, 1, 4, 5])
 
     # instantiate data
-
     # cerebro.broker = oandastore.getbroker()
-
     oandastore = StoreCls(**storekwargs, practice=True)
 
     data = oandastore.getdata(dataname='XCU_USD',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2015, 7, 1),
+                              fromdate=datetime.datetime(2019, 7, 1),
                               todate=datetime.datetime(2020, 7, 1),
                               tz='CET',
                               qcheck=0.5,
@@ -165,20 +160,20 @@ if __name__ == '__main__':
     # cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
 
     # Set the commission
-    cerebro.broker.setcommission(commission=0.01, mult=50)
+    cerebro.broker.setcommission(commission=0.0, mult=50)
 
     # Add Analyzer
     # Cerebro.addanalyzer(bt.analyzers.Benchmark)
 
     # Print out the starting conditions
-    print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    # print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
     # Run over everything
-    ret = cerebro.run(tradehistory=True)
+    ret = cerebro.run(maxcpus=1)
     # ret = cerebro.run()
 
     # Print out the final result
-    print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    # print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
     # Plot the result
-    cerebro.plot(style='candle', volume=False, preload=False)
+    # cerebro.plot(style='candle', volume=False, preload=False)

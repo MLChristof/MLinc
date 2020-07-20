@@ -6,20 +6,31 @@ from __future__ import (absolute_import, division, print_function,
 # import sys
 # import time
 import numpy as n
-
 import backtrader as bt
 
 
 class BaconBuyerStrategy(bt.Strategy):
+
     # TODO Add smart staking/sizing
     # TODO Check Commission settings
     params = (
         ('maperiod', 14),
-        ('RRR', 1),
-        ('SL_multiplier', 1.02),
+        ('RRR', 5),
+        ('SL_multiplier', 1),
         ('stakepercent', 1),
-        ('min_hma_slope', 0.00154)
-    )
+        ('min_hma_slope', 0.00154),
+        ('printlog', False)
+            )
+
+    # XCU
+    # params = (
+    #     ('maperiod', 14),
+    #     ('RRR', 0.4),
+    #     ('SL_multiplier', 1),
+    #     ('stakepercent', 1),
+    #     ('min_hma_slope', 0.002)
+    # )
+
 
     # smart sizer
     # always loose or win set amount in account balance currency (max exposure in percent may varies per trade)
@@ -74,6 +85,12 @@ class BaconBuyerStrategy(bt.Strategy):
 
         return units
 
+    # def get_spread(self, instrument):
+    #     bid = float(test['candles'][0]['bid']['c'])
+    #     ask = float(test['candles'][0]['ask']['c'])
+    #     spread = float(format(ask - bid, '.5f'))
+    #     return spread
+
     def instrument_list(self):
         inst_list = ['UK100_GBP', 'USD_CAD', 'USB05Y_USD', 'EUR_HKD', 'HK33_HKD', 'FR40_EUR', 'USD_SAR', 'GBP_CAD', 'EUR_PLN',
                      'EUR_DKK', 'SGD_CHF', 'XAU_CHF', 'XPD_USD', 'BCO_USD', 'IN50_USD', 'JP225_USD', 'CN50_USD', 'NATGAS_USD',
@@ -93,12 +110,13 @@ class BaconBuyerStrategy(bt.Strategy):
 
         return inst_list
 
-    def log(self, txt, dt=None):
+    def log(self, txt, dt=None, doprint=False):
         ''' Logging function for this strategy'''
-        dt = dt or self.datas[0].datetime.date(0)
-        tm = self.datas[0].datetime.time(0)
-        print('%s, %s' % (dt.isoformat()+' '+tm.isoformat(), txt))
-        # print('%s' % (dt.isoformat()))
+        if self.params.printlog or doprint:
+            dt = dt or self.datas[0].datetime.date(0)
+            tm = self.datas[0].datetime.time(0)
+            print('%s, %s' % (dt.isoformat()+' '+tm.isoformat(), txt))
+            # print('%s' % (dt.isoformat()))
 
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
@@ -153,6 +171,7 @@ class BaconBuyerStrategy(bt.Strategy):
     def next(self):
         # Simply log the closing price of the series from the reference
         self.log('Close, %.2f' % self.dataclose[0])
+        # spread = self.get_spread(str(self.getdatanames()[0]))
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
@@ -192,14 +211,17 @@ class BaconBuyerStrategy(bt.Strategy):
                                                     self.broker.getvalue(),
                                                     str(self.getdatanames()[0]),
                                                     EntryLong)
-            dt = self.datas[0].datetime.date(0)
-            tm = self.datas[0].datetime.time(0)
-            print(str('%s' % (dt.isoformat()))+str(' ')+str(tm))
-            print(hma_diff)
-            print('EntryLong = '+str(EntryLong.tick_close))
-            print('SL_long = '+str(SL_long))
-            print('TP_long = '+str(TP_long))
-            print('size = ' + str(stake_size_long))
+            if stake_size_long == 0:
+                stake_size_long = 1E-5
+
+            # dt = self.datas[0].datetime.date(0)
+            # tm = self.datas[0].datetime.time(0)
+            # print(str('%s' % (dt.isoformat()))+str(' ')+str(tm))
+            # print(hma_diff)
+            # print('EntryLong = '+str(EntryLong.tick_close))
+            # print('SL_long = '+str(SL_long))
+            # print('TP_long = '+str(TP_long))
+            # print('size = ' + str(stake_size_long))
             # place order
             self.order = self.buy_bracket(limitprice=TP_long,
                                           limitexec=bt.Order.Limit,
@@ -235,17 +257,21 @@ class BaconBuyerStrategy(bt.Strategy):
                                                      self.broker.getvalue(),
                                                      str(self.getdatanames()[0]),
                                                      EntryShort)
+
+            if stake_size_short == 0:
+                stake_size_short = 1E-5
+
             # print(SL_short-EntryShort)
             # print(self.broker.getvalue())
             # print(stake_size)
-            dt = self.datas[0].datetime.date(0)
-            tm = self.datas[0].datetime.time(0)
-            print(str('%s' % (dt.isoformat())) + str(' ') + str(tm))
-            print(hma_diff)
-            print('EntryShort = '+str(EntryShort.tick_close))
-            print('SL_Short = '+str(SL_short))
-            print('TP_Short = '+str(TP_short))
-            print('size = ' + str(stake_size_short))
+            # dt = self.datas[0].datetime.date(0)
+            # tm = self.datas[0].datetime.time(0)
+            # print(str('%s' % (dt.isoformat())) + str(' ') + str(tm))
+            # print(hma_diff)
+            # print('EntryShort = '+str(EntryShort.tick_close))
+            # print('SL_Short = '+str(SL_short))
+            # print('TP_Short = '+str(TP_short))
+            # print('size = ' + str(stake_size_short))
             # place order
             self.order = self.sell_bracket(price=EntryShort,
                                            exectype=bt.Order.Market,
@@ -255,8 +281,11 @@ class BaconBuyerStrategy(bt.Strategy):
                                            limitexec=bt.Order.Limit,
                                            size=stake_size_short)
 
-
-
+    def stop(self):
+        self.log('RRR: {0:8.2f} Ending Value: {1:8.2f}'.format(
+            self.params.RRR,
+            self.broker.getvalue()),
+            doprint=True)
 
 
 
