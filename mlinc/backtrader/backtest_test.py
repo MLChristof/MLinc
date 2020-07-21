@@ -132,21 +132,55 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
     # Add a strategy
     # cerebro.addstrategy(MA_CrossOver)
-    cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.002)
+    # XCU Single run
+    # cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.002)
+    # XCU Optimization
     # cerebro.addstrategy(BaconBuyerStrategy, RRR=5, min_hma_slope=0.00154, printlog=True)
     # cerebro.optstrategy(BaconBuyerStrategy,
     #                     RRR=[0.4],
     #                     min_hma_slope=[0.0020, 0.0022]
+    #                     )
+    # BCO Single run
+    # cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.11, stakepercent=0.01, printlog=True)
+    # BCO Optimization
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     stakepercent=0.01,
+    #                     RRR=[0.4],
+    #                     min_hma_slope=[0.105, 0.110, 0.115]
+    #                     )
+    # DE10YB_EUR Single run
+    # cerebro.addstrategy(BaconBuyerStrategy, RRR=1, min_hma_slope=0.022, stakepercent=1, printlog=True)
+    # DE10YB_EUR Optimization
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     stakepercent=1,
+    #                     RRR=[1],
+    #                     min_hma_slope=[0.022, 0.023, 0.024]
+    #                     )
+    # UK10YB_GBP Single run
+    cerebro.addstrategy(BaconBuyerStrategy, RRR=1.0, min_hma_slope=0.015, stakepercent=0.01, printlog=True)
+    # UK10YB_GBP Optimization
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     stakepercent=0.01,
+    #                     RRR=[1.0, 1.1],
+    #                     min_hma_slope=[0.014, 0.015, 0.016]
+    #                     )
+    # EUR_USD Single run
+    # cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.0004, stakepercent=1, printlog=True)
+    # EUR_USD Optimization
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     stakepercent=1,
+    #                     RRR=[0.4, 0.5, 0.6],
+    #                     min_hma_slope=[0.0002, 0.0003, 0.0004]
     #                     )
 
     # instantiate data
     # cerebro.broker = oandastore.getbroker()
     oandastore = StoreCls(**storekwargs, practice=True)
 
-    data = oandastore.getdata(dataname='XCU_USD',
+    data = oandastore.getdata(dataname='UK10YB_GBP',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2010, 1, 1),
+                              fromdate=datetime.datetime(2015, 7, 1),
                               todate=datetime.datetime(2020, 7, 1),
                               tz='CET',
                               qcheck=0.5,
@@ -168,17 +202,15 @@ if __name__ == '__main__':
     cerebro.broker.setcommission(commission=0.0, mult=50)
 
     # Add Analyzer
-    # cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
+    cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
 
     # Run over everything
     # ret = cerebro.run(maxcpus=1)
     # ret = cerebro.run()
-
-    cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
-
     thestrats = cerebro.run()
     thestrat = thestrats[0]
 
+    # print Sharpe
     print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
 
     # Plot the result
