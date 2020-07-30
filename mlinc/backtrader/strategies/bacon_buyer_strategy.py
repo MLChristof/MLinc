@@ -11,26 +11,32 @@ import backtrader as bt
 
 class BaconBuyerStrategy(bt.Strategy):
 
+    def __init__(self):
+        # Keep a reference to the "close" line in the data[0] dataseries
+        self.dataclose = self.data.close
+
+        # To keep track of pending orders and buy price/commission
+        self.order = None
+        self.buyprice = None
+        self.buycomm = None
+
+        self.indicator_shortterm = bt.indicators.HullMovingAverage(self.data.close, period=self.params.maperiod)
+        if self.params.trade_with_trend:
+            self.indicator_longterm = bt.indicators.HullMovingAverage(self.data.close, period=self.params.maperiod_longterm)
+        # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
+
     # TODO Add smart staking/sizing
     # TODO Check Commission settings
     params = (
         ('maperiod', 14),
+        ('maperiod_longterm', 200),
         ('RRR', 5),
         ('SL_multiplier', 1),
         ('stakepercent', 1),
         ('min_hma_slope', 0.00154),
-        ('printlog', False)
+        ('printlog', False),
+        ('trade_with_trend', False),
             )
-
-    # XCU
-    # params = (
-    #     ('maperiod', 14),
-    #     ('RRR', 0.4),
-    #     ('SL_multiplier', 1),
-    #     ('stakepercent', 1),
-    #     ('min_hma_slope', 0.002)
-    # )
-
 
     # smart sizer
     # always loose or win set amount in account balance currency (max exposure in percent may varies per trade)
@@ -118,18 +124,6 @@ class BaconBuyerStrategy(bt.Strategy):
             print('%s, %s' % (dt.isoformat()+' '+tm.isoformat(), txt))
             # print('%s' % (dt.isoformat()))
 
-    def __init__(self):
-        # Keep a reference to the "close" line in the data[0] dataseries
-        self.dataclose = self.datas[0].close
-
-        # To keep track of pending orders and buy price/commission
-        self.order = None
-        self.buyprice = None
-        self.buycomm = None
-
-        self.indicator = bt.indicators.HullMovingAverage(self.datas[0], period=self.params.maperiod)
-        # self.indicatorSMA = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.maperiod)
-
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
@@ -177,15 +171,40 @@ class BaconBuyerStrategy(bt.Strategy):
         if self.order:
             return
 
-        hma_data = n.array((self.indicator.lines.hma[-6],
-                            self.indicator.lines.hma[-5],
-                            self.indicator.lines.hma[-4],
-                            self.indicator.lines.hma[-3],
-                            self.indicator.lines.hma[-2],
-                            self.indicator.lines.hma[-1],
-                            self.indicator.lines.hma[0]))
-
+        hma_data = n.array((self.indicator_shortterm.lines.hma[-6],
+                            self.indicator_shortterm.lines.hma[-5],
+                            self.indicator_shortterm.lines.hma[-4],
+                            self.indicator_shortterm.lines.hma[-3],
+                            self.indicator_shortterm.lines.hma[-2],
+                            self.indicator_shortterm.lines.hma[-1],
+                            self.indicator_shortterm.lines.hma[0]))
         hma_diff = n.diff(hma_data)
+
+        # determine sign of long term hma
+        if self.params.trade_with_trend:
+            hma_data_longterm = n.array((self.indicator_longterm.lines.hma[-1],
+                                         self.indicator_longterm.lines.hma[0]))
+            hma_diff_longterm = n.diff(hma_data_longterm)
+
+        # check if long term hma gives trend condition
+        # example: return True if hma long trend option enabled (self.params.trade_with_trend = True) and
+        # slope of long term hma > 0 for long position
+        def hma_trend(long=True):
+            # long position with trend
+            if self.params.trade_with_trend and long and hma_diff_longterm[0] > 0:
+                return True
+            # long position against trend
+            elif self.params.trade_with_trend and long and hma_diff_longterm[0] < 0:
+                return False
+            # short position with trend
+            elif self.params.trade_with_trend and not long and hma_diff_longterm[0] < 0:
+                return True
+            # short position against trend
+            elif self.params.trade_with_trend and not long and hma_diff_longterm[0] > 0:
+                return False
+            # trade_with_trend disabled
+            else:
+                return True
 
         # Open Long Position on local minimum HMA
         # (if slope on last day of HMA is pos and 5 days before neg)
@@ -195,11 +214,13 @@ class BaconBuyerStrategy(bt.Strategy):
             and hma_diff[3] < 0 \
             and hma_diff[2] < 0 \
             and hma_diff[1] < 0 \
-            and hma_diff[0] < 0:
+            and hma_diff[0] < 0\
+            and hma_trend(long=True):
+
             self.log('BUY CREATE, %.5f' % self.dataclose[0])
             # determine Entry price, SL & TP
             EntryLong = self.datas[0]
-            SL_long = self.indicator.lines.hma[0]
+            SL_long = self.indicator_shortterm.lines.hma[0]
 
             sl_dist = (EntryLong - SL_long) * (self.params.SL_multiplier - 1)
             SL_long -= sl_dist
@@ -240,11 +261,13 @@ class BaconBuyerStrategy(bt.Strategy):
             and hma_diff[3] > 0 \
             and hma_diff[2] > 0 \
             and hma_diff[1] > 0 \
-            and hma_diff[0] > 0:
+            and hma_diff[0] > 0 \
+            and hma_trend(long=False):
+
             self.log('SELL CREATE, %.5f' % self.dataclose[0])
             # determine Entry price, SL & TP
             EntryShort = self.datas[0]
-            SL_short = self.indicator.lines.hma[0]
+            SL_short = self.indicator_shortterm.lines.hma[0]
 
             sl_dist = (SL_short - EntryShort) * (self.params.SL_multiplier - 1)
             SL_short += sl_dist

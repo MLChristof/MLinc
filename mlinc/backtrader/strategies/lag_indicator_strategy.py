@@ -30,8 +30,8 @@ class MlLagIndicatorStrategy(bt.Strategy):
         self.buycomm = None
 
         self.lagindex = [0, 0, 0]
-        self.threshold_long = -0.6
-        self.threshold_short = 0.95
+        self.threshold_long = -0.5
+        self.threshold_short = 0.5
 
         self.indicator = MlLagIndicator(self.datas[0], self.datas[1], period=self.params.maperiod)
 

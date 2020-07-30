@@ -42,7 +42,8 @@ class MA_CrossOver(bt.SignalStrategy):
 
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
-        self.dataclose = self.datas[0].close
+        # self.dataclose = self.datas[0].close
+        self.dataclose = self.data.close
 
         # To keep track of pending orders and buy price/commission
         self.order = None
@@ -157,13 +158,14 @@ if __name__ == '__main__':
     #                     min_hma_slope=[0.022, 0.023, 0.024]
     #                     )
     # UK10YB_GBP Single run
-    cerebro.addstrategy(BaconBuyerStrategy, RRR=1.0, min_hma_slope=0.015, stakepercent=0.01, printlog=True)
+    # cerebro.addstrategy(BaconBuyerStrategy, RRR=1.0, min_hma_slope=0.015, stakepercent=0.004,
+    #                     printlog=True)
     # UK10YB_GBP Optimization
-    # cerebro.optstrategy(BaconBuyerStrategy,
-    #                     stakepercent=0.01,
-    #                     RRR=[1.0, 1.1],
-    #                     min_hma_slope=[0.014, 0.015, 0.016]
-    #                     )
+    cerebro.optstrategy(BaconBuyerStrategy,
+                        stakepercent=[0.004],
+                        RRR=[1.0],
+                        min_hma_slope=[0.015],
+                        )
     # EUR_USD Single run
     # cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.0004, stakepercent=1, printlog=True)
     # EUR_USD Optimization
@@ -172,6 +174,15 @@ if __name__ == '__main__':
     #                     RRR=[0.4, 0.5, 0.6],
     #                     min_hma_slope=[0.0002, 0.0003, 0.0004]
     #                     )
+    # XAU_EUR Single run
+    # cerebro.addstrategy(BaconBuyerStrategy, RRR=1, min_hma_slope=0.6, stakepercent=0.001, printlog=True)
+    # XAU_EUR Optimization
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     stakepercent=0.001,
+    #                     RRR=[1],
+    #                     min_hma_slope=[0.5, 0.6, 0.70, 0.8, 0.9, 1]
+    #                     )
+
 
     # instantiate data
     # cerebro.broker = oandastore.getbroker()
@@ -180,8 +191,8 @@ if __name__ == '__main__':
     data = oandastore.getdata(dataname='UK10YB_GBP',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2015, 7, 1),
-                              todate=datetime.datetime(2020, 7, 1),
+                              fromdate=datetime.datetime(2015, 7, 31),
+                              todate=datetime.datetime(2020, 7, 31),
                               tz='CET',
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
@@ -197,22 +208,30 @@ if __name__ == '__main__':
 
     # Add sizer
     # cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
+    # cerebro.addsizer(bt.sizers.AllInSizer)
 
     # Set the commission
-    cerebro.broker.setcommission(commission=0.0, mult=50)
+    cerebro.broker.setcommission(commission=0.0, mult=5)
 
     # Add Analyzer
-    cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+    # cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+    # cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
 
     # Run over everything
-    # ret = cerebro.run(maxcpus=1)
-    # ret = cerebro.run()
-    thestrats = cerebro.run()
+    thestrats = cerebro.run(maxcpus=1)
+    # thestrats = cerebro.run()
+
     thestrat = thestrats[0]
 
-    # print Sharpe
-    print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
-
-    # Plot the result
-    cerebro.plot(style='candle', volume=False, preload=False)
-
+    # won = thestrat.analyzers.ta.get_analysis().won.total
+    # lost = thestrat.analyzers.ta.get_analysis().lost.total
+    #
+    # # print Sharpe
+    # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+    # print('Trades Won:', won)
+    # print('Trades Lost:', lost)
+    # print(f'Won/Lost: {won/lost:.2f}')
+    # #
+    # # # Plot the result
+    # # cerebro.plot(style='candle', volume=False, preload=False)
+    # #
