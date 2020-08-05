@@ -44,25 +44,25 @@ if __name__ == '__main__':
     oandastore = StoreCls(**storekwargs, practice=True)
 
     data1 = oandastore.getdata(dataname='BCO_USD',
-                              compression=1,
+                              compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2015, 7, 31),
+                              fromdate=datetime.datetime(2018, 7, 31),
                               todate=datetime.datetime(2020, 7, 31),
                               tz='CET',
                               qcheck=0.5,
-                              timeframe=bt.TimeFrame.Days,
+                              timeframe=bt.TimeFrame.Minutes,
                               backfill_start=False,
                               historical=True,
                               )
 
     data2 = oandastore.getdata(dataname='WTICO_USD',
-                              compression=1,
+                              compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2015, 7, 31),
+                              fromdate=datetime.datetime(2018, 7, 31),
                               todate=datetime.datetime(2020, 7, 31),
                               tz='CET',
                               qcheck=0.5,
-                              timeframe=bt.TimeFrame.Days,
+                              timeframe=bt.TimeFrame.Minutes,
                               backfill_start=False,
                               historical=True,
                               )
@@ -102,5 +102,5 @@ if __name__ == '__main__':
     # print(f'Won/Lost: {won/lost:.2f}')
     # #
     # # # Plot the result
-    cerebro.plot(style='candle', volume=False, preload=False)
+    cerebro.plot(volume=False, preload=False)
     # #

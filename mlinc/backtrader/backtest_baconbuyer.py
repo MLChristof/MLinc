@@ -158,14 +158,14 @@ if __name__ == '__main__':
     #                     min_hma_slope=[0.022, 0.023, 0.024]
     #                     )
     # UK10YB_GBP Single run
-    # cerebro.addstrategy(BaconBuyerStrategy, RRR=1.0, min_hma_slope=0.015, stakepercent=0.004,
-    #                     printlog=True)
+    cerebro.addstrategy(BaconBuyerStrategy, RRR=1, min_hma_slope=0.015, stakepercent=0.004,
+                        printlog=True, SL_multiplier=1)
     # UK10YB_GBP Optimization
-    cerebro.optstrategy(BaconBuyerStrategy,
-                        stakepercent=[0.004],
-                        RRR=[1.0],
-                        min_hma_slope=[0.015],
-                        )
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     stakepercent=[0.004],
+    #                     RRR=[1.0],
+    #                     min_hma_slope=[0.015],
+    #                     )
     # EUR_USD Single run
     # cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.0004, stakepercent=1, printlog=True)
     # EUR_USD Optimization
@@ -191,8 +191,8 @@ if __name__ == '__main__':
     data = oandastore.getdata(dataname='UK10YB_GBP',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2015, 7, 31),
-                              todate=datetime.datetime(2020, 7, 31),
+                              fromdate=datetime.datetime(2019, 7, 30),
+                              todate=datetime.datetime(2020, 7, 30),
                               tz='CET',
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
@@ -214,24 +214,24 @@ if __name__ == '__main__':
     cerebro.broker.setcommission(commission=0.0, mult=5)
 
     # Add Analyzer
-    # cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
-    # cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
+    cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+    cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
 
     # Run over everything
-    thestrats = cerebro.run(maxcpus=1)
-    # thestrats = cerebro.run()
+    # thestrats = cerebro.run(maxcpus=1)
+    thestrats = cerebro.run()
 
     thestrat = thestrats[0]
 
-    # won = thestrat.analyzers.ta.get_analysis().won.total
-    # lost = thestrat.analyzers.ta.get_analysis().lost.total
-    #
-    # # print Sharpe
-    # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
-    # print('Trades Won:', won)
-    # print('Trades Lost:', lost)
-    # print(f'Won/Lost: {won/lost:.2f}')
-    # #
-    # # # Plot the result
-    # # cerebro.plot(style='candle', volume=False, preload=False)
-    # #
+    won = thestrat.analyzers.ta.get_analysis().won.total
+    lost = thestrat.analyzers.ta.get_analysis().lost.total
+
+    # print Sharpe
+    print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+    print('Trades Won:', won)
+    print('Trades Lost:', lost)
+    print(f'Won/Lost: {won/lost:.2f}')
+
+    # Plot the result
+    cerebro.plot(style='candle', volume=False, preload=False)
+

@@ -5,7 +5,7 @@ import math
 
 class MlLagIndicator(bt.Indicator):
     lines = ('mlli',)
-    params = (('period', 3),)
+    params = (('period', 5),)
 
     def __init__(self):
         self.lines.mlli = bt.Max(-1.0, self.lag_index())
