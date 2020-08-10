@@ -39,15 +39,20 @@ if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
-    cerebro.addstrategy(MlLagIndicatorStrategy, threshold_long=-0.6, threshold_short=0.6, maperiod=25)
+    cerebro.addstrategy(MlLagIndicatorStrategy, threshold=0.7, SL=0.02, TP=0.02,
+                        maperiod=40, printlog=True)
+    # cerebro.optstrategy(MlLagIndicatorStrategy,
+    #                     threshold=[0.5, 0.6],
+    #                     maperiod=[3, 5, 10, 15],
+    #                     )
 
     oandastore = StoreCls(**storekwargs, practice=True)
 
     data0 = oandastore.getdata(dataname='XAG_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2018, 7, 31),
-                               todate=datetime.datetime(2029, 7, 31),
+                               fromdate=datetime.datetime(2016, 7, 31),
+                               todate=datetime.datetime(2018, 7, 31),
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
@@ -58,8 +63,8 @@ if __name__ == '__main__':
     data1 = oandastore.getdata(dataname='XAU_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2018, 7, 31),
-                               todate=datetime.datetime(2029, 7, 31),
+                               fromdate=datetime.datetime(2016, 7, 31),
+                               todate=datetime.datetime(2018, 7, 31),
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
@@ -89,7 +94,6 @@ if __name__ == '__main__':
     # Run over everything
     # thestrats = cerebro.run(maxcpus=1)
     thestrats = cerebro.run()
-
     thestrat = thestrats[0]
 
     won = thestrat.analyzers.ta.get_analysis().won.total

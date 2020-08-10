@@ -11,18 +11,19 @@ from mlinc.backtrader.indicators.lag_indicator import MlLagIndicator
 
 class MlLagIndicatorStrategy(bt.Strategy):
     params = (
-        ('maperiod', 20),
-        ('threshold_long', -0.9),
-        ('threshold_short', 0.9),
+        ('maperiod', 15),
+        ('threshold', 0.6),
         ('SL', 0.02),
         ('TP', 0.02),
+        ('printlog', False),
         )
 
-    def log(self, txt, dt=None):
+    def log(self, txt, dt=None, doprint=False):
         ''' Logging function for this strategy'''
-        dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
-        # print('%s' % (dt.isoformat()))
+        if self.params.printlog or doprint:
+            dt = dt or self.datas[0].datetime.date(0)
+            print('%s, %s' % (dt.isoformat(), txt))
+            # print('%s' % (dt.isoformat()))
 
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
@@ -91,18 +92,8 @@ class MlLagIndicatorStrategy(bt.Strategy):
         self.lagindex.append(self.indicator.lag_index())
         # print(self.lagindex[-1])
 
-        # if self.lagindex[-3] > self.lagindex[-2] < self.lagindex[-1] and self.lagindex[-2] < self.params.threshold_long:
-        #     self.log('Go Long!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
-        #                                                                   self.lagindex[-2],
-        #                                                                   self.lagindex[-1]))
-        #     self.order = self.buy()
-        # elif self.lagindex[-3] < self.lagindex[-2] > self.lagindex[-1] and self.lagindex[-2] > self.params.threshold_short:
-        #     self.log('Go Short!!! Because lagindex is [{}, {}, {}]'.format(self.lagindex[-3],
-        #                                                                    self.lagindex[-2],
-        #                                                                    self.lagindex[-1]))
-        #     self.order = self.sell()
-
-        if self.lagindex[-1] < self.params.threshold_long and the_size == 0:
+        # long position
+        if self.lagindex[-1] < -self.params.threshold and the_size == 0:
             self.log('Go Long!!! Because lagindex is [{}]'.format(self.lagindex[-1]))
             # self.order = self.buy()
             self.order = self.buy_bracket(limitprice=self.dataclose*(1+self.params.TP),
@@ -111,16 +102,27 @@ class MlLagIndicatorStrategy(bt.Strategy):
                                           stopprice=self.dataclose*(1-self.params.SL),
                                           stopexec=bt.Order.Stop,
                                           )
-        elif self.lagindex[-1] > self.params.threshold_short and the_size == 0:
+        # short position
+        elif self.lagindex[-1] > self.params.threshold and the_size == 0:
             self.log('Go Short!!! Because lagindex is [{}]'.format(self.lagindex[-1]))
 
             # self.order = self.sell()
-            self.order = self.buy_bracket(limitprice=self.dataclose*(1-self.params.TP),
-                                          limitexec=bt.Order.Limit,
-                                          exectype=bt.Order.Market,
-                                          stopprice=self.dataclose*(1+self.params.TP),
-                                          stopexec=bt.Order.Stop,
-                                          )
+            self.order = self.sell_bracket(limitprice=self.dataclose*(1-self.params.TP),
+                                           limitexec=bt.Order.Limit,
+                                           exectype=bt.Order.Market,
+                                           stopprice=self.dataclose*(1+self.params.TP),
+                                           stopexec=bt.Order.Stop,
+                                           )
 
         else:
             return
+
+    def stop(self):
+        self.log('threshold: {0:.2f} maperiod: {1:.1f} Ending Value: {2:8.2f}'.format(
+            self.params.threshold,
+            self.params.maperiod,
+            self.broker.getvalue()),
+            doprint=True
+                )
+
+
