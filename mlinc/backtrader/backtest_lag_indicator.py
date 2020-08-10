@@ -39,37 +39,37 @@ if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
-    cerebro.addstrategy(MlLagIndicatorStrategy)
+    cerebro.addstrategy(MlLagIndicatorStrategy, threshold_long=-0.6, threshold_short=0.6, maperiod=25)
 
     oandastore = StoreCls(**storekwargs, practice=True)
 
-    data1 = oandastore.getdata(dataname='BCO_USD',
-                              compression=60,
-                              backfill=False,
-                              fromdate=datetime.datetime(2018, 7, 31),
-                              todate=datetime.datetime(2020, 7, 31),
-                              tz='CET',
-                              qcheck=0.5,
-                              timeframe=bt.TimeFrame.Minutes,
-                              backfill_start=False,
-                              historical=True,
-                              )
+    data0 = oandastore.getdata(dataname='XAG_USD',
+                               compression=60,
+                               backfill=False,
+                               fromdate=datetime.datetime(2018, 7, 31),
+                               todate=datetime.datetime(2029, 7, 31),
+                               tz='CET',
+                               qcheck=0.5,
+                               timeframe=bt.TimeFrame.Minutes,
+                               backfill_start=False,
+                               historical=True,
+                               )
 
-    data2 = oandastore.getdata(dataname='WTICO_USD',
-                              compression=60,
-                              backfill=False,
-                              fromdate=datetime.datetime(2018, 7, 31),
-                              todate=datetime.datetime(2020, 7, 31),
-                              tz='CET',
-                              qcheck=0.5,
-                              timeframe=bt.TimeFrame.Minutes,
-                              backfill_start=False,
-                              historical=True,
-                              )
+    data1 = oandastore.getdata(dataname='XAU_USD',
+                               compression=60,
+                               backfill=False,
+                               fromdate=datetime.datetime(2018, 7, 31),
+                               todate=datetime.datetime(2029, 7, 31),
+                               tz='CET',
+                               qcheck=0.5,
+                               timeframe=bt.TimeFrame.Minutes,
+                               backfill_start=False,
+                               historical=True,
+                               )
 
     # Add the Data Feed to Cerebro
+    cerebro.adddata(data0)
     cerebro.adddata(data1)
-    cerebro.adddata(data2)
 
     # Set our desired cash start
     cerebro.broker.setcash(10000)
@@ -77,14 +77,14 @@ if __name__ == '__main__':
     # Add sizer
     # cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
     # cerebro.addsizer(bt.sizers.AllInSizer)
-    cerebro.addsizer(bt.sizers.FixedSize, stake=0.00005)
+    cerebro.addsizer(bt.sizers.PercentSizer, percents=10)
 
     # Set the commission
     cerebro.broker.setcommission(commission=0.0, mult=5)
 
     # Add Analyzer
-    # cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
-    # cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
+    cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+    cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
 
     # Run over everything
     # thestrats = cerebro.run(maxcpus=1)
@@ -92,15 +92,15 @@ if __name__ == '__main__':
 
     thestrat = thestrats[0]
 
-    # won = thestrat.analyzers.ta.get_analysis().won.total
-    # lost = thestrat.analyzers.ta.get_analysis().lost.total
+    won = thestrat.analyzers.ta.get_analysis().won.total
+    lost = thestrat.analyzers.ta.get_analysis().lost.total
+
+    # print Sharpe
+    print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+    print('Trades Won:', won)
+    print('Trades Lost:', lost)
+    print(f'Won/Lost: {won/lost:.2f}')
     #
-    # # print Sharpe
-    # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
-    # print('Trades Won:', won)
-    # print('Trades Lost:', lost)
-    # print(f'Won/Lost: {won/lost:.2f}')
-    # #
-    # # # Plot the result
+    # Plot the result
     cerebro.plot(volume=False, preload=False)
-    # #
+
