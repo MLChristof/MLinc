@@ -118,9 +118,11 @@ class MlLagIndicatorStrategy(bt.Strategy):
             return
 
     def stop(self):
-        self.log('threshold: {0:.2f} maperiod: {1:.1f} Ending Value: {2:8.2f}'.format(
+        self.log('threshold: {0:.2f} maperiod: {1:.1f} SL: {2:.4f} TP: {3:.4f} Ending Value: {4:8.2f}'.format(
             self.params.threshold,
             self.params.maperiod,
+            self.params.SL,
+            self.params.TP,
             self.broker.getvalue()),
             doprint=True
                 )
