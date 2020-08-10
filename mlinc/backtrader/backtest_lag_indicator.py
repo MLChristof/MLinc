@@ -53,7 +53,7 @@ if __name__ == '__main__':
     data0 = oandastore.getdata(dataname='XAG_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2019, 7, 31),
+                               fromdate=datetime.datetime(2005, 7, 31),
                                todate=datetime.datetime(2020, 7, 31),
                                tz='CET',
                                qcheck=0.5,
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     data1 = oandastore.getdata(dataname='XAU_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2019, 7, 31),
+                               fromdate=datetime.datetime(2005, 7, 31),
                                todate=datetime.datetime(2020, 7, 31),
                                tz='CET',
                                qcheck=0.5,
@@ -84,10 +84,10 @@ if __name__ == '__main__':
     # Add sizer
     # cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
     # cerebro.addsizer(bt.sizers.AllInSizer)
-    cerebro.addsizer(bt.sizers.PercentSizer, percents=10)
+    cerebro.addsizer(bt.sizers.PercentSizer, percents=20)
 
     # Set the commission
-    cerebro.broker.setcommission(commission=0.0, mult=5)
+    cerebro.broker.setcommission(commission=0.0, mult=10)
 
     # Add Analyzer
     cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
