@@ -671,7 +671,7 @@ class OandaTrader(object):
         df_comb12 = df_comb12.iloc[self.li_window-1:]
         df_comb12['li'] = list_li
         print(datetime.datetime.now())
-        print(df_comb12.tail(5))
+        print(df_comb12.tail(self.li_window))
 
         # conditions to go short
         if list_li[-1] > self.li_threshold:
@@ -693,7 +693,6 @@ class OandaTrader(object):
                        self.granularity,
                        )
             notify(message, self.send_notification, *self.notify_who)
-            print(df_comb12.tail(self.li_window))
             print(message)
 
         # conditions to go long
@@ -716,7 +715,6 @@ class OandaTrader(object):
                        self.granularity,
                        )
             notify(message, self.send_notification, *self.notify_who)
-            print(df_comb12.tail(self.li_window))
             print(message)
 
         return df_comb12
@@ -754,7 +752,7 @@ class OandaTrader(object):
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
         if self.strategy == 'Mosterd':
-            volume = sign * balance / close * (max_exp / 100)
+            volume = sign * int(round(balance / close * (max_exp / 100)))
         else:
             volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
 

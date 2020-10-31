@@ -110,7 +110,7 @@ class MlLagIndicatorStrategy(bt.Strategy):
             self.order = self.sell_bracket(limitprice=self.dataclose*(1-self.params.TP),
                                            limitexec=bt.Order.Limit,
                                            exectype=bt.Order.Market,
-                                           stopprice=self.dataclose*(1+self.params.TP),
+                                           stopprice=self.dataclose*(1+self.params.SL),
                                            stopexec=bt.Order.Stop,
                                            )
 
