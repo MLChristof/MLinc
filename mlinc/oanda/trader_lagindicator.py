@@ -77,7 +77,7 @@ def lag_indicator(prices1, prices2, window):
             li_list.append(li)
             prices1 = prices1[:-1]
             prices2 = prices2[:-1]
-            li_list.reverse()
+        li_list.reverse()
         return li_list
     except IndexError:
         return 0
@@ -224,6 +224,10 @@ class OandaTrader(object):
         self.count = int(kwargs.get('count')) if kwargs.get('count') else 50
         self.hma_window = int(kwargs.get('hma_window')) if kwargs.get('hma_window') else 14
         self.rsi_window = int(kwargs.get('rsi_window')) if kwargs.get('rsi_window') else 14
+        self.li_window = int(kwargs.get('li_window')) if kwargs.get('li_window') else 5
+        self.li_threshold = float(kwargs.get('li_threshold')) if kwargs.get('li_threshold') else 0.6
+        self.li_sl = float(kwargs.get('li_sl')) if kwargs.get('li_sl') else 0.015
+        self.li_tp = float(kwargs.get('li_tp')) if kwargs.get('li_tp') else 0.01
         self.notify_who = list(kwargs.get('notify_who')) if kwargs.get('notify_who') else ['r', 'j', 'c', 'b', 'v']
         self.send_notification = kwargs.get('send_notification') if kwargs.get('send_notification') else 'False'
         self.rsi_max = float(kwargs.get('rsi_max')) if kwargs.get('rsi_max') else 70
@@ -254,7 +258,7 @@ class OandaTrader(object):
         try:
             assert input['strategy']
             strategy = input['strategy']
-            if strategy in ['Baconbuyer', 'Inverse_Baconbuyer']:
+            if strategy in ['Baconbuyer', 'Inverse_Baconbuyer', 'Mosterd']:
                 pass
             else:
                 raise ValueError(f'Strategy not possible...')
@@ -654,6 +658,121 @@ class OandaTrader(object):
 
         return dataframe
 
+    def mosterd_auto(self, instrument1, instrument2):
+        dataframe1 = self.data_as_dataframe(instrument1)
+        dataframe2 = self.data_as_dataframe(instrument2)
+        list_li = lag_indicator(n.array(dataframe1['close'].tolist()),
+                                n.array(dataframe2['close'].tolist()),
+                                self.li_window)
+
+        prices12_comb = [dataframe1['time'], dataframe1['close'], dataframe2['close']]
+        headers_comb = ["time", "close1", "close2"]
+        df_comb12 = pd.concat(prices12_comb, axis=1, keys=headers_comb)
+        df_comb12 = df_comb12.iloc[self.li_window-1:]
+        df_comb12['li'] = list_li
+        print(datetime.datetime.now())
+        print(df_comb12.tail(5))
+
+        # # conditions to go short
+        # if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < -self.min_hma_slope:
+        #     # set half spread (prices are all 'mid', avg of bid and ask)
+        #     spread = self.get_spread(instrument)
+        #     half_spread = 0.5 * spread
+        #     # set stoploss
+        #     sl = dataframe.tail(7)['hma'].max()
+        #     close = float(dataframe.tail(1)['close'])
+        #     # sl_mult sets SL further away from price
+        #     # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
+        #     sl_dist = (sl - close) * (self.sl_multiplier - 1)
+        #     sl += sl_dist
+        #     # set take profit
+        #     tp = close - (sl - close) / self.rrr
+        #     # account for spreads
+        #     sl += spread
+        #     tp -= spread
+        #     # format sl and tp
+        #     nr_decimals_close = str(close)[::-1].find('.')
+        #     sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+        #     tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+        #
+        #     if self.margin_closeout_percent() < self.max_margin_closeout_percent:
+        #         if self.tsl == 'On':
+        #             self.tsl_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
+        #             message = 'Fritsie just opened a Short position on {} with TSL={} and TP={} ' \
+        #                       'because: HMA just peaked on {} chart. \n' \
+        #                       'BaconBuyer used a RRR={}'. \
+        #                 format(instrument,
+        #                        sl,
+        #                        tp,
+        #                        self.granularity,
+        #                        self.rrr)
+        #         else:
+        #             self.market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
+        #             message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+        #                       'because: HMA just peaked on {} chart. \n' \
+        #                       'BaconBuyer used a RRR={}'. \
+        #                 format(instrument,
+        #                        sl,
+        #                        tp,
+        #                        self.granularity,
+        #                        self.rrr)
+        #         notify(message, self.send_notification, *self.notify_who)
+        #         print(dataframe.tail(3))
+        #         print(message)
+        #     else:
+        #         notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
+        #
+        # # conditions to go long
+        # elif all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > self.min_hma_slope:
+        #     # set half spread (prices are all 'mid', avg of bid and ask)
+        #     spread = self.get_spread(instrument)
+        #     half_spread = 0.5 * spread
+        #     # set stoploss
+        #     sl = dataframe.tail(7)['hma'].min()
+        #     close = float(dataframe.tail(1)['close'])
+        #     # sl_mult sets SL further away from price
+        #     # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
+        #     sl_dist = (close - sl) * (self.sl_multiplier - 1)
+        #     sl -= sl_dist
+        #     # set take profit
+        #     tp = (close - sl) / self.rrr + close
+        #     # account for spreads
+        #     sl -= spread
+        #     tp += spread
+        #     # format sl and tp
+        #     nr_decimals_close = str(close)[::-1].find('.')
+        #     sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+        #     tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+        #
+        #     if self.margin_closeout_percent() < self.max_margin_closeout_percent:
+        #         if self.tsl == 'On':
+        #             self.tsl_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
+        #             message = 'Fritsie just opened a Long position on {} with TSL={} and TP={} ' \
+        #                       'because: HMA just dipped on {} chart. \n' \
+        #                       'BaconBuyer used a RRR={}'. \
+        #                 format(instrument,
+        #                        sl,
+        #                        tp,
+        #                        self.granularity,
+        #                        self.rrr)
+        #         else:
+        #             self.market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
+        #             message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+        #                       'because: HMA just dipped on {} chart. \n' \
+        #                       'BaconBuyer used a RRR={}'. \
+        #                 format(instrument,
+        #                        sl,
+        #                        tp,
+        #                        self.granularity,
+        #                        self.rrr)
+        #         notify(message, self.send_notification, *self.notify_who)
+        #         print(dataframe.tail(10))
+        #         print(message)
+        #     else:
+        #         notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
+        #
+        # return df_comb12
+
     def analyse(self):
         if self.strategy == 'Baconbuyer':
             for instrument in self.instruments:
@@ -661,12 +780,20 @@ class OandaTrader(object):
                 self.baconbuyer(instrument=instrument)
 
     def auto_trade(self):
-        for instrument in self.instruments:
-            print(instrument)
-            if self.strategy == 'Inverse_Baconbuyer':
-                self.inverse_baconbuyer_auto(instrument)
-            elif self.strategy == 'Baconbuyer':
-                self.baconbuyer_auto(instrument)
+        if self.strategy == 'Mosterd':
+            if len(self.instruments) == 2:
+                self.mosterd_auto(self.instruments[0],
+                                  self.instruments[1])
+            else:
+                raise ValueError(f'Please provide 2 trading pairs for strategy Mosterd')
+        else:
+            for instrument in self.instruments:
+                print(instrument)
+                if self.strategy == 'Inverse_Baconbuyer':
+                    self.inverse_baconbuyer_auto(instrument)
+                elif self.strategy == 'Baconbuyer':
+                    self.baconbuyer_auto(instrument)
+
 
     def market_order(self, sl, tp, close, inst, short_long, max_exp):
 
@@ -900,19 +1027,13 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, False)
 
-    trader = OandaTrader.from_conf_file(['BCO_USD'],
-                                        r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
-    # trader = OandaTrader.from_conf_file(custom_list(),
-    #                                     r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf.ini')
-
-    # save data to csv
-    # trader.save_data_to_csv('BCO_USD')
-
-    # retrieve tradable instruments
-    print(trader.instrument_list)
+    # mosterd strategy: give instrument to trade (follower) first, leader second in instruments list
+    trader = OandaTrader.from_conf_file(['XAG_USD', 'XAU_USD'],
+                                        r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files'
+                                        r'\conf_mosterd.ini')
 
     # auto trade
-    # trader.auto_trade()
+    trader.auto_trade()
 
 
 
