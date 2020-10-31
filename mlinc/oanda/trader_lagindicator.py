@@ -673,105 +673,53 @@ class OandaTrader(object):
         print(datetime.datetime.now())
         print(df_comb12.tail(5))
 
-        # # conditions to go short
-        # if all(item > 0 for item in hma_diff[-7:-2]) and hma_diff[-2] < -self.min_hma_slope:
-        #     # set half spread (prices are all 'mid', avg of bid and ask)
-        #     spread = self.get_spread(instrument)
-        #     half_spread = 0.5 * spread
-        #     # set stoploss
-        #     sl = dataframe.tail(7)['hma'].max()
-        #     close = float(dataframe.tail(1)['close'])
-        #     # sl_mult sets SL further away from price
-        #     # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
-        #     sl_dist = (sl - close) * (self.sl_multiplier - 1)
-        #     sl += sl_dist
-        #     # set take profit
-        #     tp = close - (sl - close) / self.rrr
-        #     # account for spreads
-        #     sl += spread
-        #     tp -= spread
-        #     # format sl and tp
-        #     nr_decimals_close = str(close)[::-1].find('.')
-        #     sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
-        #     tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
-        #
-        #     if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-        #         if self.tsl == 'On':
-        #             self.tsl_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
-        #             message = 'Fritsie just opened a Short position on {} with TSL={} and TP={} ' \
-        #                       'because: HMA just peaked on {} chart. \n' \
-        #                       'BaconBuyer used a RRR={}'. \
-        #                 format(instrument,
-        #                        sl,
-        #                        tp,
-        #                        self.granularity,
-        #                        self.rrr)
-        #         else:
-        #             self.market_order(sl, tp, close, instrument, 'short', self.max_exposure_percent)
-        #             message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
-        #                       'because: HMA just peaked on {} chart. \n' \
-        #                       'BaconBuyer used a RRR={}'. \
-        #                 format(instrument,
-        #                        sl,
-        #                        tp,
-        #                        self.granularity,
-        #                        self.rrr)
-        #         notify(message, self.send_notification, *self.notify_who)
-        #         print(dataframe.tail(3))
-        #         print(message)
-        #     else:
-        #         notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
-        #
-        # # conditions to go long
-        # elif all(item < 0 for item in hma_diff[-7:-2]) and hma_diff[-2] > self.min_hma_slope:
-        #     # set half spread (prices are all 'mid', avg of bid and ask)
-        #     spread = self.get_spread(instrument)
-        #     half_spread = 0.5 * spread
-        #     # set stoploss
-        #     sl = dataframe.tail(7)['hma'].min()
-        #     close = float(dataframe.tail(1)['close'])
-        #     # sl_mult sets SL further away from price
-        #     # sl_multiplier=1 -> SL on hma like usual, sl_multiplier=2 -> SL twice as far away
-        #     sl_dist = (close - sl) * (self.sl_multiplier - 1)
-        #     sl -= sl_dist
-        #     # set take profit
-        #     tp = (close - sl) / self.rrr + close
-        #     # account for spreads
-        #     sl -= spread
-        #     tp += spread
-        #     # format sl and tp
-        #     nr_decimals_close = str(close)[::-1].find('.')
-        #     sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
-        #     tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
-        #
-        #     if self.margin_closeout_percent() < self.max_margin_closeout_percent:
-        #         if self.tsl == 'On':
-        #             self.tsl_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
-        #             message = 'Fritsie just opened a Long position on {} with TSL={} and TP={} ' \
-        #                       'because: HMA just dipped on {} chart. \n' \
-        #                       'BaconBuyer used a RRR={}'. \
-        #                 format(instrument,
-        #                        sl,
-        #                        tp,
-        #                        self.granularity,
-        #                        self.rrr)
-        #         else:
-        #             self.market_order(sl, tp, close, instrument, 'long', self.max_exposure_percent)
-        #             message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
-        #                       'because: HMA just dipped on {} chart. \n' \
-        #                       'BaconBuyer used a RRR={}'. \
-        #                 format(instrument,
-        #                        sl,
-        #                        tp,
-        #                        self.granularity,
-        #                        self.rrr)
-        #         notify(message, self.send_notification, *self.notify_who)
-        #         print(dataframe.tail(10))
-        #         print(message)
-        #     else:
-        #         notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
-        #
-        # return df_comb12
+        # conditions to go short
+        if list_li[-1] > self.li_threshold:
+            close1 = df_comb12['close1'].iloc[-1]
+            spread = self.get_spread(instrument1)
+            sl = close1*(1+self.li_sl)+spread
+            tp = close1*(1-self.li_tp)-spread
+            # format sl and tp
+            nr_decimals_close = str(close1)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+            self.market_order(sl, tp, close1, instrument1, 'short', self.max_exposure_percent)
+            message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+                      'because: Lag Indicator just exceeded pos. threshold on {} chart.' \
+                      . \
+                format(instrument1,
+                       sl,
+                       tp,
+                       self.granularity,
+                       )
+            notify(message, self.send_notification, *self.notify_who)
+            print(df_comb12.tail(self.li_window))
+            print(message)
+
+        # conditions to go long
+        if list_li[-1] < -self.li_threshold:
+            close1 = df_comb12['close1'].iloc[-1]
+            spread = self.get_spread(instrument1)
+            sl = close1*(1-self.li_sl)-spread
+            tp = close1*(1+self.li_tp)+spread
+            # format sl and tp
+            nr_decimals_close = str(close1)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+            self.market_order(sl, tp, close1, instrument1, 'long', self.max_exposure_percent)
+            message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+                      'because: Lag Indicator just exceeded neg. threshold on {} chart.' \
+                      . \
+                format(instrument1,
+                       sl,
+                       tp,
+                       self.granularity,
+                       )
+            notify(message, self.send_notification, *self.notify_who)
+            print(df_comb12.tail(self.li_window))
+            print(message)
+
+        return df_comb12
 
     def analyse(self):
         if self.strategy == 'Baconbuyer':
@@ -784,6 +732,8 @@ class OandaTrader(object):
             if len(self.instruments) == 2:
                 self.mosterd_auto(self.instruments[0],
                                   self.instruments[1])
+            elif len(self.instruments) == 0:
+                raise ValueError(f'Either no instruments given, or instruments removed from list due to open positions')
             else:
                 raise ValueError(f'Please provide 2 trading pairs for strategy Mosterd')
         else:
@@ -794,9 +744,7 @@ class OandaTrader(object):
                 elif self.strategy == 'Baconbuyer':
                     self.baconbuyer_auto(instrument)
 
-
     def market_order(self, sl, tp, close, inst, short_long, max_exp):
-
         # short/long order
         if short_long == 'short':
             sign = -1
@@ -805,7 +753,10 @@ class OandaTrader(object):
         else:
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
-        volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
+        if self.strategy == 'Mosterd':
+            volume = sign * balance / close * (max_exp / 100)
+        else:
+            volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
 
         # set correct nr of decimals
         nr_decimals_close = str(close)[::-1].find('.')
