@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
-    cerebro.addstrategy(MlLagIndicatorStrategy, threshold=0.6, SL=0.015, TP=0.01,
+    cerebro.addstrategy(MlLagIndicatorStrategy, threshold=0.6, SL=0.01, TP=0.01,
                         maperiod=5, printlog=True)
     # cerebro.optstrategy(MlLagIndicatorStrategy,
     #                     threshold=[0.6],
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     data0 = oandastore.getdata(dataname='XAG_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2005, 1, 1),
-                               todate=datetime.datetime(2015, 10, 31),
+                               fromdate=datetime.datetime(2019, 1, 1),
+                               todate=datetime.datetime(2020, 1, 1),
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     data1 = oandastore.getdata(dataname='XAU_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2005, 1, 1),
-                               todate=datetime.datetime(2015, 10, 31),
+                               fromdate=datetime.datetime(2019, 1, 1),
+                               todate=datetime.datetime(2020, 1, 1),
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
