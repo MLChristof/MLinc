@@ -3,12 +3,9 @@ from __future__ import (absolute_import, division, print_function,
 
 import argparse
 import datetime
-import math
 import backtrader as bt
-import backtrader.feeds as btfeeds
 import backtrader.analyzers as btanalyzers
-import numpy as np
-from backtrader.utils import flushfile
+import pandas as pd
 import btoandav20
 import json
 from mlinc.backtrader.strategies.lag_indicator_strategy import MlLagIndicatorStrategy
@@ -39,7 +36,7 @@ if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
-    cerebro.addstrategy(MlLagIndicatorStrategy, threshold=0.6, SL=0.01, TP=0.01,
+    cerebro.addstrategy(MlLagIndicatorStrategy, threshold=0.5, SL=0.01, TP=0.01,
                         maperiod=5, printlog=True)
     # cerebro.optstrategy(MlLagIndicatorStrategy,
     #                     threshold=[0.6],
@@ -53,8 +50,8 @@ if __name__ == '__main__':
     data0 = oandastore.getdata(dataname='XAG_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2019, 1, 1),
-                               todate=datetime.datetime(2020, 1, 1),
+                               fromdate=datetime.datetime(2005, 1, 1),
+                               todate=datetime.datetime(2020, 11, 1),
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
@@ -65,8 +62,8 @@ if __name__ == '__main__':
     data1 = oandastore.getdata(dataname='XAU_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2019, 1, 1),
-                               todate=datetime.datetime(2020, 1, 1),
+                               fromdate=datetime.datetime(2005, 1, 1),
+                               todate=datetime.datetime(2020, 11, 1),
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
@@ -91,6 +88,7 @@ if __name__ == '__main__':
 
     # Add Analyzer
     cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+    cerebro.addanalyzer(btanalyzers.AnnualReturn, _name='annual_return')
     cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
 
     # Run over everything
@@ -101,11 +99,17 @@ if __name__ == '__main__':
     won = thestrat.analyzers.ta.get_analysis().won.total
     lost = thestrat.analyzers.ta.get_analysis().lost.total
     #
-    # print Sharpe
+    dict_annual_return = thestrat.analyzers.annual_return.get_analysis()
+    df_annual_return = pd.DataFrame(dict_annual_return, index=dict_annual_return.keys()).iloc[0]
+    # print results
     print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+    print('Annual Return:', *df_annual_return)
     print('Trades Won:', won)
     print('Trades Lost:', lost)
     print(f'Won/Lost: {won/lost:.2f}')
+    # annual returns to excel
+    df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return.xlsx')
+
     #
     # Plot the result
     cerebro.plot(volume=False, preload=False)
