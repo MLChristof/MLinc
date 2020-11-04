@@ -6,6 +6,7 @@ import re
 import os
 import json
 import configparser
+import csv
 
 from mlinc.notifier import notification
 from mlinc.oanda.instruments_list import instrument_list
@@ -209,9 +210,10 @@ def custom_list():
 
 
 class OandaTrader(object):
-    def __init__(self, instruments, **kwargs):
+    def __init__(self, instruments, log, **kwargs):
         account = kwargs.get('accountid') if kwargs.get('accountid') else None
         token = kwargs.get('token') if kwargs.get('token') else None
+        self.log_path = log
         self.accountID, self.access_token = (account, token)
         self.client = oandapyV20.API(access_token=self.access_token)
         if instruments == 'all':
@@ -247,7 +249,7 @@ class OandaTrader(object):
         self.min_hma_slope = float(kwargs.get('min_hma_slope')) if kwargs.get('min_hma_slope') else 0
 
     @classmethod
-    def from_conf_file(cls, instruments, conf):
+    def from_conf_file(cls, instruments, log, conf):
         config = configparser.RawConfigParser(allow_no_value=True)
         config.read(conf)
 
@@ -265,7 +267,7 @@ class OandaTrader(object):
         except AssertionError:
             raise ValueError(f'Please provide a strategy in: {conf}')
 
-        return cls(instruments, **input)
+        return cls(instruments, log,  **input)
 
     @property
     def instrument_list(self):
@@ -730,10 +732,8 @@ class OandaTrader(object):
             if len(self.instruments) == 2:
                 self.mosterd_auto(self.instruments[0],
                                   self.instruments[1])
-            elif len(self.instruments) == 0:
-                raise ValueError(f'Either no instruments given, or instruments removed from list due to open positions')
             else:
-                raise ValueError(f'Please provide 2 trading pairs for strategy Mosterd')
+                raise ValueError(f'Either no instruments given, or instruments removed from list due to open positions')
         else:
             for instrument in self.instruments:
                 print(instrument)
@@ -751,10 +751,7 @@ class OandaTrader(object):
         else:
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
-        if self.strategy == 'Mosterd':
-            volume = sign * int(round(balance / close * (max_exp / 100)))
-        else:
-            volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
+        volume = sign * self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
 
         # set correct nr of decimals
         nr_decimals_close = str(close)[::-1].find('.')
@@ -781,13 +778,39 @@ class OandaTrader(object):
 
         # create and process order requests
         for O in orderConf:
-
             r = orders.OrderCreate(accountID=self.accountID, data=O)
             print("processing : {}".format(r))
             print("===============================")
             print(r.data)
             try:
                 response = self.client.request(r)
+                response_list = [response["orderFillTransaction"]["id"],
+                                 response["orderFillTransaction"]["accountID"],
+                                 response["orderFillTransaction"]["userID"],
+                                 response["orderFillTransaction"]["time"],
+                                 response["orderFillTransaction"]["type"],
+                                 response["orderFillTransaction"]["orderID"],
+                                 response["orderFillTransaction"]["instrument"],
+                                 response["orderFillTransaction"]["units"],
+                                 response["orderFillTransaction"]["price"],
+                                 response["orderFillTransaction"]["halfSpreadCost"],
+                                 response["orderFillTransaction"]["fullVWAP"],
+                                 response["orderFillTransaction"]["accountBalance"],
+                                 response["orderFillTransaction"]["reason"],
+                                 response['orderCreateTransaction']['id'],
+                                 response['orderCreateTransaction']['time'],
+                                 response['orderCreateTransaction']['type'],
+                                 response['orderCreateTransaction']['units'],
+                                 response['orderCreateTransaction']['takeProfitOnFill']['price'],
+                                 response['orderCreateTransaction']['stopLossOnFill']['price'],
+                                 response['orderCreateTransaction']['reason'],
+                                 response['relatedTransactionIDs'],
+                                 response['lastTransactionID'],
+                                 ]
+                with open(self.log_path, 'a',
+                          newline='') as myfile:
+                    wr = csv.writer(myfile)
+                    wr.writerow(response_list)
             except V20Error as e:
                 print("V20Error: {}".format(e))
             else:
@@ -976,10 +999,12 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, False)
 
+    log_path = r"C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\log\transaction_log.csv"
+    conf_path = r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf_mosterd.ini'
     # mosterd strategy: give instrument to trade (follower) first, leader second in instruments list
     trader = OandaTrader.from_conf_file(['XAG_USD', 'XAU_USD'],
-                                        r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files'
-                                        r'\conf_mosterd.ini')
+                                        log_path,
+                                        conf_path)
 
     # auto trade
     trader.auto_trade()
