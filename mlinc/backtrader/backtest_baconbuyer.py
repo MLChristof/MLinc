@@ -5,10 +5,8 @@ import argparse
 import datetime
 import math
 import backtrader as bt
-import backtrader.feeds as btfeeds
 import backtrader.analyzers as btanalyzers
-import numpy as np
-from backtrader.utils import flushfile
+import pandas as pd
 import btoandav20
 import json
 from mlinc.backtrader.strategies.bacon_buyer_strategy import BaconBuyerStrategy
@@ -158,14 +156,16 @@ if __name__ == '__main__':
     #                     min_hma_slope=[0.022, 0.023, 0.024]
     #                     )
     # UK10YB_GBP Single run
-    # cerebro.addstrategy(BaconBuyerStrategy, RRR=1, min_hma_slope=0.015, stakepercent=0.004,
-    #                     printlog=True, SL_multiplier=1)
+    # RRR=1, min_hma_slope=0.015
+    cerebro.addstrategy(BaconBuyerStrategy, RRR=1, min_hma_slope=0.015, stakepercent=0.004,
+                        printlog=True, SL_multiplier=1.0)
     # UK10YB_GBP Optimization
-    cerebro.optstrategy(BaconBuyerStrategy,
-                        stakepercent=[0.004],
-                        RRR=[1.0],
-                        min_hma_slope=[0.015],
-                        )
+    # cerebro.optstrategy(BaconBuyerStrategy,
+    #                     stakepercent=[0.004],
+    #                     RRR=[1],
+    #                     min_hma_slope=[0.014, 0.015, 0.016, 0.018, 0.02],
+    #                     SL_multiplier=[1.00],
+    #                     )
     # EUR_USD Single run
     # cerebro.addstrategy(BaconBuyerStrategy, RRR=0.4, min_hma_slope=0.0004, stakepercent=1, printlog=True)
     # EUR_USD Optimization
@@ -191,8 +191,8 @@ if __name__ == '__main__':
     data = oandastore.getdata(dataname='UK10YB_GBP',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2010, 7, 30),
-                              todate=datetime.datetime(2015, 7, 30),
+                              fromdate=datetime.datetime(2010, 1, 1),
+                              todate=datetime.datetime(2020, 11, 6),
                               tz='CET',
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
@@ -207,31 +207,67 @@ if __name__ == '__main__':
     cerebro.broker.setcash(10000)
 
     # Add sizer
-    # cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
-    # cerebro.addsizer(bt.sizers.AllInSizer)
+    cerebro.addsizer(btoandav20.sizers.OandaV20RiskCashSizer)
+    cerebro.addsizer(bt.sizers.AllInSizer)
 
     # Set the commission
     cerebro.broker.setcommission(commission=0.0, mult=5)
 
     # Add Analyzer
     cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+    cerebro.addanalyzer(btanalyzers.AnnualReturn, _name='annual_return')
     cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
 
-    # Run over everything
+    # Run over everything for opt strategy
     thestrats = cerebro.run(maxcpus=1)
+    # for normal strategy
     # thestrats = cerebro.run()
 
-    # thestrat = thestrats[0]
-    #
-    # won = thestrat.analyzers.ta.get_analysis().won.total
-    # lost = thestrat.analyzers.ta.get_analysis().lost.total
-    #
-    # # print Sharpe
-    # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
-    # print('Trades Won:', won)
-    # print('Trades Lost:', lost)
-    # print(f'Won/Lost: {won/lost:.2f}')
-    #
-    # # Plot the result
-    # cerebro.plot(style='candle', volume=False, preload=False)
+    if isinstance(cerebro.strats[0], list):
+        thestrat = thestrats[0]
+        won = thestrat.analyzers.ta.get_analysis().won.total
+        lost = thestrat.analyzers.ta.get_analysis().lost.total
+        dict_annual_return = thestrat.analyzers.annual_return.get_analysis()
+        dict_annual_return.update((x, round(y * 100, 2)) for x, y in dict_annual_return.items())
+        df_annual_return = pd.DataFrame(dict_annual_return.values(), index=dict_annual_return.keys(),
+                                        columns=['annual return'])
+
+        # print Results
+        print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+        print('Annual Return:', df_annual_return)
+        print('Trades Won:', won)
+        print('Trades Lost:', lost)
+        print(f'Won/Lost: {won / lost:.2f}')
+        df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_bacbuy.xlsx')
+
+        # # Plot the result
+        cerebro.plot(style='candle', volume=False, preload=False)
+    else:
+        # loop over runs for results from analyzers
+        run_counter = 0
+        file_name = r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_bacbuy_opt.xlsx'
+        for i in thestrats:
+            won = i[0].analyzers.ta.get_analysis().won.total
+            lost = i[0].analyzers.ta.get_analysis().lost.total
+            if run_counter == 0:
+                dict_annual_return = i[0].analyzers.annual_return.get_analysis()
+                dict_annual_return.update((x, round(y * 100, 2)) for x, y in dict_annual_return.items())
+                df_annual_return = pd.DataFrame(dict_annual_return.values(), index=dict_annual_return.keys(),
+                                                columns=['run 0'])
+            else:
+                dict_annual_return = i[0].analyzers.annual_return.get_analysis()
+                dict_annual_return.update((x, round(y * 100, 2)) for x, y in dict_annual_return.items())
+                df_annual_return['run ' + str(run_counter)] = dict_annual_return.values()
+            # print Results
+            print('Sharpe Ratio:', i[0].analyzers.mysharpe.get_analysis())
+            print('Annual Return:', df_annual_return)
+            print('Trades Won:', won)
+            print('Trades Lost:', lost)
+            print(f'Won/Lost: {won/lost:.2f}')
+            run_counter += 1
+
+        # To save it back as Excel
+        df_annual_return.to_excel(file_name)  # Write DateFrame back as Excel file
+
+
 

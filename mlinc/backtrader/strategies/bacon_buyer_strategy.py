@@ -305,9 +305,10 @@ class BaconBuyerStrategy(bt.Strategy):
                                            size=stake_size_short)
 
     def stop(self):
-        self.log('RRR: {0:3.1f} min_hma_slope: {1:7.5f} Ending Value: {2:8.2f}'.format(
+        self.log('RRR: {0:3.1f} min_hma_slope: {1:7.5f} SL_multiplier: {2:5.2f} Ending Value: {3:8.2f}'.format(
             self.params.RRR,
             self.params.min_hma_slope,
+            self.params.SL_multiplier,
             self.broker.getvalue()),
             doprint=True)
 

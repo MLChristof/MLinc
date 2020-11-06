@@ -108,7 +108,7 @@ if __name__ == '__main__':
     print('Trades Lost:', lost)
     print(f'Won/Lost: {won/lost:.2f}')
     # annual returns to excel
-    df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return.xlsx')
+    df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_mosterd.xlsx')
 
     #
     # Plot the result
