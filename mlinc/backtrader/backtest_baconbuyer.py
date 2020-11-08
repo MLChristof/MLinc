@@ -191,8 +191,8 @@ if __name__ == '__main__':
     data = oandastore.getdata(dataname='UK10YB_GBP',
                               compression=60,
                               backfill=False,
-                              fromdate=datetime.datetime(2010, 1, 1),
-                              todate=datetime.datetime(2020, 11, 6),
+                              fromdate=datetime.datetime(2018, 1, 1),
+                              todate=datetime.datetime(2020, 11, 8),
                               tz='CET',
                               qcheck=0.5,
                               timeframe=bt.TimeFrame.Minutes,
@@ -213,10 +213,14 @@ if __name__ == '__main__':
     # Set the commission
     cerebro.broker.setcommission(commission=0.0, mult=5)
 
-    # Add Analyzer
+    # Add Analyzers
     cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
     cerebro.addanalyzer(btanalyzers.AnnualReturn, _name='annual_return')
+    cerebro.addanalyzer(btanalyzers.DrawDown, _name='drawdown')
     cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
+    cerebro.addanalyzer(btanalyzers.Transactions, _name='transactions')
+    # Add observer
+    cerebro.addobserver(bt.observers.Value, _name='value')
 
     # Run over everything for opt strategy
     thestrats = cerebro.run(maxcpus=1)
@@ -225,20 +229,35 @@ if __name__ == '__main__':
 
     if isinstance(cerebro.strats[0], list):
         thestrat = thestrats[0]
-        won = thestrat.analyzers.ta.get_analysis().won.total
-        lost = thestrat.analyzers.ta.get_analysis().lost.total
+        ta = thestrat.analyzers.ta.get_analysis()
+        streak = ta.streak
         dict_annual_return = thestrat.analyzers.annual_return.get_analysis()
         dict_annual_return.update((x, round(y * 100, 2)) for x, y in dict_annual_return.items())
         df_annual_return = pd.DataFrame(dict_annual_return.values(), index=dict_annual_return.keys(),
                                         columns=['annual return'])
-
+        dict_transactions = thestrat.analyzers.transactions.get_analysis()
+        df_transactions = pd.DataFrame(dict_transactions.values(), index=dict_transactions.keys(),
+                                       columns=['transactions'])
         # print Results
         print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
         print('Annual Return:', df_annual_return)
-        print('Trades Won:', won)
-        print('Trades Lost:', lost)
-        print(f'Won/Lost: {won / lost:.2f}')
+        print('Draw Down:', thestrat.analyzers.drawdown.get_analysis())
+        print('Total Trades:', ta.total)
+        print('Trades Won:', ta.won)
+        print('Trades Lost:', ta.lost)
+        print(f'Won/Lost: {ta.won.total / ta.lost.total:.2f}')
+        print('Streak:', streak)
+
+        # save results to files
+        # get datetimes
+        datetime_array = thestrat.observers.value.data0_datetime.array
+        datetime_array_dates = [bt.num2date(x) for x in datetime_array]
+        value_array = thestrat.observers.value.array
+        df_value = pd.DataFrame(index=datetime_array_dates, data={"value": value_array})
+        df_value.to_csv(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\value_array.csv')
         df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_bacbuy.xlsx')
+        df_transactions.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\transactions_bacbuy.xlsx')
+
 
         # # Plot the result
         cerebro.plot(style='candle', volume=False, preload=False)
@@ -266,7 +285,7 @@ if __name__ == '__main__':
             print(f'Won/Lost: {won/lost:.2f}')
             run_counter += 1
 
-        # To save it back as Excel
+        # save as Excel
         df_annual_return.to_excel(file_name)  # Write DateFrame back as Excel file
 
 

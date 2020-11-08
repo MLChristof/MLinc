@@ -47,11 +47,14 @@ if __name__ == '__main__':
 
     oandastore = StoreCls(**storekwargs, practice=True)
 
+    fromdate = datetime.datetime(2019, 11, 8)
+    todate = datetime.datetime(2020, 11, 8)
+
     data0 = oandastore.getdata(dataname='XAG_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2005, 1, 1),
-                               todate=datetime.datetime(2020, 11, 1),
+                               fromdate=fromdate,
+                               todate=todate,
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
@@ -62,8 +65,8 @@ if __name__ == '__main__':
     data1 = oandastore.getdata(dataname='XAU_USD',
                                compression=60,
                                backfill=False,
-                               fromdate=datetime.datetime(2005, 1, 1),
-                               todate=datetime.datetime(2020, 11, 1),
+                               fromdate=fromdate,
+                               todate=todate,
                                tz='CET',
                                qcheck=0.5,
                                timeframe=bt.TimeFrame.Minutes,
@@ -96,14 +99,17 @@ if __name__ == '__main__':
     thestrats = cerebro.run()
     thestrat = thestrats[0]
     #
-    won = thestrat.analyzers.ta.get_analysis().won.total
-    lost = thestrat.analyzers.ta.get_analysis().lost.total
+    ta = thestrat.analyzers.ta.get_analysis()
+    total = ta.total
+    won = ta.won.total
+    lost = ta.lost.total
     #
     dict_annual_return = thestrat.analyzers.annual_return.get_analysis()
     df_annual_return = pd.DataFrame(dict_annual_return, index=dict_annual_return.keys()).iloc[0]
     # print results
     print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
     print('Annual Return:', *df_annual_return)
+    print('Total Trades:', ta.total)
     print('Trades Won:', won)
     print('Trades Lost:', lost)
     print(f'Won/Lost: {won/lost:.2f}')
