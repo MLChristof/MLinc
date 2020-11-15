@@ -36,19 +36,20 @@ if __name__ == '__main__':
     # Create a cerebro entity
     cerebro = bt.Cerebro()
     # Add a strategy
+    # threshold=0.5, SL=0.01, TP=0.01, maperiod=6, printlog=True
     cerebro.addstrategy(MlLagIndicatorStrategy, threshold=0.5, SL=0.01, TP=0.01,
-                        maperiod=5, printlog=True)
+                        maperiod=6, printlog=True)
     # cerebro.optstrategy(MlLagIndicatorStrategy,
-    #                     threshold=[0.6],
-    #                     maperiod=[5],
-    #                     SL=[0.015],
-    #                     TP=[0.01],
+    #                     threshold=[0.5, 0.6, 0.7, 0.8, 0.9],
+    #                     maperiod=[5, 6],
+    #                     SL=[0.01, 0.015, 0.02],
+    #                     TP=[0.01, 0.015, 0.02],
     #                     )
 
     oandastore = StoreCls(**storekwargs, practice=True)
 
-    fromdate = datetime.datetime(2019, 11, 8)
-    todate = datetime.datetime(2020, 11, 8)
+    fromdate = datetime.datetime(2006, 1, 1)
+    todate = datetime.datetime(2020, 11, 14)
 
     data0 = oandastore.getdata(dataname='XAG_USD',
                                compression=60,
@@ -89,34 +90,80 @@ if __name__ == '__main__':
     # Set the commission
     cerebro.broker.setcommission(commission=0.0, mult=10)
 
-    # Add Analyzer
+# Add Analyzers
     cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
     cerebro.addanalyzer(btanalyzers.AnnualReturn, _name='annual_return')
+    cerebro.addanalyzer(btanalyzers.DrawDown, _name='drawdown')
     cerebro.addanalyzer(btanalyzers.TradeAnalyzer, _name='ta')
+    cerebro.addanalyzer(btanalyzers.Transactions, _name='transactions')
+    # Add observer
+    cerebro.addobserver(bt.observers.Value, _name='value')
 
-    # Run over everything
-    # thestrats = cerebro.run(maxcpus=1)
-    thestrats = cerebro.run()
-    thestrat = thestrats[0]
-    #
-    ta = thestrat.analyzers.ta.get_analysis()
-    total = ta.total
-    won = ta.won.total
-    lost = ta.lost.total
-    #
-    dict_annual_return = thestrat.analyzers.annual_return.get_analysis()
-    df_annual_return = pd.DataFrame(dict_annual_return, index=dict_annual_return.keys()).iloc[0]
-    # print results
-    print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
-    print('Annual Return:', *df_annual_return)
-    print('Total Trades:', ta.total)
-    print('Trades Won:', won)
-    print('Trades Lost:', lost)
-    print(f'Won/Lost: {won/lost:.2f}')
-    # annual returns to excel
-    df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_mosterd.xlsx')
+    # Run over everything for opt strategy
+    thestrats = cerebro.run(maxcpus=1)
+    # for normal strategy
+    # thestrats = cerebro.run()
 
-    #
-    # Plot the result
-    cerebro.plot(volume=False, preload=False)
+    if isinstance(cerebro.strats[0], list):
+        thestrat = thestrats[0]
+        ta = thestrat.analyzers.ta.get_analysis()
+        streak = ta.streak
+        dict_annual_return = thestrat.analyzers.annual_return.get_analysis()
+        dict_annual_return.update((x, round(y * 100, 2)) for x, y in dict_annual_return.items())
+        df_annual_return = pd.DataFrame(dict_annual_return.values(), index=dict_annual_return.keys(),
+                                        columns=['annual return'])
+        dict_transactions = thestrat.analyzers.transactions.get_analysis()
+        df_transactions = pd.DataFrame(dict_transactions.values(), index=dict_transactions.keys(),
+                                       columns=['transactions'])
+        # print Results
+        print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+        print('Annual Return:', df_annual_return)
+        print('Draw Down:', thestrat.analyzers.drawdown.get_analysis())
+        print('Total Trades:', ta.total)
+        print('Trades Won:', ta.won)
+        print('Trades Lost:', ta.lost)
+        print(f'Won/Lost: {ta.won.total / ta.lost.total:.2f}')
+        print('Streak:', streak)
 
+        # save results to files
+        # get datetimes
+        datetime_array = thestrat.observers.value.data0_datetime.array
+        datetime_array_dates = [bt.num2date(x) for x in datetime_array]
+        value_array = thestrat.observers.value.array
+        diflen = len(value_array) - len(datetime_array)
+        df_value = pd.DataFrame(index=datetime_array_dates, data={"value": value_array[diflen:]})
+        df_value.to_csv(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\value_array.csv')
+        df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_mosterd.xlsx')
+        # df_transactions.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\transactions_mosterd.xlsx')
+        # # Plot the result
+        cerebro.plot(style='candle', volume=False, preload=False)
+    else:
+        # loop over runs for results from analyzers
+        run_counter = 0
+        file_name = r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_mosterd_opt.xlsx'
+        for i in thestrats:
+            won = i[0].analyzers.ta.get_analysis().won.total
+            lost = i[0].analyzers.ta.get_analysis().lost.total
+            if run_counter == 0:
+                dict_annual_return = i[0].analyzers.annual_return.get_analysis()
+                dict_annual_return.update((x, round(y * 100, 2)) for x, y in dict_annual_return.items())
+                df_annual_return = pd.DataFrame(dict_annual_return.values(), index=dict_annual_return.keys(),
+                                                columns=[f'run 0; SL={i[0].params.SL}; TP={i[0].params.TP}; '
+                                                         f'threshold={i[0].params.threshold}; '
+                                                         f'maperiod={i[0].params.maperiod}'])
+            else:
+                dict_annual_return = i[0].analyzers.annual_return.get_analysis()
+                dict_annual_return.update((x, round(y * 100, 2)) for x, y in dict_annual_return.items())
+                df_annual_return[f'run {run_counter}; SL={i[0].params.SL}; TP={i[0].params.TP}; '
+                                 f'threshold={i[0].params.threshold}; '
+                                 f'maperiod={i[0].params.maperiod}'] = dict_annual_return.values()
+            # print Results
+            print('Sharpe Ratio:', i[0].analyzers.mysharpe.get_analysis())
+            print('Annual Return:', df_annual_return)
+            print('Trades Won:', won)
+            print('Trades Lost:', lost)
+            print(f'Won/Lost: {won/lost:.2f}')
+            run_counter += 1
+
+        # save as Excel
+        df_annual_return.to_excel(file_name)  # Write DateFrame back as Excel file

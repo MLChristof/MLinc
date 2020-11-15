@@ -687,11 +687,12 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
             self.market_order(sl, tp, close1, instrument1, 'short', self.max_exposure_percent)
             message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
-                      'because: Lag Indicator just exceeded pos. threshold on {} chart.' \
+                      'because: Lag Indicator just exceeded pos. threshold of {} on {} chart.' \
                       . \
                 format(instrument1,
                        sl,
                        tp,
+                       self.li_threshold,
                        self.granularity,
                        )
             notify(message, self.send_notification, *self.notify_who)
@@ -709,11 +710,12 @@ class OandaTrader(object):
             tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
             self.market_order(sl, tp, close1, instrument1, 'long', self.max_exposure_percent)
             message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
-                      'because: Lag Indicator just exceeded neg. threshold on {} chart.' \
+                      'because: Lag Indicator just exceeded neg. threshold of {} on {} chart.' \
                       . \
                 format(instrument1,
                        sl,
                        tp,
+                       self.li_threshold,
                        self.granularity,
                        )
             notify(message, self.send_notification, *self.notify_who)

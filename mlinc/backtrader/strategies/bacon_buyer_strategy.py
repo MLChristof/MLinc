@@ -36,6 +36,7 @@ class BaconBuyerStrategy(bt.Strategy):
         ('min_hma_slope', 0.00154),
         ('printlog', False),
         ('trade_with_trend', False),
+        ('SL_on_hma', True),
             )
 
     # smart sizer
@@ -221,7 +222,11 @@ class BaconBuyerStrategy(bt.Strategy):
             # determine Entry price, SL & TP
             EntryLong = self.datas[0]
             SL_long = self.indicator_shortterm.lines.hma[0]
-
+            # if SL_on_hma is True then SL is placed according to original strategy
+            # if False then the minimum is taken from the hma dip and past three close prices
+            if not self.params.SL_on_hma:
+                SL_long_alt = min(self.datas[0].close.array[-3:])
+                SL_long = min(SL_long_alt, SL_long)
             sl_dist = (EntryLong - SL_long) * (self.params.SL_multiplier - 1)
             SL_long -= sl_dist
 
@@ -268,7 +273,11 @@ class BaconBuyerStrategy(bt.Strategy):
             # determine Entry price, SL & TP
             EntryShort = self.datas[0]
             SL_short = self.indicator_shortterm.lines.hma[0]
-
+            # if SL_on_hma is True then SL is placed according to original strategy
+            # if False then the maximum is taken from the hma peak and past three close prices
+            if not self.params.SL_on_hma:
+                SL_short_alt = max(self.datas[0].close.array[-3:])
+                SL_short = max(SL_short_alt, SL_short)
             sl_dist = (SL_short - EntryShort) * (self.params.SL_multiplier - 1)
             SL_short += sl_dist
 
