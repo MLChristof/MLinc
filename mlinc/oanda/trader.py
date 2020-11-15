@@ -235,9 +235,9 @@ class OandaTrader(object):
             if strategy in ['Baconbuyer', 'Inverse_Baconbuyer']:
                 pass
             else:
-                raise ValueError('Strategy not possible...')
+                raise ValueError(f'Strategy not possible...')
         except AssertionError:
-            raise ValueError('Please provide a strategy in: conf.ini')
+            raise ValueError(f'Please provide a strategy in: {conf}')
 
         return cls(instruments, **input)
 
@@ -494,7 +494,7 @@ class OandaTrader(object):
                                self.granularity,
                                self.rrr)
                 notify(message, self.send_notification, *self.notify_who)
-                print(dataframe.tail(10))
+                print(dataframe.tail(3))
                 print(message)
             else:
                 notify('Position not opened due to insufficient margin', self.send_notification, *self.notify_who)
@@ -818,7 +818,11 @@ class OandaTrader(object):
             r = trades.TradeClose(accountID=self.accountID, tradeID=trade['id'])
             self.client.request(r)
             response_dict[trade['id']] = r.response
-        print(response_dict)
+        print(datetime.datetime.now())
+        if response_dict == {}:
+            print('No open positions found, no trades closed.')
+        else:
+            print(response_dict)
         return response_dict
 
     @staticmethod
@@ -838,7 +842,7 @@ class OandaTrader(object):
 
     def get_closed_trades(self, date):
         r = trades.TradesList(accountID=self.accountID, params={'state': 'CLOSED',
-                                                                'count': 100})
+                                                                'count': 500})
         self.client.request(r)
         df = pd.DataFrame(list(r.response['trades']))
         df['closeTime'] = pd.to_datetime(df['closeTime'], errors='coerce')
