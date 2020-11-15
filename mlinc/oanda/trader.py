@@ -6,7 +6,8 @@ import re
 import os
 import json
 import configparser
-
+import sys
+sys.path.append("/home/pi/MLinc/MLinc/mlinc")
 from notifier import notification
 from oanda.instruments_list import instrument_list
 
@@ -22,8 +23,7 @@ import oandapyV20.endpoints.instruments as instruments
 import oandapyV20.endpoints.pricing as pricing
 import warnings
 
-import sys
-sys.path.append("/home/pi/MLinc/MLinc/mlinc")
+
 
 # TODO: add normal SL in case price distance is not met
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
