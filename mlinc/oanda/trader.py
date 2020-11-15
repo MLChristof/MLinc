@@ -7,9 +7,6 @@ import os
 import json
 import configparser
 
-import sys
-sys.path.append("/home/pi/MLinc/MLinc/mlinc")
-
 from notifier import notification
 from oanda.instruments_list import instrument_list
 
@@ -25,6 +22,8 @@ import oandapyV20.endpoints.instruments as instruments
 import oandapyV20.endpoints.pricing as pricing
 import warnings
 
+import sys
+sys.path.append("/home/pi/MLinc/MLinc/mlinc")
 
 # TODO: add normal SL in case price distance is not met
 # TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
@@ -882,7 +881,7 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, False)
 
-    trader = OandaTrader.from_conf_file(['BCO_USD'],
+    trader = OandaTrader.from_conf_file(['UK10YB_GBP'],
                                         r'/home/pi/Documents/ML_conf/conf.ini')
     # trader = OandaTrader.from_conf_file(custom_list(),
     #                                     r'/home/pi/Documents/ML_conf/conf.ini')

@@ -8,30 +8,27 @@ import json
 import configparser
 import csv
 
-from mlinc.notifier import notification
-from mlinc.oanda.instruments_list import instrument_list
+from notifier import notification
+from oanda.instruments_list import instrument_list
 
 import oandapyV20
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
 import oandapyV20.endpoints.positions as positions
 import oandapyV20.endpoints.trades as trades
-import oandapyV20.endpoints.transactions as transactions
-import oandapyV20.endpoints.forexlabs as labs
 import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.instruments as instruments
 import oandapyV20.endpoints.pricing as pricing
 import warnings
 
+import sys
+sys.path.append("/home/pi/MLinc/MLinc/mlinc")
 
-# TODO: Also see developer's pdf:
-# TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
-
-file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
-file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
-file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
-file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
-file_bastijn = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_bastijn.txt'
+file_jelle = '/home/pi/Documents/ML_conf/ifttt_info_jelle.txt'
+file_robert = '/home/pi/Documents/ML_conf/ifttt_info_robert.txt'
+file_christof = '/home/pi/Documents/ML_conf/ifttt_info_christof.txt'
+file_vincent = '/home/pi/Documents/ML_conf/ifttt_info_vincent.txt'
+file_bastijn = '/home/pi/Documents/ML_conf/ifttt_info_bastijn.txt'
 
 
 def hma(values, window):
@@ -1001,8 +998,8 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, False)
 
-    log_path = r"C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\log\transaction_log.csv"
-    conf_path = r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf_mosterd.ini'
+    log_path = r'/home/pi/MLinc/ML_log/mosterd/transaction_log.csv'
+    conf_path = r'/home/pi/Documents/ML_conf/conf_mosterd.ini'
     # mosterd strategy: give instrument to trade (follower) first, leader second in instruments list
     trader = OandaTrader.from_conf_file(['XAG_USD', 'XAU_USD'],
                                         log_path,
