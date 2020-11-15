@@ -7,10 +7,10 @@ import os
 import json
 import configparser
 import csv
-
+import sys
+sys.path.append("/home/pi/MLinc/MLinc/mlinc")
 from notifier import notification
 from oanda.instruments_list import instrument_list
-
 import oandapyV20
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.exceptions import V20Error
@@ -20,9 +20,6 @@ import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.instruments as instruments
 import oandapyV20.endpoints.pricing as pricing
 import warnings
-
-import sys
-sys.path.append("/home/pi/MLinc/MLinc/mlinc")
 
 file_jelle = '/home/pi/Documents/ML_conf/ifttt_info_jelle.txt'
 file_robert = '/home/pi/Documents/ML_conf/ifttt_info_robert.txt'
