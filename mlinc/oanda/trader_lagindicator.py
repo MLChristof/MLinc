@@ -6,12 +6,10 @@ import re
 import os
 import json
 import configparser
+import csv
 
-import sys
-sys.path.append("/home/pi/MLinc/MLinc/mlinc")
-
-from notifier import notification
-from oanda.instruments_list import instrument_list
+from mlinc.notifier import notification
+from mlinc.oanda.instruments_list import instrument_list
 
 import oandapyV20
 import oandapyV20.endpoints.orders as orders
@@ -26,16 +24,15 @@ import oandapyV20.endpoints.pricing as pricing
 import warnings
 
 
-# TODO: add normal SL in case price distance is not met
-# TODO: Only send IFTTT message for opening position if v20 api sends confirmation (if not send returned error) (JtB)
 # TODO: Also see developer's pdf:
 # TODO: https://media.readthedocs.org/pdf/oanda-api-v20/latest/oanda-api-v20.pdf
 
-file_jelle = '/home/pi/Documents/ML_conf/ifttt_info_jelle.txt'
-file_robert = '/home/pi/Documents/ML_conf/ifttt_info_robert.txt'
-file_christof = '/home/pi/Documents/ML_conf/ifttt_info_christof.txt'
-file_vincent = '/home/pi/Documents/ML_conf/ifttt_info_vincent.txt'
-file_bastijn = '/home/pi/Documents/ML_conf/ifttt_info_bastijn.txt'
+file_jelle = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_jelle.txt'
+file_robert = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_robert.txt'
+file_christof = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_christof.txt'
+file_vincent = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_vincent.txt'
+file_bastijn = 'C:\Data\\2_Personal\Python_Projects\ifttt_info_bastijn.txt'
+
 
 def hma(values, window):
     period = int(n.sqrt(window))
@@ -59,6 +56,32 @@ def wma(values, window):
     weighted_moving_averages = n.append(weighted_moving_averages, n.convolve(values, weights, 'valid'))
 
     return weighted_moving_averages
+
+
+def lag_indicator(prices1, prices2, window):
+    """
+    This function calculates the custom ML lag indicator.
+    The indicator calculates the difference of the normalized prices of two instrument pairs.
+    This indicator shows with -1 <= value <= 1 whether a price is relatively high or low to another (correlated) price.
+    If the last price of prices1 is relatively high compared to last price of prices2, the last lag indicator is > 0.
+    """
+    def normalize(array):
+        # Normalize last price in array
+        norm = (array[-1] - n.min(array)) / \
+               (n.max(array) - n.min(array))
+        return norm
+
+    try:
+        li_list = []
+        for i in range(len(prices1) - window + 1):
+            li = normalize(prices1[-window:]) - normalize(prices2[-window:])
+            li_list.append(li)
+            prices1 = prices1[:-1]
+            prices2 = prices2[:-1]
+        li_list.reverse()
+        return li_list
+    except IndexError:
+        return 0
 
 
 def trinum(num):
@@ -187,9 +210,10 @@ def custom_list():
 
 
 class OandaTrader(object):
-    def __init__(self, instruments, **kwargs):
+    def __init__(self, instruments, log, **kwargs):
         account = kwargs.get('accountid') if kwargs.get('accountid') else None
         token = kwargs.get('token') if kwargs.get('token') else None
+        self.log_path = log
         self.accountID, self.access_token = (account, token)
         self.client = oandapyV20.API(access_token=self.access_token)
         if instruments == 'all':
@@ -202,6 +226,10 @@ class OandaTrader(object):
         self.count = int(kwargs.get('count')) if kwargs.get('count') else 50
         self.hma_window = int(kwargs.get('hma_window')) if kwargs.get('hma_window') else 14
         self.rsi_window = int(kwargs.get('rsi_window')) if kwargs.get('rsi_window') else 14
+        self.li_window = int(kwargs.get('li_window')) if kwargs.get('li_window') else 5
+        self.li_threshold = float(kwargs.get('li_threshold')) if kwargs.get('li_threshold') else 0.6
+        self.li_sl = float(kwargs.get('li_sl')) if kwargs.get('li_sl') else 0.015
+        self.li_tp = float(kwargs.get('li_tp')) if kwargs.get('li_tp') else 0.01
         self.notify_who = list(kwargs.get('notify_who')) if kwargs.get('notify_who') else ['r', 'j', 'c', 'b', 'v']
         self.send_notification = kwargs.get('send_notification') if kwargs.get('send_notification') else 'False'
         self.rsi_max = float(kwargs.get('rsi_max')) if kwargs.get('rsi_max') else 70
@@ -221,7 +249,7 @@ class OandaTrader(object):
         self.min_hma_slope = float(kwargs.get('min_hma_slope')) if kwargs.get('min_hma_slope') else 0
 
     @classmethod
-    def from_conf_file(cls, instruments, conf):
+    def from_conf_file(cls, instruments, log, conf):
         config = configparser.RawConfigParser(allow_no_value=True)
         config.read(conf)
 
@@ -232,14 +260,14 @@ class OandaTrader(object):
         try:
             assert input['strategy']
             strategy = input['strategy']
-            if strategy in ['Baconbuyer', 'Inverse_Baconbuyer']:
+            if strategy in ['Baconbuyer', 'Inverse_Baconbuyer', 'Mosterd']:
                 pass
             else:
                 raise ValueError(f'Strategy not possible...')
         except AssertionError:
             raise ValueError(f'Please provide a strategy in: {conf}')
 
-        return cls(instruments, **input)
+        return cls(instruments, log,  **input)
 
     @property
     def instrument_list(self):
@@ -632,6 +660,69 @@ class OandaTrader(object):
 
         return dataframe
 
+    def mosterd_auto(self, instrument1, instrument2):
+        dataframe1 = self.data_as_dataframe(instrument1)
+        dataframe2 = self.data_as_dataframe(instrument2)
+        list_li = lag_indicator(n.array(dataframe1['close'].tolist()),
+                                n.array(dataframe2['close'].tolist()),
+                                self.li_window)
+
+        prices12_comb = [dataframe1['time'], dataframe1['close'], dataframe2['close']]
+        headers_comb = ["time", "close1", "close2"]
+        df_comb12 = pd.concat(prices12_comb, axis=1, keys=headers_comb)
+        df_comb12 = df_comb12.iloc[self.li_window-1:]
+        df_comb12['li'] = list_li
+        print(datetime.datetime.now())
+        print(df_comb12.tail(self.li_window))
+
+        # conditions to go short
+        if list_li[-1] > self.li_threshold:
+            close1 = df_comb12['close1'].iloc[-1]
+            spread = self.get_spread(instrument1)
+            sl = close1*(1+self.li_sl)+spread
+            tp = close1*(1-self.li_tp)-spread
+            # format sl and tp
+            nr_decimals_close = str(close1)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+            self.market_order(sl, tp, close1, instrument1, 'short', self.max_exposure_percent)
+            message = 'Fritsie just opened a Short position on {} with SL={} and TP={} ' \
+                      'because: Lag Indicator just exceeded pos. threshold of {} on {} chart.' \
+                      . \
+                format(instrument1,
+                       sl,
+                       tp,
+                       self.li_threshold,
+                       self.granularity,
+                       )
+            notify(message, self.send_notification, *self.notify_who)
+            print(message)
+
+        # conditions to go long
+        if list_li[-1] < -self.li_threshold:
+            close1 = df_comb12['close1'].iloc[-1]
+            spread = self.get_spread(instrument1)
+            sl = close1*(1-self.li_sl)-spread
+            tp = close1*(1+self.li_tp)+spread
+            # format sl and tp
+            nr_decimals_close = str(close1)[::-1].find('.')
+            sl = float(format(sl, '.' + str(nr_decimals_close) + 'f'))
+            tp = float(format(tp, '.' + str(nr_decimals_close) + 'f'))
+            self.market_order(sl, tp, close1, instrument1, 'long', self.max_exposure_percent)
+            message = 'Fritsie just opened a Long position on {} with SL={} and TP={} ' \
+                      'because: Lag Indicator just exceeded neg. threshold of {} on {} chart.' \
+                      . \
+                format(instrument1,
+                       sl,
+                       tp,
+                       self.li_threshold,
+                       self.granularity,
+                       )
+            notify(message, self.send_notification, *self.notify_who)
+            print(message)
+
+        return df_comb12
+
     def analyse(self):
         if self.strategy == 'Baconbuyer':
             for instrument in self.instruments:
@@ -639,15 +730,21 @@ class OandaTrader(object):
                 self.baconbuyer(instrument=instrument)
 
     def auto_trade(self):
-        for instrument in self.instruments:
-            print(instrument)
-            if self.strategy == 'Inverse_Baconbuyer':
-                self.inverse_baconbuyer_auto(instrument)
-            elif self.strategy == 'Baconbuyer':
-                self.baconbuyer_auto(instrument)
+        if self.strategy == 'Mosterd':
+            if len(self.instruments) == 2:
+                self.mosterd_auto(self.instruments[0],
+                                  self.instruments[1])
+            else:
+                raise ValueError(f'Either no instruments given, or instruments removed from list due to open positions')
+        else:
+            for instrument in self.instruments:
+                print(instrument)
+                if self.strategy == 'Inverse_Baconbuyer':
+                    self.inverse_baconbuyer_auto(instrument)
+                elif self.strategy == 'Baconbuyer':
+                    self.baconbuyer_auto(instrument)
 
     def market_order(self, sl, tp, close, inst, short_long, max_exp):
-
         # short/long order
         if short_long == 'short':
             sign = -1
@@ -656,7 +753,7 @@ class OandaTrader(object):
         else:
             raise ValueError('unclear if long or short')
         balance = self.account_balance()
-        volume = sign*self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
+        volume = sign * self.get_trade_volume(sl, close, balance, max_exp, inst, self.client)
 
         # set correct nr of decimals
         nr_decimals_close = str(close)[::-1].find('.')
@@ -683,13 +780,39 @@ class OandaTrader(object):
 
         # create and process order requests
         for O in orderConf:
-
             r = orders.OrderCreate(accountID=self.accountID, data=O)
             print("processing : {}".format(r))
             print("===============================")
             print(r.data)
             try:
                 response = self.client.request(r)
+                response_list = [response["orderFillTransaction"]["id"],
+                                 response["orderFillTransaction"]["accountID"],
+                                 response["orderFillTransaction"]["userID"],
+                                 response["orderFillTransaction"]["time"],
+                                 response["orderFillTransaction"]["type"],
+                                 response["orderFillTransaction"]["orderID"],
+                                 response["orderFillTransaction"]["instrument"],
+                                 response["orderFillTransaction"]["units"],
+                                 response["orderFillTransaction"]["price"],
+                                 response["orderFillTransaction"]["halfSpreadCost"],
+                                 response["orderFillTransaction"]["fullVWAP"],
+                                 response["orderFillTransaction"]["accountBalance"],
+                                 response["orderFillTransaction"]["reason"],
+                                 response['orderCreateTransaction']['id'],
+                                 response['orderCreateTransaction']['time'],
+                                 response['orderCreateTransaction']['type'],
+                                 response['orderCreateTransaction']['units'],
+                                 response['orderCreateTransaction']['takeProfitOnFill']['price'],
+                                 response['orderCreateTransaction']['stopLossOnFill']['price'],
+                                 response['orderCreateTransaction']['reason'],
+                                 response['relatedTransactionIDs'],
+                                 response['lastTransactionID'],
+                                 ]
+                with open(self.log_path, 'a',
+                          newline='') as myfile:
+                    wr = csv.writer(myfile)
+                    wr.writerow(response_list)
             except V20Error as e:
                 print("V20Error: {}".format(e))
             else:
@@ -870,10 +993,6 @@ class OandaTrader(object):
 
         notify(message, 'True', *self.notify_who)
 
-    def run_with_conf_path(self, path):
-        trader = OandaTrader.from_conf_file(['EUR_USD'], path)
-        trader.auto_trade()
-
 
 if __name__ == '__main__':
     # Set auto_trade to On or Off in conf.ini. If off fritsie will only send out notifications for opportunities.
@@ -882,18 +1001,15 @@ if __name__ == '__main__':
     message_fritsie = 'Fritsie is looking if he can open some positions'
     notify(message_fritsie, False)
 
-    trader = OandaTrader.from_conf_file(['BCO_USD'],
-                                        r'/home/pi/Documents/ML_conf/conf.ini')
-    # trader = OandaTrader.from_conf_file(custom_list(),
-    #                                     r'/home/pi/Documents/ML_conf/conf.ini')
-
-    # save data to csv
-    # trader.save_data_to_csv('BCO_USD')
-
-    # retrieve tradable instruments
-    print(trader.instrument_list)
+    log_path = r"C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\log\transaction_log.csv"
+    conf_path = r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\oanda\conf_files\conf_mosterd.ini'
+    # mosterd strategy: give instrument to trade (follower) first, leader second in instruments list
+    trader = OandaTrader.from_conf_file(['XAG_USD', 'XAU_USD'],
+                                        log_path,
+                                        conf_path)
 
     # auto trade
-    # trader.auto_trade()
+    trader.auto_trade()
+
 
 

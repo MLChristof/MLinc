@@ -1,6 +1,7 @@
 from trader import OandaTrader
 import configparser
 
+
 def from_conf_file(instruments, conf):
     config = configparser.RawConfigParser(allow_no_value=True)
     config.read(conf)
@@ -9,6 +10,7 @@ def from_conf_file(instruments, conf):
         input[item] = config['OandaTraderInput'][item]
 
     return input
+
 
 if __name__ == '__main__':
 
