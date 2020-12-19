@@ -48,8 +48,8 @@ if __name__ == '__main__':
 
     oandastore = StoreCls(**storekwargs, practice=True)
 
-    fromdate = datetime.datetime(2006, 1, 1)
-    todate = datetime.datetime(2020, 11, 14)
+    fromdate = datetime.datetime(2020, 11, 19)
+    todate = datetime.datetime(2020, 11, 21)
 
     data0 = oandastore.getdata(dataname='XAG_USD',
                                compression=60,
@@ -117,7 +117,7 @@ if __name__ == '__main__':
                                        columns=['transactions'])
         # print Results
         print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
-        print('Annual Return:', df_annual_return)
+        print('Annual Return [%]:', df_annual_return)
         print('Draw Down:', thestrat.analyzers.drawdown.get_analysis())
         print('Total Trades:', ta.total)
         print('Trades Won:', ta.won)
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         df_value = pd.DataFrame(index=datetime_array_dates, data={"value": value_array[diflen:]})
         df_value.to_csv(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\value_array.csv')
         df_annual_return.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\annual_return_mosterd.xlsx')
-        # df_transactions.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\transactions_mosterd.xlsx')
+        df_transactions.to_excel(r'C:\Data\2_Personal\Python_Projects\MLinc\mlinc\backtest\transactions_mosterd.xlsx')
         # # Plot the result
         cerebro.plot(style='candle', volume=False, preload=False)
     else:
@@ -159,7 +159,7 @@ if __name__ == '__main__':
                                  f'maperiod={i[0].params.maperiod}'] = dict_annual_return.values()
             # print Results
             print('Sharpe Ratio:', i[0].analyzers.mysharpe.get_analysis())
-            print('Annual Return:', df_annual_return)
+            print('Annual Return [%]:', df_annual_return)
             print('Trades Won:', won)
             print('Trades Lost:', lost)
             print(f'Won/Lost: {won/lost:.2f}')

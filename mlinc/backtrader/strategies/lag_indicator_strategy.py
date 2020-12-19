@@ -21,7 +21,7 @@ class MlLagIndicatorStrategy(bt.Strategy):
     def log(self, txt, dt=None, doprint=False):
         ''' Logging function for this strategy'''
         if self.params.printlog or doprint:
-            dt = dt or self.datas[0].datetime.date(0)
+            dt = dt or self.datas[0].datetime.datetime(0)
             print('%s, %s' % (dt.isoformat(), txt))
             # print('%s' % (dt.isoformat()))
 
@@ -90,27 +90,37 @@ class MlLagIndicatorStrategy(bt.Strategy):
             return
 
         self.lagindex.append(self.indicator.lag_index())
-        # print(self.lagindex[-1])
+        # print(self.lagindex[-1])self.datas[0].datetime.datetime(0)
 
         # long position
         if self.lagindex[-1] < -self.params.threshold and the_size == 0:
-            self.log('Go Long!!! Because lagindex is [{}]'.format(self.lagindex[-1]))
+            close_price = self.dataclose[0]
+            sl = self.dataclose*(1-self.params.SL)
+            tp = self.dataclose*(1+self.params.TP)
+            # self.log('Go Long!!! Because lagindex is [{}]'.format(self.lagindex[-1]))
+            self.log(f'Go Long!!! Because lagindex is [{self.lagindex[-1]}] Price={close_price:.5f} '
+                     f'SL={sl:.5f} TP={tp:.5f}')
             # self.order = self.buy()
-            self.order = self.buy_bracket(limitprice=self.dataclose*(1+self.params.TP),
+            self.order = self.buy_bracket(limitprice=tp,
                                           limitexec=bt.Order.Limit,
                                           exectype=bt.Order.Market,
-                                          stopprice=self.dataclose*(1-self.params.SL),
+                                          stopprice=sl,
                                           stopexec=bt.Order.Stop,
                                           )
         # short position
         elif self.lagindex[-1] > self.params.threshold and the_size == 0:
-            self.log('Go Short!!! Because lagindex is [{}]'.format(self.lagindex[-1]))
+            close_price = self.dataclose[0]
+            sl = self.dataclose*(1+self.params.SL)
+            tp = self.dataclose*(1-self.params.TP)
+            self.log(f'Go Short!!! Because lagindex is [{self.lagindex[-1]}] Price={close_price:.5f} '
+                     f'SL={sl:.5f} TP={tp:.5f}')
+            # self.log('Go Short!!! Because lagindex is [{}]'.format(self.lagindex[-1]))
 
             # self.order = self.sell()
-            self.order = self.sell_bracket(limitprice=self.dataclose*(1-self.params.TP),
+            self.order = self.sell_bracket(limitprice=tp,
                                            limitexec=bt.Order.Limit,
                                            exectype=bt.Order.Market,
-                                           stopprice=self.dataclose*(1+self.params.SL),
+                                           stopprice=sl,
                                            stopexec=bt.Order.Stop,
                                            )
 
